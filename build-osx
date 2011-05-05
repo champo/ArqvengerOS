@@ -1,0 +1,11 @@
+cd ./bin
+BIN_PATH=/usr/local/386cross/bin
+
+rm -rf *
+nasm -f aout ../src/libasm.asm -o libasm.o
+nasm -f aout ../src/kstart.asm -o kstart.o
+nasm -f aout ../src/loader.asm -o kstart.o
+$BIN_PATH/i386-aout-linux-gcc -c ../src/kernel.c -o kernel.o -fno-builtin
+$BIN_PATH/i386-aout-linux-gcc -c ../src/libc.c -o libc.o -fno-builtin 
+$BIN_PATH/i386-aout-linux-ld -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o
+mcopy -o kernel.bin b:boot/ 
