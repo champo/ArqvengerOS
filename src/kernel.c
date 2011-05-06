@@ -1,15 +1,12 @@
 #include "../include/kasm.h"
 #include "../include/defs.h"
+#include "../include/video.h"
+#include "../include/type.h"
 
 DESCR_INT idt[0xA];			/* IDT de 10 entradas*/
 IDTR idtr;				/* IDTR */
 
-int tickpos=640;
-
 void int_08() {
-
-    char *video = (char *) 0xb8000;
-    video[tickpos+=2]='*';
 
 }
 
@@ -43,8 +40,8 @@ kmain()
 	_Cli();
 /* Habilito interrupcion de timer tick*/
 
-        _mascaraPIC1(0xFE);
-        _mascaraPIC2(0xFF);
+        outB(0x21,0xFE);
+        outB(0xA1,0xFF);
 
 	_Sti();
 

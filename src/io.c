@@ -8,5 +8,5 @@ inline unsigned char inB(unsigned short port) {
 }
 
 inline void outB(unsigned short port, unsigned char data) {
-    asm volatile ("outb %0, %1" : "=a"(data) : "Nd"(port));
+    asm volatile ("outb %0, %1" : : "a"(data), "Nd"(port));
 }
