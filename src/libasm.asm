@@ -1,9 +1,9 @@
 GLOBAL  _read_msw,_lidt
-GLOBAL  _int_08_hand
+GLOBAL  _int_08_hand,_int09Handler
 GLOBAL  _mascaraPIC1,_mascaraPIC2,_Cli,_Sti
 GLOBAL  _debug
 
-EXTERN  int_08
+EXTERN  int_08, int09
 
 
 SECTION .text
@@ -50,6 +50,9 @@ _lidt:				; Carga el IDTR
         pop     ebp
         retn
 
+_eoi:
+    mov al, 20h
+    out 20h, al
 
 _int_08_hand:				; Handler de INT 8 ( Timer tick)
         push    ds
@@ -66,6 +69,28 @@ _int_08_hand:				; Handler de INT 8 ( Timer tick)
         pop     ds
         iret
 
+_int09Handler:
+    ; Save the current execution context
+    push ds
+    push es
+    pusha
+
+    ; Set up the handler execution context
+    mov ax, 10h
+    mov ds, ax
+    mov es, ax
+    ; Call the handler
+    call int09
+
+    ; Tell the PIC we're done
+    call _eoi
+
+    ; Set the context back and exit
+    popa
+    pop es
+    pop ds
+
+    iret
 
 ; Debug para el BOCHS, detiene la ejecució; Para continuar colocar en el BOCHSDBG: set $eax=0
 ;
