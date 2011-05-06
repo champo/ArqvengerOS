@@ -6,6 +6,7 @@
 DESCR_INT idt[0x100];			/* IDT de 256 entradas*/
 IDTR idtr;				/* IDTR */
 
+
 void int_08() {
 }
 
