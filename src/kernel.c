@@ -24,7 +24,6 @@ void kmain() {
 
     setupIDT();
 
-
     _Cli();
 
     outB(0x21,0xFE);
