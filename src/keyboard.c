@@ -5,13 +5,5 @@
 
 void int09() {
     unsigned char scanCode = inB(KEYBOARD_READ_PORT);
-
-    char out[3] = {0, ' ', ' '};
-    int i = 2;
-    while (scanCode) {
-        out[i--] = '0' + (scanCode % 10);
-        scanCode /= 10;
-    }
-
-    write(out, 3);
+    // Do something with this
 }
