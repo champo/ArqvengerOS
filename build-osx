@@ -7,9 +7,10 @@ rm -rf *
 nasm -f aout ../src/libasm.asm -o libasm.o
 nasm -f aout ../src/kstart.asm -o kstart.o
 nasm -f aout ../src/loader.asm -o kstart.o
-$GCC -c ../src/kernel.c -o kernel.o -fno-builtin
-$GCC -c ../src/libc.c -o libc.o -fno-builtin 
-$GCC -c ../src/keyboard.c -o keyboard.o -fno-builtin
-$GCC -c ../src/io.c -o io.o -fno-builtin
-$LD -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o keyboard.o io.o
+$GCC -c ../src/kernel.c -o kernel.o -fno-builtin -O0 -g
+$GCC -c ../src/libc.c -o libc.o -fno-builtin -O0 -g
+$GCC -c ../src/keyboard.c -o keyboard.o -fno-builtin -O0 -g
+$GCC -c ../src/io.c -o io.o -fno-builtin -O0 -g
+$GCC -c ../src/video.c -o video.o -fno-builtin -O0 -g
+$LD -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o keyboard.o io.o video.o
 mcopy -o kernel.bin b:boot/ 

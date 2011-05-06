@@ -39,20 +39,24 @@ _eoi:
     mov al, 20h
     out 20h, al
 
+    ret
+
 _int_08_hand:				; Handler de INT 8 ( Timer tick)
-        push    ds
-        push    es                      ; Se salvan los registros
-        pusha                           ; Carga de DS y ES con el valor del selector
-        mov     ax, 10h			; a utilizar.
-        mov     ds, ax
-        mov     es, ax                  
-        call    int_08                 
-        mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popa                            
-        pop     es
-        pop     ds
-        iret
+    push    ds
+    push    es                      ; Se salvan los registros
+    pusha                           ; Carga de DS y ES con el valor del selector
+    mov     ax, 10h			; a utilizar.
+    mov     ds, ax
+    mov     es, ax                  
+    call    int_08                 
+
+    popa                            
+    pop     es
+    pop     ds
+
+    call _eoi
+
+    iret
 
 _int09Handler:
     ; Save the current execution context
@@ -64,16 +68,17 @@ _int09Handler:
     mov ax, 10h
     mov ds, ax
     mov es, ax
+
     ; Call the handler
     call int09
 
-    ; Tell the PIC we're done
-    call _eoi
-
-    ; Set the context back and exit
+    ; Set the context back 
     popa
     pop es
     pop ds
+
+    ; Tell the PIC we're done and exit
+    call _eoi
 
     iret
 
