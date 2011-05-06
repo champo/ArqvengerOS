@@ -2,25 +2,38 @@
 #include "../include/video.h"
 #include "../include/io.h"
 
-void write(const char* str,size_t length) {
+void updateCursor();
+
+static int cursorPosition = 0;
+
+
+void write(const char* str, size_t length) {
     
     char* video = (char*) 0xb8000;
-    int posicion = 0;
-    
+    int aux = 0;    
     while (length--) {
-        video[posicion*2] = str[posicion];
-        posicion++;
+        video[cursorPosition * 2] = str[aux++];
+        cursorPosition++;
+    }
+    updateCursor();
+    
+    if (cursorPosition >= 80*25 ) {
+        cursorPosition = 0;
     }
 }
 
-void updateCursor(int row, int col) {
+void moveCursor(int row, int col) {
 
-    unsigned short position=(row*80) + col;
- 
+    cursorPosition=(row*80) + col;
+    updateCursor();
+}
+
+void updateCursor(){
+
     // cursor LOW port to vga INDEX register
     outB(0x3D4, 0x0F);
-    outB(0x3D5, (unsigned char)(position&0xFF));
+    outB(0x3D5, (unsigned char)(cursorPosition&0xFF));
     // cursor HIGH port to vga INDEX register
     outB(0x3D4, 0x0E);
-    outB(0x3D5, (unsigned char )((position>>8)&0xFF));
+    outB(0x3D5, (unsigned char )((cursorPosition>>8)&0xFF));
  }

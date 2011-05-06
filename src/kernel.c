@@ -6,6 +6,7 @@
 DESCR_INT idt[0xA];			/* IDT de 10 entradas*/
 IDTR idtr;				/* IDTR */
 
+
 void int_08() {
 
 }
@@ -39,7 +40,6 @@ kmain()
 
 	_Cli();
 /* Habilito interrupcion de timer tick*/
-
         outB(0x21,0xFE);
         outB(0xA1,0xFF);
 
