@@ -1,9 +1,9 @@
 GLOBAL  _read_msw,_lidt
-GLOBAL  _int_08_hand,_int09Handler
+GLOBAL  _int_08_hand,_int09Handler,_int80Handler
 GLOBAL  _mascaraPIC1,_mascaraPIC2,_Cli,_Sti
 GLOBAL  _debug
 
-EXTERN  int_08, int09
+EXTERN  int_08, int09,int80
 
 
 SECTION .text
@@ -69,6 +69,26 @@ _int09Handler:
 
     ; Tell the PIC we're done
     call _eoi
+
+    ; Set the context back and exit
+    popa
+    pop es
+    pop ds
+
+    iret
+
+_int80Handler: 
+    ; Save the current execution context
+    push ds
+    push es
+    pusha
+
+    ; Set up the handler execution context
+    mov ax, 10h
+    mov ds, ax
+    mov es, ax
+    ; Call the handler
+    call int80
 
     ; Set the context back and exit
     popa
