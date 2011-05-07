@@ -1,6 +1,6 @@
 #include "../include/defs.h"
 
-/********************************** 
+/**********************************
 *
 *  Kernel
 *
@@ -27,15 +27,5 @@ typedef enum eUSER {U_KERNEL=0, U_NORMAL} tUSERS;
 *
 **/
 size_t __write(int fd, const void* buffer, size_t count);
-
-/* __read
-*
-* Recibe como parametros:
-* - File Descriptor
-* - Buffer a donde escribir
-* - Cantidad
-*
-**/
-size_t __read(int fd, void* buffer, size_t count);
 
 #endif

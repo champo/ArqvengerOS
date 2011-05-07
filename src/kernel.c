@@ -1,6 +1,5 @@
 #include "../include/kasm.h"
 #include "../include/defs.h"
-#include "../include/video.h"
 #include "../include/type.h"
 
 DESCR_INT idt[0x100];			/* IDT de 256 entradas*/
@@ -32,7 +31,8 @@ void kmain() {
 
     _Sti();
 
-    while(1) {}
-
+    while (1) {
+        asm volatile ("hlt");
+    }
 }
 
