@@ -1,7 +1,7 @@
 #ifndef _keyboard_header
 #define _keyboard_header
 
-#include "../include/type.h"
+#include "type.h"
 
 void int09();
 

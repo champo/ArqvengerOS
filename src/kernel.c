@@ -1,7 +1,7 @@
-#include "../include/kasm.h"
-#include "../include/type.h"
-#include "../include/video.h"
-#include "../include/interrupt.h"
+#include "kasm.h"
+#include "type.h"
+#include "video.h"
+#include "interrupt.h"
 
 void int08() {
 }
@@ -23,7 +23,10 @@ void kmain() {
 
     _sti();
 
+    char a;
     while (1) {
+        read(0, &a, 1);
+        write(&a, 1);
         asm volatile ("hlt");
     }
 }
