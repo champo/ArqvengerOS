@@ -1,14 +1,7 @@
-/***************************************************
-  Defs.h
-	
-****************************************************/
+#ifndef _interrupt_header_
+#define _interrupt_header_
 
-#ifndef _defs_
-#define _defs_
-
-#define byte unsigned char
-#define word short int
-#define dword int
+#include "../include/type.h"
 
 /* Flags para derechos de acceso de los segmentos */
 #define ACS_PRESENT     0x80            /* segmento presente en memoria */
@@ -25,35 +18,38 @@
 #define ACS_DATA        (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 #define ACS_STACK       (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 
-#pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
+/* Tell the compiler to pack the following structs to 1 byte (No 4 byte padding) */
+#pragma pack (1)
 
-/* Descriptor de segmento */
+/* Segment Descriptor */
 typedef struct {
-  word limit,
-       base_l;
-  byte base_m,
-       access,
-       attribs,
-       base_h;
-} DESCR_SEG;
+    word limit;
+    word base_l;
+    byte base_m;
+    byte access;
+    byte attribs;
+    byte base_h;
+} SegmentDescriptor;
 
 
-/* Descriptor de interrupcion */
+/* Interrupt descriptor */
 typedef struct {
-  word      offset_l,
-            selector;
-  byte      cero,
-            access;
-  word	    offset_h;
-} DESCR_INT;
+    word offset_l;
+    word selector;
+    byte cero;
+    byte access;
+    word offset_h;
+} InterruptDescriptor;
 
-/* IDTR  */
+/* Interrupt Descriptor Table Register */
 typedef struct {
-  word  limit;
-  dword base;
-} IDTR;
+    word limit;
+    dword base;
+} InterruptDescriptorTableRegister;
 
-     
+void setupIdtEntry(InterruptDescriptor* item, int entry, byte segmentSelector, dword offset, byte access);
+
+void setupIDT();
 
 #endif
 

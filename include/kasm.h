@@ -2,19 +2,18 @@
 kasm.h
 
 ************************************************/
+#ifndef _kasm_header_
+#define _kasm_header_
 
-#include "defs.h"
-
+#include "../include/interrupt.h"
 
 unsigned int _read_msw();
 
-void _lidt(IDTR *idtr);
+void _lidt(InterruptDescriptorTableRegister* idtr);
 
-void _Cli(void);        /* Deshabilita interrupciones  */
-void _Sti(void);	 /* Habilita interrupciones  */
+void _cli(void);
+void _sti(void);
 
-void _int_08_hand();      /* Timer tick */
+void _int08Handler();
 void _int09Handler();
-
-void _debug (void);
-
+#endif

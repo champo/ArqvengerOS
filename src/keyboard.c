@@ -1,5 +1,4 @@
 #include "../include/keyboard.h"
-#include "../include/video.h"
 
 #define KEYBOARD_READ_PORT 0x60
 #define LAST_CODE_IN_TABLE 0x39
