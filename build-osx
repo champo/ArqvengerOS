@@ -5,7 +5,6 @@ LD=$BIN_PATH/i386-aout-linux-ld
 
 rm -rf *
 nasm -f aout ../src/libasm.asm -o libasm.o
-nasm -f aout ../src/kstart.asm -o kstart.o
 nasm -f aout ../src/loader.asm -o kstart.o
 $GCC -c ../src/kernel.c -o kernel.o -fno-builtin -O0 -g
 $GCC -c ../src/libc.c -o libc.o -fno-builtin -O0 -g
