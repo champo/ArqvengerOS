@@ -1,5 +1,5 @@
-#include "interrupt.h"
-#include "kasm.h"
+#include "system/interrupt.h"
+#include "kernel/tick.h"
 
 /* Flags para derechos de acceso de los segmentos */
 #define ACS_PRESENT     0x80            /* segmento presente en memoria */
@@ -47,7 +47,13 @@ typedef struct {
 
 void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dword offset, byte access);
 
+/* These are all ASM functions used only here, so we just keep the def here */
 void _lidt(InterruptDescriptorTableRegister* idtr);
+void _cli(void);
+void _sti(void);
+
+void _int08Handler();
+void _int09Handler();
 
 /* This is our IDT with 256 entries */
 InterruptDescriptor idt[0x100];
@@ -56,6 +62,9 @@ void setupIDT() {
     // We don't actually have to keep this in memory, so it's safe to have it as a local
     InterruptDescriptorTableRegister idtr;
 
+    //TODO: Remap the PIC
+    //TODO: Manage exceptions
+
     setIdtEntry(idt, 0x08, 0x08, (dword)&_int08Handler, ACS_INT);
     setIdtEntry(idt, 0x09, 0x08, (dword)&_int09Handler, ACS_INT);
 
@@ -63,6 +72,14 @@ void setupIDT() {
     idtr.limit = sizeof(idt) - 1;
 
     _lidt(&idtr);
+
+    _cli();
+
+    /* Enable the interrupts we need in the PIC */
+    outB(0x21,0xFC);
+    outB(0xA1,0xFF);
+
+    _sti();
 }
 
 void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dword offset, byte access) {

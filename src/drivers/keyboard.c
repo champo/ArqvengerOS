@@ -1,4 +1,5 @@
-#include "keyboard.h"
+#include "drivers/keyboard.h"
+#include "common.h"
 
 #define KEYBOARD_READ_PORT 0x60
 #define LAST_CODE_IN_TABLE 0x39
@@ -94,7 +95,7 @@ size_t read(int fd, void* buffer, size_t count) {
 
     // Wait until the buffer is done
     while (bufferEnd < count) {
-        asm volatile ("hlt");
+        halt();
     }
 
     // Copy the input to the buffer

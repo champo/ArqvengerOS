@@ -1,5 +1,5 @@
-#ifndef _io_header
-#define _io_header
+#ifndef _system_io_header
+#define _system_io_header
 
 unsigned char inB(unsigned short port);
 

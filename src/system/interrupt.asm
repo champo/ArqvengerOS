@@ -1,12 +1,10 @@
-GLOBAL  _read_msw,_lidt
+GLOBAL  _lidt
 GLOBAL  _int08Handler,_int09Handler
 GLOBAL  _cli,_sti
 
 EXTERN  int08, int09
 
-
 SECTION .text
-
 
 _cli:
     cli
@@ -15,11 +13,6 @@ _cli:
 _sti:
     sti
     ret
-
-
-_read_msw:
-    smsw ax
-    retn
 
 _lidt:
     push ebp

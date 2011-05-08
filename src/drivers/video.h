@@ -1,5 +1,5 @@
-#ifndef _video_header
-#define _video_header
+#ifndef _drivers_video_header
+#define _drivers_video_header
 
 #include "type.h"
 

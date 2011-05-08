@@ -1,6 +1,6 @@
 #include "type.h"
-#include "video.h"
-#include "io.h"
+#include "drivers/video.h"
+#include "system/io.h"
 
 /* Video attribute. White letters on black background. */
 #define WHITE_TXT 0x07
