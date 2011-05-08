@@ -21,7 +21,6 @@ _read_msw:
     smsw ax
     retn
 
-
 _lidt:
     push ebp
     mov ebp, esp
