@@ -3,8 +3,8 @@ rm -rf *
 nasm -f aout ../src/libasm.asm -o libasm.o
 nasm -f aout ../src/loader.asm -o kstart.o
 gcc -c ../src/kernel.c -o kernel.o -fno-builtin
-gcc -c ../src/libc.c -o libc.o -fno-builtin 
+gcc -c ../src/interrupt.c -o interrupt.o -fno-builtin 
 gcc -c ../src/video.c -o video.o -fno-builtin
 gcc -c ../src/io.c -o io.o -fno-builtin
 gcc -c ../src/keyboard.c -o keyboard.o -fno-builtin
-ld -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o video.o io.o keyboard.o
+ld -T ../src/link.ld -o kernel.bin kernel.o kstart.o interrupt.o libasm.o video.o io.o keyboard.o
