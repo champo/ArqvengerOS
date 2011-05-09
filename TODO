@@ -2,6 +2,7 @@ Important stuff
  - Remap the PIC
  - Handle processor exceptions, and by handle, I mean crash & burn
  - Figure out how to work with read and things like scanf (Maybe make scanf a syscall?)
+ - How does read work in linux? Does it read scan codes? Is it line buffered? How in god's green earth does this work?
  - Set up basic libc stuff
  - Handle ctrl alt supr in the keyboard int
  - Handle modifier keys

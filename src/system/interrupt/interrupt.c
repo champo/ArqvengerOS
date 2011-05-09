@@ -1,5 +1,6 @@
 #include "system/interrupt.h"
-#include "type.h"
+#include "common.h"
+#include "system/io.h"
 
 /* Flags para derechos de acceso de los segmentos */
 #define ACS_PRESENT     0x80            /* segmento presente en memoria */
