@@ -1,4 +1,5 @@
 #include "drivers/keyboard.h"
+#include "system/io.h"
 #include "common.h"
 
 #define KEYBOARD_READ_PORT 0x60
@@ -34,7 +35,7 @@ int escaped = 0, bufferEnd = 0;
 
 char inputBuffer[BUFFER_SIZE];
 
-void int09() {
+void readScanCode() {
 
     unsigned char scanCode = inB(KEYBOARD_READ_PORT);
 
@@ -88,26 +89,26 @@ void int09() {
     escaped = 0;
 }
 
-size_t read(int fd, void* buffer, size_t count) {
-    // Well, we'll ignore the fd for now.
+size_t readKeyboard(void* buffer, size_t count) {
+
     char* buf = (char*) buffer;
-    int i = 0;
+    int i = 0, c = (int) count;
 
     // Wait until the buffer is done
-    while (bufferEnd < count) {
+    while (bufferEnd < c) {
         halt();
     }
 
     // Copy the input to the buffer
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < c; i++) {
         buf[i] = inputBuffer[i];
     }
 
     // Make sure we move the input buffer to remove what was already read
-    for (i = 0; count < bufferEnd; i++, count++) {
+    for (i = 0; c< bufferEnd; i++, count++) {
         inputBuffer[i] = inputBuffer[count];
     }
-    bufferEnd -= count;
+    bufferEnd -= c;
 
     return count;
 }

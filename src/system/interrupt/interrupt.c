@@ -1,5 +1,4 @@
 #include "system/interrupt.h"
-#include "kernel/tick.h"
 #include "type.h"
 
 /* Flags para derechos de acceso de los segmentos */

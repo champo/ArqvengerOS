@@ -1,34 +1,5 @@
-GLOBAL  _lidt
 GLOBAL  _int08Handler,_int09Handler
-GLOBAL  _cli,_sti
-
 EXTERN  int08, int09
-
-SECTION .text
-
-_cli:
-    cli
-    ret
-
-_sti:
-    sti
-    ret
-
-_lidt:
-    push ebp
-    mov ebp, esp
-    push ebx
-    mov ebx, [ss:ebp + 6] ; ds:bx = puntero a IDTR
-    rol ebx, 16
-    lidt [ds:ebx] ; carga IDTR
-    pop ebx
-    pop ebp
-    retn
-
-_eoi:
-    mov al, 20h
-    out 20h, al
-    ret
 
 _int08Handler:
     ; Save the current execution context
@@ -49,7 +20,8 @@ _int08Handler:
     pop es
     pop ds
 
-    call _eoi
+    mov al, 20h
+    out 20h, al
 
     iret
 
@@ -73,6 +45,7 @@ _int09Handler:
     pop ds
 
     ; Tell the PIC we're done and exit
-    call _eoi
+    mov al, 20h
+    out 20h, al
 
     iret

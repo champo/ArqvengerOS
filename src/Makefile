@@ -2,12 +2,16 @@ SRCDIR=../src
 OBJDIR=../bin
 TARGET=$(OBJDIR)/kernel.bin
 FOLDERS=. $(CHILD_FOLDERS)
-CHILD_FOLDERS=$(shell find . -type d -d 1)
+CHILD_FOLDERS=$(shell find . -type d -mindepth 1)
 OBJS=$(addprefix $(OBJDIR)/,$(foreach dir,$(FOLDERS),$(patsubst %.c, %.o, $(wildcard $(dir)/*.c)) $(patsubst %.asm, %-asm.o, $(wildcard $(dir)/*.asm))))
 INCLUDES=$(addprefix $(SRCDIR)/,$(foreach dir,$(FOLDERS), $(wildcard $(dir)/*.h)))
 
 include common.mk
-CFLAGS=-fno-builtin -I$(SRCDIR)
+CFLAGS=-fno-builtin -I$(SRCDIR) -pedantic -std=c99 -fstrict-aliasing -Wall -Wextra -Wshadow -Wcast-qual \
+	-Wwrite-strings -Wpointer-arith -Wcast-align -Wmissing-prototypes \
+	-Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline \
+	-Wstrict-prototypes -Wunreachable-code -fno-builtin -nostdlib \
+	-nostartfiles -nodefaultlibs -m32
 LDFLAGS=-T $(SRCDIR)/link.ld
 
 .SUFFIXES:

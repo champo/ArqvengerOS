@@ -3,8 +3,8 @@
 
 #include "type.h"
 
-void int09();
+void readScanCode();
 
-size_t read(int fd, void* buffer, size_t count);
+size_t readKeyboard(void* buffer, size_t count);
 
 #endif

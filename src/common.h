@@ -3,6 +3,6 @@
 
 #include "type.h"
 
-#define halt() asm volatile ("hlt")
+#define halt() __asm__ volatile ("hlt")
 
 #endif

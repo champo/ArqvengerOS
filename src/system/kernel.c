@@ -1,7 +1,7 @@
 #include "common.h"
 #include "drivers/video.h"
-#include "drivers/keyboard.h"
 #include "system/interrupt.h"
+#include "system/call.h"
 
 /**
  * Kernel entry point
@@ -12,10 +12,10 @@ void kmain() {
 
     setupIDT();
 
-    char a;
+    char a[1];
     while (1) {
-        read(0, &a, 1);
-        write(&a, 1);
+        read(0, (void*) a, 1);
+        write(0, (void*) a, 1);
     }
 }
 

@@ -22,21 +22,25 @@ void clearScreen() {
     }
 }
 
-void write(const char* str, size_t length) {
+size_t writeScreen(const void* buf, size_t length) {
 
     char* video = (char*) 0xb8000;
-    int aux = 0;
+    const char* str = (const char*) buf;
+
+    size_t aux = 0;
 
     while (length--) {
         video[cursorPosition * 2] = str[aux++];
         cursorPosition++;
-    }
 
-    if (cursorPosition >= 80*25 ) {
-        cursorPosition = 0;
+        if (cursorPosition >= 80*25 ) {
+            cursorPosition = 0;
+        }
     }
 
     updateCursor();
+
+    return aux;
 }
 
 void moveCursor(int row, int col) {
