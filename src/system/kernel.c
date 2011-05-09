@@ -12,10 +12,7 @@ void kmain() {
 
     setupIDT();
 
-    char a[1];
     while (1) {
-        read(0, (void*) a, 1);
-        write(0, (void*) a, 1);
     }
 }
 

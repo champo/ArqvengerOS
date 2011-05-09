@@ -2,9 +2,6 @@ Important stuff
  - Remap the PIC
  - Handle processor exceptions, and by handle, I mean crash & burn
  - Figure out how to work with read and things like scanf (Maybe make scanf a syscall?)
- - Move read & write out of drivers/ and into system/
- - Move tick into system/
- - What good is kernel/ of?
  - Set up basic libc stuff
  - Handle ctrl alt supr in the keyboard int
  - Handle modifier keys
