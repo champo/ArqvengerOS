@@ -6,7 +6,6 @@ Important stuff
  - Move tick into system/
  - What good is kernel/ of?
  - Set up basic libc stuff
- - Makefile
  - Handle ctrl alt supr in the keyboard int
  - Handle modifier keys
 

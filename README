@@ -1,2 +1,14 @@
 I'm in space!
 
+Besides that, there's something you need to take into account before trying to build the project:
+1. Create a bin/ and img/ folders
+2. Obtain a copy of tpe.img file and drop it in img/
+3. Setup your .mtoolsrc and .bochsrc
+4. Create and populate src/common.mk
+    In most 32-bit linux systems the content will simply be:
+    CC=gcc
+    LD=ld
+
+    If you're not in one of those, well my friend, you're in for a treat. You need a cross compiler for i386-aout-linux and then you set your common.mk to:
+    CC=path to your cross gcc
+    LD=path to your cross ld
