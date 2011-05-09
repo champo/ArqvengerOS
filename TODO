@@ -12,3 +12,4 @@ Important stuff
 
 Wishlist:
  - Screen scroll
+ - Colores en la tty! Usando algun marker ascii non-printable non-null podemos marcar que el proximo byte setea el color a usar.
