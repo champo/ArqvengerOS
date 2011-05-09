@@ -56,4 +56,4 @@ void updateCursor() {
     // cursor HIGH port to vga INDEX register
     outB(0x3D4, 0x0E);
     outB(0x3D5, (unsigned char )((cursorPosition>>8)&0xFF));
- }
+}
