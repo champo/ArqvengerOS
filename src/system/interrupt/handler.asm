@@ -2,6 +2,8 @@ GLOBAL  _int08Handler,_int09Handler
 EXTERN  int08, int09
 
 _int08Handler:
+    cli
+
     ; Save the current execution context
     push ds
     push es
@@ -23,9 +25,13 @@ _int08Handler:
     mov al, 20h
     out 20h, al
 
+    sti
+
     iret
 
 _int09Handler:
+    cli
+
     ; Save the current execution context
     push ds
     push es
@@ -47,5 +53,7 @@ _int09Handler:
     ; Tell the PIC we're done and exit
     mov al, 20h
     out 20h, al
+
+    sti
 
     iret
