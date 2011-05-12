@@ -29,7 +29,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 %.c:
 
 $(TARGET): prepare $(OBJS) $(INCLUDES)
-	# The wire, and filter-out is a hack to make sure the loader is at the start of the endfile, so it can load!
+# The wire, and filter-out is a hack to make sure the loader is at the start of the endfile, so it can load!
 	$(LD) $(LDFLAGS) -o $@ $(OBJDIR)/./system/loader-asm.o $(filter-out $(OBJDIR)/./system/loader-asm.o, $(OBJS))
 	mcopy -o $@ b:boot/
 
