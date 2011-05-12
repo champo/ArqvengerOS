@@ -307,6 +307,8 @@ size_t writeScreen(const void* buf, size_t length) {
                             break;
                         case 'm':
                             // Change color!
+
+                            //TODO: Implement this!
                             endControlSequence();
                             break;
                         default:

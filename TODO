@@ -4,8 +4,8 @@ Important stuff
  - Set up basic libc stuff
  - Handle ctrl alt supr in the keyboard int
  - Handle modifier keys
- - Rewrite read & write
+ - Rewrite read
+ - Implement color change in write
 
 Wishlist:
  - Screen scroll
- - Colores en la tty! Usando algun marker ascii non-printable non-null podemos marcar que el proximo byte setea el color a usar.
