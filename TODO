@@ -8,3 +8,5 @@ Finish these tasks before the end of 24/5
  - Rewrite read
  - Implement ioctl <= This means kernel-level file descriptors
  - Screen scroll
+ - int 80h
+ - Basic shell
