@@ -25,6 +25,31 @@
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')
 
+#define COLOR_BLACK 0x0
+#define COLOR_BLUE 0x1
+#define COLOR_GREEN 0x2
+#define COLOR_CYAN 0x3
+#define COLOR_RED 0x4
+#define COLOR_MAGENTA 0x5
+#define COLOR_BROWN 0x6
+#define COLOR_WHITE 0x7
+#define COLOR_GRAY 0x8
+#define COLOR_BRIGHT_BLUE 0x9
+#define COLOR_BRIGHT_GREEN 0xA
+#define COLOR_BRIGHT_CYAN 0xB
+#define COLOR_BRIGHT_RED 0xC
+#define COLOR_BRIGHT_MAGENTA 0xD
+#define COLOR_YELLOW 0xE
+#define COLOR_BRIGHT_WHITE 0xF
+
+#define BLINK_ATTR 0x80
+
+#define setForeground(color) setAttribute((attribute >> 3) & 0x7, (color), attribute & BLINK_ATTR)
+#define setBackground(color) setAttribute((color), attribute & 0xF, attribute & BLINK_ATTR)
+#define setBlink(blink) (attribute |= ((blink) ? BLINK_ATTR : 0))
+
+void setAttribute(int bg, int fg, int blink);
+
 void updateCursor();
 
 void parseControlBuffer(int* a, int* b, int def);
@@ -38,10 +63,18 @@ void setBlank(int start, int end);
 void setCharacter(char c);
 
 static int cursorPosition = 0;
-static int escaped = 0, csi = 0, attribute = WHITE_TXT;
+static int escaped = 0, csi = 0;
+static char attribute = WHITE_TXT;
 static char controlBuffer[CONTROL_BUFFER_LEN];
 static size_t controlBufferPos = 0;
 static char* videoBuffer = (char*) 0xb8000;
+
+void setAttribute(int bg, int fg, int blink) {
+    attribute = fg | (bg << 4);
+    if (blink) {
+        attribute |= BLINK_ATTR;
+    }
+}
 
 void setCharacter(char c) {
     videoBuffer[2*cursorPosition] = c;
@@ -147,7 +180,7 @@ size_t writeScreen(const void* buf, size_t length) {
 
             if (cur != ESCAPE_CODE) {
 
-                size_t end;
+                int end;
                 switch (cur) {
                     case '\n':
                         cursorPosition = cursorPosition / LINE_WIDTH + 1;
@@ -182,6 +215,8 @@ size_t writeScreen(const void* buf, size_t length) {
                 }
 
                 if (cursorPosition >= LINE_WIDTH * TOTAL_ROWS) {
+                    cursorPosition = 0;
+                } else if (cursorPosition < 0) {
                     cursorPosition = 0;
                 }
             } else {
@@ -269,6 +304,9 @@ size_t writeScreen(const void* buf, size_t length) {
                         case 'G':
                             // Jump to column
                             readControlBuffer(1);
+                            if (mod1 < 1) {
+                                mod1 = 1;
+                            }
                             cursorPosition += ((mod1 - 1) % LINE_WIDTH) - ((cursorPosition) % LINE_WIDTH);
 
                             endControlSequence();
@@ -276,6 +314,14 @@ size_t writeScreen(const void* buf, size_t length) {
                         case 'H':
                             // Jump cursor
                             readControlBuffer(1);
+                            if (mod1 < 1) {
+                                mod1 = 1;
+                            }
+
+                            if (mod2 < 1) {
+                                mod2 = 1;
+                            }
+
                             cursorPosition = LINE_WIDTH * ((mod1 - 1) % TOTAL_ROWS) + ((mod2 - 1) % LINE_WIDTH);
 
                             endControlSequence();
@@ -301,14 +347,97 @@ size_t writeScreen(const void* buf, size_t length) {
                         case 'd':
                             // Jump to row
                             readControlBuffer(1);
+                            if (mod1 < 1) {
+                                mod1 = 1;
+                            }
+
                             cursorPosition = ((mod1 - 1) % TOTAL_ROWS) + (cursorPosition % LINE_WIDTH);
 
                             endControlSequence();
                             break;
                         case 'm':
                             // Change color!
+                            readControlBuffer(1);
+                            switch (mod1) {
+                                case 47:
+                                    // White bg
+                                    setBackground(COLOR_WHITE);
+                                    break;
+                                case 46:
+                                    // Cyan bg
+                                    setBackground(COLOR_CYAN);
+                                    break;
+                                case 45:
+                                    // Magenta bg
+                                    setBackground(COLOR_MAGENTA);
+                                    break;
+                                case 44:
+                                    // Blue bg
+                                    setBackground(COLOR_BLUE);
+                                    break;
+                                case 42:
+                                    // Green bg
+                                    setBackground(COLOR_GREEN);
+                                    break;
+                                case 41:
+                                    // Red bg
+                                    setBackground(COLOR_RED);
+                                    break;
+                                case 49:
+                                case 40:
+                                    // Black bg
+                                    setBackground(COLOR_BLACK);
+                                    break;
+                                case 39:
+                                case 37:
+                                    // White fg
+                                    setForeground(COLOR_WHITE);
+                                    break;
+                                case 36:
+                                    // Cyan fg
+                                    setForeground(COLOR_CYAN);
+                                    break;
+                                case 35:
+                                    // Magenta fg
+                                    setForeground(COLOR_MAGENTA);
+                                    break;
+                                case 34:
+                                    // Blue fg
+                                    setForeground(COLOR_BLUE);
+                                    break;
+                                case 33:
+                                    // Yellow fg
+                                    setForeground(COLOR_YELLOW);
+                                    break;
+                                case 32:
+                                    // Green fg
+                                    setForeground(COLOR_GREEN);
+                                    break;
+                                case 31:
+                                    // Red fg
+                                    setForeground(COLOR_RED);
+                                    break;
+                                case 30:
+                                    // Black fg
+                                    setForeground(COLOR_BLACK);
+                                    break;
+                                case 25:
+                                    // Time of the Angels
+                                    // If you blink, you die
+                                    setBlink(0);
+                                    break;
+                                case 5:
+                                    // Blink!
+                                    setBlink(1);
+                                    break;
+                                case 0:
+                                    // Reset
+                                    setBlink(0);
+                                    setForeground(COLOR_BLACK);
+                                    setBackground(COLOR_WHITE);
+                                    break;
+                            }
 
-                            //TODO: Implement this!
                             endControlSequence();
                             break;
                         default:

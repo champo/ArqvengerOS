@@ -8,7 +8,8 @@
 void kmain() {
     setupIDT();
 
-    write(1, "\033[0;0H\033[2J", 10);
+    // This dandy line, resets the cursor and clears the screen
+    write(1, "\033[1;1H\033[2J", 10);
     while (1) {}
 }
 
