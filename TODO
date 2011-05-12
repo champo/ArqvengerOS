@@ -5,7 +5,5 @@ Important stuff
  - Handle ctrl alt supr in the keyboard int
  - Handle modifier keys
  - Rewrite read
- - Implement color change in write
-
-Wishlist:
+ - Implement ioctl
  - Screen scroll
