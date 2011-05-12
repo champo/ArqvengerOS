@@ -4,6 +4,7 @@
 
 #define putchar(x) putc((x),1)
 #define EOF -1
+#define NULL (void *)0
 
 int putc(char c, int fd);
 int puts(const char *s);
