@@ -7,4 +7,6 @@ void readScanCode();
 
 size_t readKeyboard(void* buffer, size_t count);
 
+int ioctlKeyboard(int cmd, void* argp);
+
 #endif

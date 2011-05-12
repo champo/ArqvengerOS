@@ -1,4 +1,5 @@
 #include "drivers/keyboard.h"
+#include "system/call/ioctl/keyboard.h"
 #include "system/io.h"
 #include "common.h"
 
@@ -30,6 +31,8 @@ struct ModifierStatus {
     int alt;
     int shift;
 } kbStatus;
+
+termios status;
 
 int escaped = 0, bufferEnd = 0;
 
@@ -112,3 +115,26 @@ size_t readKeyboard(void* buffer, size_t count) {
 
     return count;
 }
+
+int ioctlKeyboard(int cmd, void* argp) {
+
+    termios* param;
+    int res = 0;
+
+    switch (cmd) {
+        case TCGETS:
+            param = (termios*) argp;
+            *param = status;
+            break;
+        case TCSETS:
+            param = (termios*) argp;
+            status = *param;
+            break;
+        default:
+            res = -1;
+            break;
+    }
+
+    return res;
+}
+
