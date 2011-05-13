@@ -1,5 +1,5 @@
 #include "system/interrupt.h"
-#include "common.h"
+#include "system/common.h"
 #include "system/io.h"
 
 /* Flags para derechos de acceso de los segmentos */
