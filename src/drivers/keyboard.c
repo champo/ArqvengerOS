@@ -269,8 +269,8 @@ size_t readKeyboard(void* buffer, size_t count) {
     }
 
     // Make sure we move the input buffer to remove what was already read
-    for (i = 0; c < bufferEnd; i++, count++) {
-        inputBuffer[i] = inputBuffer[count];
+    for (i = 0; c < bufferEnd; i++, c++) {
+        inputBuffer[i] = inputBuffer[c];
     }
     bufferEnd -= c;
 
