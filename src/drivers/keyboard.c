@@ -6,6 +6,9 @@
 #include "system/common.h"
 
 #define KEYBOARD_IO_PORT 0x60
+#define KEYBOARD_CTRL_PORT 0x64
+
+#define LED_CODE 0xEd
 
 #define LAST_CODE_IN_TABLE 0x39
 #define MIN_BREAK_CODE 0x80
@@ -72,6 +75,8 @@ static char inputBuffer[BUFFER_SIZE];
 
 void addInput(const char* str, size_t len);
 
+void setLeds(void);
+
 void addInput(const char* str, size_t len) {
 
     int i;
@@ -90,6 +95,27 @@ void addInput(const char* str, size_t len) {
             writeScreen(str, i);
         }
     }
+}
+
+void setLeds(void) {
+
+    byte leds = 0;
+
+    if (kbStatus.caps) {
+        leds |= 4;
+    }
+    if (kbStatus.num) {
+        leds |= 2;
+    }
+    if (kbStatus.scroll) {
+        leds |= 1;
+    }
+
+    while (inB(KEYBOARD_CTRL_PORT) & 0x2);
+    outB(KEYBOARD_IO_PORT, LED_CODE);
+
+    while (inB(KEYBOARD_CTRL_PORT) & 0x2);
+    outB(KEYBOARD_IO_PORT, leds);
 }
 
 void readScanCode() {
@@ -135,20 +161,20 @@ void readScanCode() {
             case CAPS_LOCK:
                 if (!isBreak) {
                     kbStatus.caps = !kbStatus.caps;
-                    //TODO: Set the light
+                    setLeds();
                 }
                 break;
             case NUM_LOCK:
                 if (!isBreak) {
-                    //TODO: Set the light
                     kbStatus.num = !kbStatus.num;
+                    setLeds();
                 }
                 break;
             case SCROLL_LOCK:
                 if (!isBreak) {
-                    //TODO: Set the light
                     //TODO: Make this stop execution
                     kbStatus.scroll = !kbStatus.scroll;
+                    setLeds();
                 }
                 break;
             case UP_ARROW_CODE:
