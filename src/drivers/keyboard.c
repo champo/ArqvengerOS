@@ -1,10 +1,12 @@
 #include "drivers/keyboard.h"
+#include "system/reboot.h"
 #include "drivers/video.h"
 #include "system/call/ioctl/keyboard.h"
 #include "system/io.h"
 #include "system/common.h"
 
-#define KEYBOARD_READ_PORT 0x60
+#define KEYBOARD_IO_PORT 0x60
+
 #define LAST_CODE_IN_TABLE 0x39
 #define MIN_BREAK_CODE 0x80
 #define ESCAPE_OFFSET 0xFF
@@ -68,7 +70,7 @@ void echo(const char* str, size_t len) {
 
 void readScanCode() {
 
-    unsigned char scanCode = inB(KEYBOARD_READ_PORT);
+    unsigned char scanCode = inB(KEYBOARD_IO_PORT);
 
     if (scanCode == ESCAPED_CODE) {
         // This is an escaped code, for now we bail
@@ -103,8 +105,8 @@ void readScanCode() {
                 kbStatus.alt = !isBreak;
                 break;
             case DELETE_CODE:
-                if (kbStatus.alt && kbStatus.ctrl && !escaped) {
-                    //TODO: Reboot here
+                if (kbStatus.alt && kbStatus.ctrl && escaped) {
+                    reboot();
                 }
                 break;
             case CAPS_LOCK:
