@@ -1,5 +1,7 @@
 #include "type.h"
 #include "library/stdio.h"
+#include "limits.h"
+#include "string.h"
 
 
 /**
@@ -119,4 +121,94 @@ char *strrchr(const char *cs, char c) {
     }
 
     return(last == -1 ? NULL : (cs + last));
+}
+
+
+/**
+ * Compares strings cs and ct.
+ */
+int strcmp(const char *cs, const char *ct) {
+    
+    return strncmp(cs, ct, INT_MAX);
+}
+
+/**
+ * Compares at most n characters of strings cs and ct.
+ */
+int strncmp(const char *cs, const char *ct, size_t n) {
+    
+    int i = 0;
+
+    while (cs[i] == ct[i] && cs[i] != '\0' && i < n) {
+        i++;
+    }
+
+    if (cs[i] == ct[i]) {
+        return 0;
+    }
+
+    return cs[i] < ct[i] ? -1 : 1;
+}
+
+/**
+ *  Sets n characters of s with c
+ */
+void *memset(void *s, char c, size_t n) {
+    
+    int i = 0;
+
+    while(i < n){
+        *((char *) s + i) = c;
+        i++;
+    }
+
+    return s;
+}
+
+/**
+ * Copies n characters from ct to s
+ */ 
+void *memcpy(void *s, const void *ct, size_t n) {
+
+    int i = 0;
+
+    while (i < n) {
+        *((char *) s + i) = *((char *)ct + i);
+        i++;
+    }
+
+    return s;
+}
+
+/**
+ * Returns pointer of first occurance of c in cs, checks n characters as most
+ */
+void *memchr(const void *cs, char c, size_t n){
+
+    int i = 0;
+    
+    while(i < n && *((char *) cs + i) != c) {
+        i++;    
+    }
+
+    return *((char *) cs + i) == c ? cs + i : NULL;
+}
+
+/**
+ * Compares the first n characters of cs and ct 
+ */
+int memcmp(const void *cs, const void *ct, size_t n) {
+
+    int i = 0;
+
+    while (*((char *) cs + i) == *((char *) ct +i) && i < n) {
+        i++;
+    }
+
+    if (*((char *) cs + i) == *((char *) ct + i)) {
+        return 0;
+    }
+
+    return *((char *) cs + i) < *((char *) ct + i) ? -1 : 1;
+
 }
