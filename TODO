@@ -1,12 +1,10 @@
-Important stuff
+Impossible Badge (60 points):
+Finish these tasks before the end of 24/5
  - Remap the PIC
  - Handle processor exceptions, and by handle, I mean crash & burn
- - Figure out how to work with read and things like scanf (Maybe make scanf a syscall?)
- - How does read work in linux? Does it read scan codes? Is it line buffered? How in god's green earth does this work?
  - Set up basic libc stuff
- - Handle ctrl alt supr in the keyboard int
- - Handle modifier keys
+ - int 80h
+ - Basic shell
 
 Wishlist:
- - Screen scroll
- - Colores en la tty! Usando algun marker ascii non-printable non-null podemos marcar que el proximo byte setea el color a usar.
+ - Support numpad

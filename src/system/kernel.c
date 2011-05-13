@@ -1,5 +1,4 @@
 #include "common.h"
-#include "drivers/video.h"
 #include "system/interrupt.h"
 #include "system/call.h"
 
@@ -7,12 +6,13 @@
  * Kernel entry point
  */
 void kmain() {
-    clearScreen();
-    moveCursor(0, 0);
+
+    // This dandy line, resets the cursor and clears the screen
+    write(1, "\033[1;1H\033[2J", 10);
 
     setupIDT();
-
     while (1) {
+        halt();
     }
 }
 

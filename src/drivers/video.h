@@ -5,8 +5,4 @@
 
 size_t writeScreen(const void* buf, size_t length);
 
-void moveCursor(int row,int col);
-
-void clearScreen();
-
 #endif
