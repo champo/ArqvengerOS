@@ -20,6 +20,16 @@
 #define ENTER_CODE 0x1C
 #define DELETE_CODE 0x53
 
+#define UP_ARROW_CODE 0x48
+#define LEFT_ARROW_CODE 0x4B
+#define DOWN_ARROW_CODE 0x50
+#define RIGHT_ARROW_CODE 0x4D
+
+#define ESCAPE_CHAR 0x1B
+
+#define HOME_CODE 0x47
+#define END_CODE 0x4F
+
 #define BUFFER_SIZE 4000
 
 #define CAPS_LOCK 0x3A
@@ -60,11 +70,25 @@ static int escaped = 0, bufferEnd = 0;
 
 static char inputBuffer[BUFFER_SIZE];
 
-void echo(const char* str, size_t len);
+void addInput(const char* str, size_t len);
 
-void echo(const char* str, size_t len) {
+void addInput(const char* str, size_t len) {
+
+    int i;
+    for (i = 0; i < len && bufferEnd < BUFFER_SIZE; i++) {
+        inputBuffer[bufferEnd++] = str[i];
+    }
+
     if (status.echo) {
-        writeScreen(str, len);
+
+        if (str[0] == ESCAPE_CHAR) {
+            writeScreen("^[", 2);
+            if (i > 1) {
+                writeScreen(str + 1, i - 1);
+            }
+        } else {
+            writeScreen(str, i);
+        }
     }
 }
 
@@ -92,7 +116,6 @@ void readScanCode() {
 
     if (escaped || makeCode > LAST_CODE_IN_TABLE || !codeTable[makeCode]) {
         // This can't be mapped to an ascii, so let's handle it on it's own
-        // TODO: Take into account keys like arrows, and those
         switch (makeCode) {
             case CTRL_CODE:
                 kbStatus.ctrl = !isBreak;
@@ -128,11 +151,41 @@ void readScanCode() {
                     kbStatus.scroll = !kbStatus.scroll;
                 }
                 break;
+            case UP_ARROW_CODE:
+                if (!isBreak && (escaped || !kbStatus.num)) {
+                    addInput("\033[A", 3);
+                }
+                break;
+            case DOWN_ARROW_CODE:
+                if (!isBreak && (escaped || !kbStatus.num)) {
+                    addInput("\033[B", 3);
+                }
+                break;
+            case RIGHT_ARROW_CODE:
+                if (!isBreak && (escaped || !kbStatus.num)) {
+                    addInput("\033[C", 3);
+                }
+                break;
+            case LEFT_ARROW_CODE:
+                if (!isBreak && (escaped || !kbStatus.num)) {
+                    addInput("\033[D", 3);
+                }
+                break;
+            case HOME_CODE:
+                if (!isBreak && (escaped || !kbStatus.num)) {
+                    addInput("\033[H", 3);
+                }
+                break;
+            case END_CODE:
+                if (!isBreak && (escaped || !kbStatus.num)) {
+                    addInput("\033[F", 3);
+                }
+                break;
         }
     } else if (bufferEnd < BUFFER_SIZE && !isBreak) {
         // We know how to map this, yay!
-        inputBuffer[bufferEnd++] = codeTable[makeCode];
-        echo(&codeTable[makeCode], 1);
+        //TODO: Handle caps lock
+        addInput(&codeTable[makeCode], 1);
     }
 
     escaped = 0;
