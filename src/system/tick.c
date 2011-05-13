@@ -7,3 +7,4 @@ static size_t ticksSinceStart = 0;
 void timerTick() {
     ticksSinceStart++;
 }
+

@@ -2,7 +2,7 @@
 
 #define __limits_header__
 
-#define INT_MAX 32767
-#define INT_MIN -32767
+#define INT_MAX 4294967295
+#define INT_MIN -4294967296
 
 #endif
