@@ -152,6 +152,8 @@ void parseControlBuffer(int* a, int* b, int def) {
 
         if (i != controlBufferPos) {
             i++;
+
+            t = 0;
             while (i < controlBufferPos) {
                 t = t*10 + (controlBuffer[i] - '0');
                 i++;
@@ -183,7 +185,7 @@ size_t writeScreen(const void* buf, size_t length) {
                 int end;
                 switch (cur) {
                     case '\n':
-                        cursorPosition = cursorPosition / LINE_WIDTH + 1;
+                        cursorPosition = LINE_WIDTH * (cursorPosition / LINE_WIDTH + 1);
                         break;
                     case '\r':
                         cursorPosition -= cursorPosition % LINE_WIDTH;
@@ -463,6 +465,7 @@ size_t writeScreen(const void* buf, size_t length) {
 }
 
 void updateCursor() {
+
     // cursor LOW port to vga INDEX register
     outB(0x3D4, 0x0F);
     outB(0x3D5, (unsigned char)(cursorPosition&0xFF));

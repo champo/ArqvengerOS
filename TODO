@@ -3,10 +3,9 @@ Finish these tasks before the end of 24/5
  - Remap the PIC
  - Handle processor exceptions, and by handle, I mean crash & burn
  - Set up basic libc stuff
- - Handle ctrl alt supr in the keyboard int
- - Handle modifier keys
- - Rewrite read
- - Implement ioctl <= This means kernel-level file descriptors
  - Screen scroll
  - int 80h
  - Basic shell
+
+Wishlist:
+ - Support numpad
