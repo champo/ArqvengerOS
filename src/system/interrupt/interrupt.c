@@ -55,6 +55,7 @@ void _sti(void);
 
 void _int08Handler();
 void _int09Handler();
+void _int80Handler();
 
 /* This is our IDT with 256 entries */
 InterruptDescriptor idt[0x100];
@@ -66,15 +67,20 @@ void setupIDT() {
     //TODO: Remap the PIC
     //TODO: Manage exceptions
 
+
+    setIdtEntry(idt, 0x80, 0x08, (dword)&_int80Handler, ACS_INT);
+
     setIdtEntry(idt, 0x08, 0x08, (dword)&_int08Handler, ACS_INT);
     setIdtEntry(idt, 0x09, 0x08, (dword)&_int09Handler, ACS_INT);
-
+    
     idtr.base = (dword) &idt;
     idtr.limit = sizeof(idt) - 1;
 
     _lidt(&idtr);
 
     _cli();
+
+    setInterruptHandlerTable();
 
     /* Enable the interrupts we need in the PIC */
     outB(0x21,0xFC);
