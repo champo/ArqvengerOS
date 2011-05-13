@@ -1,7 +1,8 @@
 #include "system/tick.h"
+#include "system/call.h"
 #include "type.h"
 
-size_t ticksSinceStart = 0;
+static size_t ticksSinceStart = 0;
 
 void timerTick() {
     ticksSinceStart++;

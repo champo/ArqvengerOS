@@ -6,7 +6,7 @@
 #define WHITE_TXT 0x07
 
 #define LINE_WIDTH 80
-#define TOTAL_ROWS 24
+#define TOTAL_ROWS 25
 
 #define ESCAPE_CODE 0x1B
 #define CSI '['
@@ -46,7 +46,7 @@
 
 #define setForeground(color) setAttribute((attribute >> 3) & 0x7, (color), attribute & BLINK_ATTR)
 #define setBackground(color) setAttribute((color), attribute & 0xF, attribute & BLINK_ATTR)
-#define setBlink(blink) (attribute |= ((blink) ? BLINK_ATTR : 0))
+#define setBlink(blink) setAttribute((attribute >> 3) & 0x7, attribute & 0xF, (blink))
 
 void setAttribute(int bg, int fg, int blink);
 
@@ -62,12 +62,15 @@ void setBlank(int start, int end);
 
 void setCharacter(char c);
 
+void scrollLine(int delta);
+
 static int cursorPosition = 0;
 static int escaped = 0, csi = 0;
 static char attribute = WHITE_TXT;
 static char controlBuffer[CONTROL_BUFFER_LEN];
 static size_t controlBufferPos = 0;
-static char* videoBuffer = (char*) 0xb8000;
+static char* videoMemory = (char*) 0xb8000;
+static char videoBuffer[2 * LINE_WIDTH * TOTAL_ROWS];
 
 void setAttribute(int bg, int fg, int blink) {
     attribute = fg | (bg << 4);
@@ -77,10 +80,38 @@ void setAttribute(int bg, int fg, int blink) {
 }
 
 void setCharacter(char c) {
+    videoMemory[2*cursorPosition] = c;
+    videoMemory[2*cursorPosition + 1] = attribute;
+
     videoBuffer[2*cursorPosition] = c;
-    videoBuffer[2*cursorPosition+1] = attribute;
+    videoBuffer[2*cursorPosition + 1] = attribute;
 
     cursorPosition++;
+}
+
+void scrollLine(int delta) {
+    if (delta > TOTAL_ROWS) {
+        delta = TOTAL_ROWS;
+    } else if (delta < 1) {
+        delta = 1;
+    }
+
+    int i, j;
+    // Move the video buffer up one line
+    for (j = 0, i = delta * 2 * LINE_WIDTH; i < 2 * LINE_WIDTH * TOTAL_ROWS; i++, j++) {
+        videoBuffer[j] = videoBuffer[i];
+    }
+
+    // Clear the lines that scrolled up
+    for (i = LINE_WIDTH * (TOTAL_ROWS - delta); i < LINE_WIDTH * TOTAL_ROWS; i++) {
+        videoBuffer[2 * i] = ' ';
+        videoBuffer[2 * i + 1] = attribute;
+    }
+
+    // Reflect the changes to screen
+    for (i = 0; i < 2 * LINE_WIDTH * TOTAL_ROWS; i++) {
+        videoMemory[i] = videoBuffer[i];
+    }
 }
 
 void eraseLine(int type) {
@@ -130,6 +161,9 @@ void clearScreen(int type) {
 void setBlank(int start, int end) {
 
     while (start < end) {
+        videoMemory[2*start] = ' ';
+        videoMemory[2*start + 1] = attribute;
+
         videoBuffer[2*start] = ' ';
         videoBuffer[2*start + 1] = attribute;
         start++;
@@ -217,7 +251,8 @@ size_t writeScreen(const void* buf, size_t length) {
                 }
 
                 if (cursorPosition >= LINE_WIDTH * TOTAL_ROWS) {
-                    cursorPosition = 0;
+                    scrollLine(1);
+                    cursorPosition -= LINE_WIDTH;
                 } else if (cursorPosition < 0) {
                     cursorPosition = 0;
                 }

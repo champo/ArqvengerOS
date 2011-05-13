@@ -3,7 +3,6 @@ Finish these tasks before the end of 24/5
  - Remap the PIC
  - Handle processor exceptions, and by handle, I mean crash & burn
  - Set up basic libc stuff
- - Screen scroll
  - int 80h
  - Basic shell
 
