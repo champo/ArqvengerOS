@@ -1,59 +1,63 @@
-GLOBAL  _int08Handler,_int09Handler
-EXTERN  int08, int09
+EXTERN  int08, int09, interruptDispatcher
 
-_int08Handler:
-    cli
-
+%macro CALLER 1
     ; Save the current execution context
-    push ds
+    pusha   
+    push ds    
     push es
-    pusha
-
-    ; Set up the interrupt handler execution context
-    mov ax, 10h
-    mov ds, ax
-    mov es, ax
-
-    ; Go go int 08h
-    call int08
-
-    ; Restore the execution context, tell the PIC we're done and exit
-    popa
-    pop es
-    pop ds
-
-    mov al, 20h
-    out 20h, al
-
-    sti
-
-    iret
-
-_int09Handler:
-    cli
-
-    ; Save the current execution context
-    push ds
-    push es
-    pusha
+    push fs
+    push gs
 
     ; Set up the handler execution context
-    mov ax, 10h
-    mov ds, ax
+    mov ax, 0x10    
+    mov ds, ax 
     mov es, ax
+    mov fs, ax
+    mov gs, ax
 
-    ; Call the handler
-    call int09
+    call %1
 
-    ; Set the context back
-    popa
+    pop gs
+    pop fs
     pop es
-    pop ds
+    pop ds 
+    popa
 
-    ; Tell the PIC we're done and exit
-    mov al, 20h
-    out 20h, al
+    ; Move the sp to where it when the interrupt was triggered
+    add esp, 8  
 
     sti
-
     iret
+%endmacro
+
+
+; Defines a macro that takes as an argument the
+; interrupt number
+%macro ISR_NOERRCODE 2 
+GLOBAL _int%1Handler   
+  _int%1Handler:
+    cli
+
+    ; Save the error code (errCode)
+    push 0         
+    ; Save the interrupt number (intNum)
+    push %1h      
+    CALLER %2
+%endmacro
+
+; Idem, but without adding the cero error code
+%macro ISR_ERRCODE 2   
+GLOBAL _int%1Handler
+  _int%1Handler:
+    cli
+
+    push 0
+    ; Save the interrupt number (intNum)
+    push %1h       
+    CALLER %2
+%endmacro
+
+
+ISR_ERRCODE 80, interruptDispatcher
+ISR_ERRCODE 20, interruptDispatcher
+ISR_ERRCODE 21, interruptDispatcher
