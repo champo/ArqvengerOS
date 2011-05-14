@@ -9,6 +9,6 @@
 
 #define disableInterrupts() __asm__ volatile ("cli")
 
-int _isIF();
+int _isIF(void);
 
 #endif

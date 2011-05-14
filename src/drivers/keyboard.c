@@ -79,7 +79,7 @@ void setLeds(void);
 
 void addInput(const char* str, size_t len) {
 
-    int i;
+    size_t i;
     for (i = 0; i < len && bufferEnd < BUFFER_SIZE; i++) {
         inputBuffer[bufferEnd++] = str[i];
     }
@@ -118,7 +118,7 @@ void setLeds(void) {
     outB(KEYBOARD_IO_PORT, leds);
 }
 
-void readScanCode() {
+void readScanCode(void) {
 
     unsigned char scanCode = inB(KEYBOARD_IO_PORT);
 
@@ -220,7 +220,7 @@ void readScanCode() {
 size_t readKeyboard(void* buffer, size_t count) {
 
     char* buf = (char*) buffer;
-    int i = 0, c = (int) count;
+    int i, c = (int) count;
 
     if (status.canon) {
 
@@ -242,6 +242,8 @@ size_t readKeyboard(void* buffer, size_t count) {
             }
 
             i = bufferEnd;
+        } else {
+            i++;
         }
 
         if (c > i) {
@@ -272,7 +274,7 @@ size_t readKeyboard(void* buffer, size_t count) {
     for (i = 0; c < bufferEnd; i++, c++) {
         inputBuffer[i] = inputBuffer[c];
     }
-    bufferEnd -= c;
+    bufferEnd = i;
 
     return c;
 }
