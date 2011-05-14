@@ -44,7 +44,7 @@ void interruptDispatcher(registers regs ){
     if ( regs.intNum >= PIC_MIN_INTNUM && regs.intNum < PIC_MIN_INTNUM + PIC_IRQS) {     
         if ( regs.intNum - PIC_MIN_INTNUM >= 8) {
             // Tell the slave PIC we're done
-            outb(0xA0, PIC_EOI);
+            outB(0xA0, PIC_EOI);
         }
         // Tell the master PIC we're done
         outB(0x20, PIC_EOI);

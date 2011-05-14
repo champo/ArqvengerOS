@@ -212,3 +212,25 @@ int memcmp(const void *cs, const void *ct, size_t n) {
     return *((char *) cs + i) < *((char *) ct + i) ? -1 : 1;
 
 }
+
+/**
+ * Reverses the string
+ */
+char *reverse(char * s) {
+    
+    int i = 0;
+    int len = strlen(s) - 1;
+    char buff[len + 2];
+
+    while (len >= 0) {
+        buff[i] = s[len];
+        len--;
+        i++;
+    }
+
+    buff[i] = '\0';
+    strcpy(s, buff);
+
+    return s;
+
+}
