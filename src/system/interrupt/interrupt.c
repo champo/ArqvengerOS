@@ -3,6 +3,7 @@
 #include "system/io.h"
 #include "system/call.h"
 #include "system/interrupt/handler.h"
+#include "system/call/codes.h"
 
 /* Flags para derechos de acceso de los segmentos */
 #define ACS_PRESENT         0x80            /* segmento presente en memoria */
