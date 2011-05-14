@@ -2,6 +2,8 @@
 
 #define __string_header__
 
+#include "type.h"
+
 size_t strlen(const char *s);
 char *strcpy(char *s, const char *ct);
 char *strncpy(char *s, const char *ct, size_t n);

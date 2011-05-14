@@ -4,7 +4,6 @@ Finish these tasks before the end of 24/5
  - Handle processor exceptions, and by handle, I mean crash & burn
  - Set up basic libc stuff
  - int 80h
- - Basic shell
 
 Wishlist:
  - Support numpad
