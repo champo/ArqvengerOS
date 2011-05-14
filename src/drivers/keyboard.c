@@ -79,7 +79,7 @@ void setLeds(void);
 
 void addInput(const char* str, size_t len) {
 
-    int i;
+    size_t i;
     for (i = 0; i < len && bufferEnd < BUFFER_SIZE; i++) {
         inputBuffer[bufferEnd++] = str[i];
     }
@@ -118,7 +118,7 @@ void setLeds(void) {
     outB(KEYBOARD_IO_PORT, leds);
 }
 
-void readScanCode() {
+void readScanCode(void) {
 
     unsigned char scanCode = inB(KEYBOARD_IO_PORT);
 

@@ -12,12 +12,12 @@ typedef void (*commandFunction)(char* argv);
 
 typedef struct {
     commandFunction func;
-    char* name;
+    const char* name;
 } command;
 
 void nextCommand(char* inputBuffer);
 
-command* findCommand(const char* commandString);
+const command* findCommand(const char* commandString);
 
 void echo(char* argv);
 
@@ -27,9 +27,8 @@ static const command commands[] = {
 
 void shell(void) {
 
-    command* cmd;
+    const command* cmd;
     static char inputBuffer[BUFFER_SIZE];
-
     while (1) {
         putchar('>');
         putchar(' ');
@@ -68,9 +67,9 @@ void nextCommand(char* inputBuffer) {
     inputBuffer[bufferPos] = 0;
 }
 
-command* findCommand(const char* commandString) {
+const command* findCommand(const char* commandString) {
 
-    command* res;
+    const command* res;
     int i;
 
     for (i = 0; i < NUM_COMMANDS; i++) {

@@ -3,7 +3,7 @@
 
 #include "type.h"
 
-void readScanCode();
+void readScanCode(void);
 
 size_t readKeyboard(void* buffer, size_t count);
 
