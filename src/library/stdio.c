@@ -149,7 +149,13 @@ size_t systemWrite(FILE *stream, const char *cs, size_t n){
  * Calls the system so it can read on the correct file
  */
 size_t systemRead(FILE *stream, void *buf, size_t n) {
-    return read(getfd(stream), buf, n);
+    return systemCall(_SYS_READ, getfd(stream), (int)buf, n);
+}
+/**
+ *  Calls the system to do driver dependent operations
+ */
+size_t systemIoctl(FILE *stream, int cmd, void *argp) {
+    return systemCall(_SYS_IOCTL, getfd(stream), cmd, (int)argp);
 }
 
 /**
