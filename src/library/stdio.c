@@ -5,13 +5,17 @@
 #include "library/limits.h"
 #include "library/stdarg.h"
 #include "type.h"
+#include "system/call/codes.h"
 
 FILE *stdout = {{1}};
 FILE *stdin = {{0}};
 FILE *stderr = {{2}};
 
+extern size_t systemCall(int eax, int ebx, int ecx, int edx);
+
 size_t systemWrite(FILE *stream, const char *cs, size_t n);
 size_t systemRead(FILE *stream, void *buf, size_t n);
+size_t systemIoctl(FILE *stream, int cmd, void *argp);
 int getfd(FILE *stream);
 
 /**
@@ -142,14 +146,20 @@ int vprintf(const char *format, va_list arg) {
  * Calls the system so it can write on the correct file
  */
 size_t systemWrite(FILE *stream, const char *cs, size_t n){
-    return _write(getfd(stream), cs, n);
+    return systemCall(_SYS_WRITE,getfd(stream),(int) cs, n);
 }
 
 /**
  * Calls the system so it can read on the correct file
  */
 size_t systemRead(FILE *stream, void *buf, size_t n) {
-    return _read(getfd(stream), buf, n);
+    return systemCall(_SYS_READ, getfd(stream), (int)buf, n);
+}
+/**
+ *  Calls the system to do driver dependent operations
+ */
+size_t systemIoctl(FILE *stream, int cmd, void *argp) {
+    return systemCall(_SYS_IOCTL, getfd(stream), cmd, (void*)argp);
 }
 
 /**
