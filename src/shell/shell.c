@@ -1,6 +1,5 @@
 #include "shell/shell.h"
 #include "system/call/ioctl/keyboard.h"
-#include "system/call.h"
 #include "library/stdio.h"
 #include "library/string.h"
 #include "library/stdlib.h"
@@ -51,8 +50,8 @@ void shell(void) {
     history.end = 0;
     history.current = 0;
 
-    _ioctl(0, TCGETS, &inputStatus);
-    _ioctl(0, TCSETS, &shellStatus);
+    ioctl(0, TCGETS, &inputStatus);
+    ioctl(0, TCSETS, &shellStatus);
 
     while (1) {
 
@@ -60,11 +59,11 @@ void shell(void) {
         cmd = findCommand(inputBuffer);
         if (cmd != NULL) {
 
-            _ioctl(0, TCSETS, &inputStatus);
+            ioctl(0, TCSETS, &inputStatus);
             cmd->func(inputBuffer);
-            _ioctl(0, TCGETS, &inputStatus);
+            ioctl(0, TCGETS, &inputStatus);
 
-            _ioctl(0, TCSETS, &shellStatus);
+            ioctl(0, TCSETS, &shellStatus);
         }
     }
 }
@@ -101,19 +100,16 @@ void nextCommand(char* inputBuffer, const char* prompt) {
 
     int cursorPos = 0, inputEnd = 0, i;
     size_t promptLen = strlen(prompt);
-    char a[1];
+    char in;
 
     printf("%s", prompt);
     memset(inputBuffer, 0, BUFFER_SIZE);
-    //TODO: Use getchar
-    while (_read(0, a, 1) && a[0] != '\n') {
+    while ((in = getchar()) != '\n') {
 
-        if (a[0] == '\033') {
-            _read(0, a, 1);
-            if (a[0] == '[') {
+        if (in == '\033') {
+            if (getchar() == '[') {
                 // We know this! Yay!
-                _read(0, a, 1);
-                switch (a[0]) {
+                switch (getchar()) {
                     case 'A':
                         // Up
                         break;
@@ -146,7 +142,7 @@ void nextCommand(char* inputBuffer, const char* prompt) {
                         break;
                 }
             }
-        } else if (a[0] == '\b') {
+        } else if (in == '\b') {
 
             if (cursorPos > 0) {
                 inputEnd--;
@@ -163,14 +159,14 @@ void nextCommand(char* inputBuffer, const char* prompt) {
 
                 inputBuffer[inputEnd] = 0;
             }
-        } else if (!isspace(a[0]) || a[0] == ' ') {
+        } else if (!isspace(in) || in == ' ') {
 
             if (inputEnd + 1 < BUFFER_SIZE - 1) {
 
                 for (i = inputEnd - 1; i >= cursorPos; i--) {
                     inputBuffer[i + 1] = inputBuffer[i];
                 }
-                inputBuffer[cursorPos] = a[0];
+                inputBuffer[cursorPos] = in;
                 inputEnd++;
 
                 printf("%s", inputBuffer + cursorPos);

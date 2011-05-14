@@ -14,8 +14,9 @@ FILE *stderr = {{2}};
 extern size_t systemCall(int eax, int ebx, int ecx, int edx);
 
 size_t systemWrite(FILE *stream, const char *cs, size_t n);
+
 size_t systemRead(FILE *stream, void *buf, size_t n);
-size_t systemIoctl(FILE *stream, int cmd, void *argp);
+
 int getfd(FILE *stream);
 
 /**
@@ -52,7 +53,7 @@ int getfd(FILE *stream) {
  * Prints with format given the FILE and the va_list initiated
  */
 int vfprintf(FILE *stream, const char *format, va_list arg) {
-    
+
     int i = 0;
     int symb = 0;
     int lastprint = 0;
@@ -60,14 +61,14 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
     char buffint[MAX_BUF];
     char *buffstring;
     int sizestring;
-    
+
     while(format[i] != '\0') {
         if(format[i] == '%') {
             if(systemWrite(stream,format + lastprint, i - lastprint)
                  != i - lastprint ) {
                 return -1;
             }
-            
+
             i++;
             symb++;
             switch (format[i]) {
@@ -77,13 +78,13 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                     plus += sizestring;
                     if(systemWrite(stream,buffint,sizestring) != sizestring) {
                         return -1;
-                    }    
+                    }
                     symb++;
                     break;
                 case 'c':
                     if(fputc(va_arg(arg,int), stream) == EOF) {
                         return -1;
-                    }   
+                    }
                     break;
                 case 's':
                     buffstring = va_arg(arg,char *);
@@ -97,13 +98,13 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                 case '%':
                     if(fputc('%', stream) == EOF) {
                         return -1;
-                    }   
+                    }
                     break;
                 //TODO HACER LOS CASE NECESARIOS, ACORDARSE DE SUMAR PLUS
             }
             i++;
             lastprint = i;
-        } else {    
+        } else {
             i++;
         }
     }
@@ -118,7 +119,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
  *  Prints with format on stdout
  */
 int printf(const char *format, ...) {
-    
+
     va_list ap;
     va_start(ap, format);
     return vfprintf(stdout, format, ap);
@@ -128,17 +129,17 @@ int printf(const char *format, ...) {
  * Prints with format given an output
  */
 int fprintf(FILE *stream, const char *format, ...) {
-        
+
     va_list ap;
     va_start(ap, format);
     return vfprintf(stream, format, ap);
 }
 
-/** 
+/**
  * Prints with a format given with the variable list ap initialized
  */
 int vprintf(const char *format, va_list arg) {
-    
+
     return vfprintf(stdout, format, arg);
 }
 
@@ -158,7 +159,7 @@ size_t systemRead(FILE *stream, void *buf, size_t n) {
 /**
  *  Calls the system to do driver dependent operations
  */
-size_t systemIoctl(FILE *stream, int cmd, void *argp) {
+size_t iOctl(FILE *stream, int cmd, void *argp) {
     return systemCall(_SYS_IOCTL, getfd(stream), cmd, (int)argp);
 }
 
@@ -169,3 +170,4 @@ int fgetc(FILE *stream) {
     char c;
     return systemRead(stream, &c, 1) ? c : EOF;
 }
+

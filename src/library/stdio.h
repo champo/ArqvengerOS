@@ -27,5 +27,6 @@ int printf(const char *format, ...);
 int fprintf(FILE *stream, const char *format, ...);
 int vprintf(const char *format, va_list arg);
 int fgetc(FILE *stream);
+size_t iOctl(FILE *stream, int cmd, void *argp);
 
 #endif
