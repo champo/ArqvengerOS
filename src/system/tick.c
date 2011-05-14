@@ -4,7 +4,7 @@
 
 static size_t ticksSinceStart = 0;
 
-void timerTick() {
+void timerTick(void) {
     ticksSinceStart++;
 }
 

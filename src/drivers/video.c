@@ -50,7 +50,7 @@
 
 void setAttribute(int bg, int fg, int blink);
 
-void updateCursor();
+void updateCursor(void);
 
 void parseControlBuffer(int* a, int* b, int def);
 
@@ -499,7 +499,7 @@ size_t writeScreen(const void* buf, size_t length) {
     return length;
 }
 
-void updateCursor() {
+void updateCursor(void) {
 
     // cursor LOW port to vga INDEX register
     outB(0x3D4, 0x0F);

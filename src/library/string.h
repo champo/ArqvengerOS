@@ -17,5 +17,6 @@ void *memcpy(void *s, const void *ct, size_t n);
 void *memchr(const void *cs, char c, size_t n);
 void *memset(void *s, char c, size_t n);
 int memcmp(const void *cs, const void *ct, size_t n);
+char *reverse(char *s);
 
 #endif

@@ -2,6 +2,8 @@
 #include "system/call.h"
 #include "shell/shell.h"
 
+void kmain(void);
+
 /**
  * Kernel entry point
  */
@@ -15,5 +17,4 @@ void kmain(void) {
         shell();
     }
 }
-
 

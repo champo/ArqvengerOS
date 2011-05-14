@@ -3,6 +3,7 @@
 #include "library/stdio.h"
 #include "library/string.h"
 #include "library/stdlib.h"
+#include "shell/commands.h"
 
 #define BUFFER_SIZE 500
 
@@ -12,14 +13,12 @@ typedef void (*commandFunction)(char* argv);
 
 typedef struct {
     commandFunction func;
-    char* name;
+    const char* name;
 } command;
 
 void nextCommand(char* inputBuffer);
 
-command* findCommand(const char* commandString);
-
-void echo(char* argv);
+const command* findCommand(const char* commandString);
 
 static const command commands[] = {
     { &echo, "echo" }
@@ -27,9 +26,8 @@ static const command commands[] = {
 
 void shell(void) {
 
-    command* cmd;
+    const command* cmd;
     static char inputBuffer[BUFFER_SIZE];
-
     while (1) {
         putchar('>');
         putchar(' ');
@@ -38,19 +36,6 @@ void shell(void) {
         if (cmd != NULL) {
             cmd->func(inputBuffer);
         }
-    }
-}
-
-void echo(char* argv) {
-
-    char* cmdEnd = strchr(argv, ' ');
-    if (cmdEnd != NULL) {
-        cmdEnd++;
-        while (*cmdEnd != 0) {
-            putchar(*cmdEnd);
-            cmdEnd++;
-        }
-        putchar('\n');
     }
 }
 
@@ -68,9 +53,9 @@ void nextCommand(char* inputBuffer) {
     inputBuffer[bufferPos] = 0;
 }
 
-command* findCommand(const char* commandString) {
+const command* findCommand(const char* commandString) {
 
-    command* res;
+    const command* res;
     int i;
 
     for (i = 0; i < NUM_COMMANDS; i++) {

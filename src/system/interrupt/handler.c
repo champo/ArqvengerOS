@@ -40,7 +40,7 @@ void int21(registers* regs ) {
 }
 
 void setInterruptHandlerTable(void) {
-    int i; 
+    int i;
     for (i = 0;i < 32;i++) {
         table[i] = &exceptionHandler;
     }
@@ -50,23 +50,25 @@ void setInterruptHandlerTable(void) {
     register(80);
 }
 
-void interruptDispatcher(registers regs ){
-    
+void interruptDispatcher(registers regs) {
+
     (*table[regs.intNum])(&regs);
 
-    if (regs.intNum >= PIC_MIN_INTNUM && regs.intNum < PIC_MIN_INTNUM + PIC_IRQS) {     
+    if (regs.intNum >= PIC_MIN_INTNUM && regs.intNum < PIC_MIN_INTNUM + PIC_IRQS) {
         if (regs.intNum - PIC_MIN_INTNUM >= 8) {
             // Tell the slave PIC we're done
             outB(0xA0, PIC_EOI);
         }
+
         // Tell the master PIC we're done
         outB(0x20, PIC_EOI);
     }
 }
 
 void int80(registers* regs) {
-    
+
     switch (regs->eax) {
+
         case _SYS_READ: 
             regs->eax = _read((unsigned int)regs->ebx, (char*)regs->ecx, (size_t)regs->edx);
             break;
@@ -86,13 +88,13 @@ void exceptionHandler(registers* regs){
         *screen = message[i++];
         screen += 2;
     }
-    
+
     *screen = (regs->intNum/10)+'0';
     screen += 2;
     *screen = (regs->intNum%10)+'0';
     screen += 2;
     *screen = ' ';
-    
+
     const char* exception;
     if (regs->intNum > IN_USE_EXCEPTIONS ){
         exception = "Reserved for future use";
