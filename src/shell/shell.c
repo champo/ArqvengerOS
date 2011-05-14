@@ -60,7 +60,7 @@ void nextCommand(char* inputBuffer) {
     char a[1];
 
     //TODO: Use getchar
-    while ((in = read(0, a, 1)) && a[0] != '\n') {
+    while ((in = _read(0, a, 1)) && a[0] != '\n') {
         if (bufferPos < BUFFER_SIZE) {
             inputBuffer[bufferPos++] = a[0];
         }

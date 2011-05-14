@@ -8,7 +8,7 @@
  */
 int putc(char c, int fd) {
 
-    return (write(fd, &c, 1) == 1? c : EOF);
+    return (_write(fd, &c, 1) == 1? c : EOF);
 }
 
 /**
@@ -19,7 +19,7 @@ int puts(const char *s) {
     if(s != NULL){
         int len = strlen(s);
         int total;
-        total = write(1, s, len);
+        total = _write(1, s, len);
         total = total + (putchar('\n') > 0);
 
         return (total == len + 1? len : EOF);
