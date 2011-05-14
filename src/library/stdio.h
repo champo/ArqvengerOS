@@ -2,6 +2,8 @@
 
 #define __stdio_header__
 
+#include "type.h"
+
 #define putchar(x) fputc((x),stdout)
 #define putc(x, stream) fputc((x), (stream))
 #define puts(s) fputs((s),stdout)
@@ -18,9 +20,9 @@ typedef struct {
     int unget;
 } FILE;
 
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
+FILE *stdin;
+FILE *stdout;
+FILE *stderr;
 
 int fputc(char c, FILE *stream);
 int fputs(const char *s, FILE *stream);

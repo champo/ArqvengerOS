@@ -8,9 +8,9 @@
 #include "system/call/codes.h"
 #include "library/ctype.h"
 
-FILE *stdout = {{1, 0, 0}};
-FILE *stdin = {{0, 0, 0}};
-FILE *stderr = {{2, 0, 0}};
+FILE *stdout;
+FILE *stdin;
+FILE *stderr;
 
 extern size_t systemCall(int eax, int ebx, int ecx, int edx);
 
@@ -22,7 +22,6 @@ size_t systemRead(FILE *stream, void *buf, size_t n);
  * Insert a character into standard output
  */
 int fputc(char c, FILE *stream) {
-
     return (systemWrite(stream, &c, 1) == 1? c : EOF);
 }
 
@@ -158,7 +157,7 @@ size_t systemRead(FILE *stream, void *buf, size_t n) {
 /**
  *  Calls the system to do driver dependent operations
  */
-size_t iOctl(FILE *stream, int cmd, void *argp) {
+size_t ioctl(FILE *stream, int cmd, void *argp) {
     return systemCall(_SYS_IOCTL, getfd(stream), cmd, (int)argp);
 }
 

@@ -1,4 +1,5 @@
 #include "mcurses/mcurses.h"
+#include "library/stdio.h"
 
 void moveCursor(int r, int c) {
     printf("\033[%d;%dH", r % TOTAL_ROWS, c % LINE_WIDTH);
