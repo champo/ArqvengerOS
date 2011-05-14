@@ -13,7 +13,9 @@
 #include "library/stdarg.h"
 
 typedef struct {
-    int fd;  
+    int fd;
+    int flag;
+    int unget;  
 } FILE;
 
 extern FILE *stdin;
@@ -27,5 +29,8 @@ int printf(const char *format, ...);
 int fprintf(FILE *stream, const char *format, ...);
 int vprintf(const char *format, va_list arg);
 int fgetc(FILE *stream);
+int ungetc(int c, FILE *stream);
+int vfscanf(FILE *stream, const char *format, va_list arg);
+int scanf(const char *format, ...);
 
 #endif

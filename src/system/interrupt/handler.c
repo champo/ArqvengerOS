@@ -3,6 +3,7 @@
 #include "system/call.h"
 #include "system/io.h"
 #include "system/interrupt/handler.h"
+#include "system/call/codes.h"
 
 typedef struct {
    int gs, fs, es, ds;
