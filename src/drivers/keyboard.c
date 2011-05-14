@@ -73,9 +73,9 @@ static int escaped = 0, bufferEnd = 0;
 
 static char inputBuffer[BUFFER_SIZE];
 
-void addInput(const char* str, size_t len);
+static void addInput(const char* str, size_t len);
 
-void setLeds(void);
+static void setLeds(void);
 
 void addInput(const char* str, size_t len) {
 

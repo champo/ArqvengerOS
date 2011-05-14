@@ -1,23 +1,10 @@
 #include "type.h"
 #include "drivers/video.h"
+#include "drivers/videoControl.h"
 #include "system/io.h"
 
 /* Video attribute. White letters on black background. */
 #define WHITE_TXT 0x07
-
-#define LINE_WIDTH 80
-#define TOTAL_ROWS 25
-
-#define ESCAPE_CODE 0x1B
-#define CSI '['
-
-#define CLEAR_ALL 2
-#define CLEAR_ABOVE 1
-#define CLEAR_BELOW 0
-
-#define ERASE_ALL 2
-#define ERASE_LEFT 1
-#define ERASE_RIGHT 0
 
 #define CONTROL_BUFFER_LEN 40
 #define readControlBuffer(def) parseControlBuffer(&mod1, &mod2, def)
@@ -25,44 +12,27 @@
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')
 
-#define COLOR_BLACK 0x0
-#define COLOR_BLUE 0x1
-#define COLOR_GREEN 0x2
-#define COLOR_CYAN 0x3
-#define COLOR_RED 0x4
-#define COLOR_MAGENTA 0x5
-#define COLOR_BROWN 0x6
-#define COLOR_WHITE 0x7
-#define COLOR_GRAY 0x8
-#define COLOR_BRIGHT_BLUE 0x9
-#define COLOR_BRIGHT_GREEN 0xA
-#define COLOR_BRIGHT_CYAN 0xB
-#define COLOR_BRIGHT_RED 0xC
-#define COLOR_BRIGHT_MAGENTA 0xD
-#define COLOR_YELLOW 0xE
-#define COLOR_BRIGHT_WHITE 0xF
-
 #define BLINK_ATTR 0x80
 
 #define setForeground(color) setAttribute((attribute >> 3) & 0x7, (color), attribute & BLINK_ATTR)
 #define setBackground(color) setAttribute((color), attribute & 0xF, attribute & BLINK_ATTR)
 #define setBlink(blink) setAttribute((attribute >> 3) & 0x7, attribute & 0xF, (blink))
 
-void setAttribute(int bg, int fg, int blink);
+static void setAttribute(int bg, int fg, int blink);
 
-void updateCursor(void);
+static void updateCursor(void);
 
-void parseControlBuffer(int* a, int* b, int def);
+static void parseControlBuffer(int* a, int* b, int def);
 
-void clearScreen(int type);
+static void clearScreen(int type);
 
-void eraseLine(int type);
+static void eraseLine(int type);
 
-void setBlank(int start, int end);
+static void setBlank(int start, int end);
 
-void setCharacter(char c);
+static void setCharacter(char c);
 
-void scrollLine(int delta);
+static void scrollLine(int delta);
 
 static int cursorPosition = 0;
 static int escaped = 0, csi = 0;
