@@ -6,18 +6,17 @@
 #include "library/stdarg.h"
 #include "type.h"
 #include "system/call/codes.h"
+#include "library/ctype.h"
 
-FILE *stdout = {{1}};
-FILE *stdin = {{0}};
-FILE *stderr = {{2}};
+FILE *stdout = {{1, 0, 0}};
+FILE *stdin = {{0, 0, 0}};
+FILE *stderr = {{2, 0, 0}};
 
 extern size_t systemCall(int eax, int ebx, int ecx, int edx);
 
 size_t systemWrite(FILE *stream, const char *cs, size_t n);
 
 size_t systemRead(FILE *stream, void *buf, size_t n);
-
-int getfd(FILE *stream);
 
 /**
  * Insert a character into standard output
@@ -37,6 +36,7 @@ int fputs(const char *s, FILE *stream) {
         int total;
         total = systemWrite(stream, s, len);
         total = total + (fputc('\n', stream) > 0);
+
         return (total == len + 1? len : EOF);
     }
     return EOF;
@@ -100,7 +100,6 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                         return -1;
                     }
                     break;
-                //TODO HACER LOS CASE NECESARIOS, ACORDARSE DE SUMAR PLUS
             }
             i++;
             lastprint = i;
@@ -147,7 +146,7 @@ int vprintf(const char *format, va_list arg) {
  * Calls the system so it can write on the correct file
  */
 size_t systemWrite(FILE *stream, const char *cs, size_t n){
-    return systemCall(_SYS_WRITE,getfd(stream),(int) cs, n);
+    return systemCall(_SYS_WRITE, getfd(stream), (int) cs, n);
 }
 
 /**
@@ -168,6 +167,113 @@ size_t iOctl(FILE *stream, int cmd, void *argp) {
  */
 int fgetc(FILE *stream) {
     char c;
+    if (stream->flag) {
+        stream->flag = 0;
+        return stream->unget;
+    }
     return systemRead(stream, &c, 1) ? c : EOF;
+}
+
+/**
+ *Deals with formatted input conversion given a stream and a list of arguments
+ */
+int vfscanf(FILE *stream, const char *format, va_list arg) {
+
+    int i = 0;
+    int j;
+    int converted;
+    char buff[MAX_BUF];
+    char cur;
+    char *tempstring;
+
+    while (format[i] != '\0') {
+        if (!isspace(format[i])) {
+            if (format[i] != '%') {
+                if (format[i] != fgetc(stream)) {
+                    return EOF;
+                }
+            } else {
+                i++;
+                switch (format[i]) {
+                    case '%':
+                        if (fgetc(stream) != '%') {
+                            return EOF;
+                        }
+                        break;
+                    case 'c':
+                        *(va_arg(arg, char *)) = fgetc(stream);
+                        converted++;
+                        break;
+                    case 's':
+                        tempstring = va_arg(arg, char *);
+                        cur = fgetc(stream);
+                        j = 0;
+                        while (!isspace(cur) && cur != EOF) {
+                            tempstring[j] = cur;
+                            cur = fgetc(stream);
+                            j++;
+                        }
+                        converted++;
+                        break;
+                    case 'i':
+                    case 'd':
+                        cur = fgetc(stream);
+                        if (!isdigit(cur) && cur != '-') {
+                            return EOF;
+                        }
+                        j = 0;
+                        if (cur == '-') {
+                            buff[j] = '-';
+                            j++;
+                            cur = fgetc(stream);
+                            if(!isdigit(cur)){
+                                return EOF;
+                            }
+                        }
+                        buff[j] = cur;
+                        j++;
+                        cur = fgetc(stream);
+                        while(isdigit(cur)) {
+                            buff[j] = cur;
+                            j++;
+                            cur = fgetc(stream);
+                        }
+
+
+                        *(va_arg(arg, int *)) = atoi(buff);
+                        converted ++;
+                        if (cur == EOF) {
+                            return converted;
+                        }
+                        break;
+                }
+            }
+        }
+
+        i++;
+    }
+    return converted;
+}
+
+/**
+ *  Prepares the character c to be read the next time you access stream
+ */
+int ungetc(int c, FILE *stream) {
+    if (c == EOF || stream->flag) {
+        return EOF;
+    }
+    stream->flag = 1;
+    stream->unget = c;
+    return c;
+}
+
+/**
+ * Deals with a formatted input
+ */
+int scanf(const char *format, ...){
+
+    va_list ap;
+    va_start(ap, format);
+    return vfscanf(stdin, format, ap);
 }
 

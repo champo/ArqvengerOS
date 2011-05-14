@@ -14,6 +14,8 @@
 
 typedef struct {
     int fd;
+    int flag;
+    int unget;
 } FILE;
 
 extern FILE *stdin;
@@ -27,6 +29,10 @@ int printf(const char *format, ...);
 int fprintf(FILE *stream, const char *format, ...);
 int vprintf(const char *format, va_list arg);
 int fgetc(FILE *stream);
-size_t iOctl(FILE *stream, int cmd, void *argp);
+size_t ioctl(FILE *stream, int cmd, void *argp);
+int ungetc(int c, FILE *stream);
+int vfscanf(FILE *stream, const char *format, va_list arg);
+int scanf(const char *format, ...);
+int getfd(FILE *stream);
 
 #endif
