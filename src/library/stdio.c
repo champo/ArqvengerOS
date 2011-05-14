@@ -5,14 +5,18 @@
 #include "library/limits.h"
 #include "library/stdarg.h"
 #include "type.h"
+#include "system/call/codes.h"
+#include "library/ctype.h"
 
 FILE *stdout = {{1, 0, 0}};
 FILE *stdin = {{0, 0, 0}};
 FILE *stderr = {{2, 0, 0}};
 
-size_t systemWrite(FILE *stream, const char *cs, size_t n);
-size_t systemRead(FILE *stream, void *buf, size_t n);
-int getfd(FILE *stream);
+extern size_t systemCall(int eax, int ebx, int ecx, int edx);
+
+static size_t systemWrite(FILE *stream, const char *cs, size_t n);
+static size_t systemRead(FILE *stream, void *buf, size_t n);
+static size_t systemIoctl(FILE *stream, int cmd, void *argp);
 
 /**
  * Insert a character into standard output
@@ -142,7 +146,7 @@ int vprintf(const char *format, va_list arg) {
  * Calls the system so it can write on the correct file
  */
 size_t systemWrite(FILE *stream, const char *cs, size_t n){
-    return write(getfd(stream), cs, n);
+    return systemCall(_SYS_WRITE, getfd(stream), (int) cs, n);
 }
 
 /**
@@ -181,7 +185,6 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
     char buff[MAX_BUF];
     char cur;
     char *tempstring;
-    int *tempint;
 
     while (format[i] != '\0') {
         if (!isspace(format[i])) {
@@ -220,24 +223,24 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                         }
                         j = 0;
                         if (cur == '-') {
-                            tempstring[j] = '-';
+                            buff[j] = '-';
                             j++;
                             cur = fgetc(stream);
                             if(!isdigit(cur)){
                                 return EOF;
                             }
                         }
-                        tempstring[j] = cur;
+                        buff[j] = cur;
                         j++;
                         cur = fgetc(stream);
                         while(isdigit(cur)) {
-                            tempstring[j] = cur;
+                            buff[j] = cur;
                             j++;
                             cur = fgetc(stream);
                         }
                         
                         
-                        *(va_arg(arg, int *)) = atoi(tempstring); 
+                        *(va_arg(arg, int *)) = atoi(buff); 
                         converted ++;
                         if (cur == EOF) {
                             return converted;
@@ -261,6 +264,7 @@ int ungetc(int c, FILE *stream) {
     }
     stream->flag = 1;
     stream->unget = c;
+    return c;
 }
 
 /**
