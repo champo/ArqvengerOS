@@ -42,12 +42,12 @@ int itoa(char *s, int n){
         n = n * -1;
     }
  
-    while (n > 0) {
+    do {
         aux = n%10;
         s[i] = aux + '0';
         n = n / 10;
         i++;
-    }
+    } while(n > 0);
 
     if (neg) {
         s[i] = '-';

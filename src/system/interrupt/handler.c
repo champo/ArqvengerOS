@@ -2,6 +2,7 @@
 #include "system/tick.h"
 #include "system/call.h"
 #include "system/io.h"
+#include "system/interrupt/handler.h"
 
 typedef struct {
    int gs, fs, es, ds;
@@ -14,23 +15,20 @@ typedef void (*interruptHandler)(registers* regs);
 
 static interruptHandler table[256];
 
-#define register(X)  table[0x##X] = &int##X
+#define     register(X)         table[0x##X] = &int##X 
 
-#define PIC_MIN_INTNUM  32
-#define PIC_IRQS        16
-#define PIC_EOI         0x20
+#define     PIC_MIN_INTNUM      32
+#define     PIC_IRQS            16
+#define     PIC_EOI             0x20
 
-#define     _SYS_READ   3
-#define     _SYS_WRITE  4
-
-#define IN_USE_EXCEPTIONS   20
+#define     IN_USE_EXCEPTIONS   20   
 
 static const char* exceptionTable[] = { "Divide by zero", "Debugger", "NMI", "Breakpoint", "Overflow", "Bounds", "Invalid Opcode", "Coprocesor not available", "Double fault", "Coprocessor Segment Overrun", "Invalid Task State Segment", "Segment not present", "Stack fault", "General Protection", "Page Fault", "Intel Reserved", "Math Fault", "Aligment Check", "Machine Check", "Floating-Point Exception"};
 
-void int20(registers* regs);
-void int21(registers* regs);
-void int80(registers* regs);
-void exceptionHandler(registers* regs);
+static void int20(registers* regs);
+static void int21(registers* regs);
+static void int80(registers* regs);
+static void exceptionHandler(registers* regs);
 void interruptDispatcher(registers regs);
 
 void int20(registers* regs) {
@@ -70,12 +68,15 @@ void interruptDispatcher(registers regs) {
 void int80(registers* regs) {
 
     switch (regs->eax) {
-        case _SYS_READ:
-            regs->eax = read((unsigned int)regs->ebx, (char*)regs->ecx, (size_t)regs->edx);
+
+        case _SYS_READ: 
+            regs->eax = _read((unsigned int)regs->ebx, (char*)regs->ecx, (size_t)regs->edx);
             break;
         case _SYS_WRITE:
-            regs->eax = write((unsigned int)regs->ebx, (const char*)regs->ecx, (size_t)regs->edx);
+            regs->eax = _write((unsigned int)regs->ebx, (const char*)regs->ecx, (size_t)regs->edx);
             break;
+        case _SYS_IOCTL:
+            regs->eax = _ioctl(regs->ebx, regs->ecx, (void*)regs->edx);
     }
 }
 

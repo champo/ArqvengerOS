@@ -2,6 +2,7 @@
 #include "system/common.h"
 #include "system/io.h"
 #include "system/call.h"
+#include "system/interrupt/handler.h"
 
 /* Flags para derechos de acceso de los segmentos */
 #define ACS_PRESENT         0x80            /* segmento presente en memoria */
@@ -28,6 +29,7 @@
 
 // 8086/88 (MCS-80/85) mode
 #define ICW4_8086           0x01        
+
 /* Tell the compiler to pack the following structs to 1 byte (No 4 byte padding) */
 #pragma pack (1)
 
