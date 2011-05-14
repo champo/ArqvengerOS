@@ -7,10 +7,6 @@ void echo(char* argv) {
     char* cmdEnd = strchr(argv, ' ');
     if (cmdEnd != NULL) {
         cmdEnd++;
-        while (*cmdEnd != 0) {
-            putchar(*cmdEnd);
-            cmdEnd++;
-        }
-        putchar('\n');
+        printf("%s\n", cmdEnd);
     }
 }

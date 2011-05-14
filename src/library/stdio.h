@@ -3,8 +3,8 @@
 #define __stdio_header__
 
 #define putchar(x) fputc((x),stdout)
-#define putc( x , stream ) fputc((x),(stream))
-#define puts( s ) fputs((s),stdout)
+#define putc(x, stream) fputc((x), (stream))
+#define puts(s) fputs((s),stdout)
 #define EOF -1
 #define NULL (void *)0
 #define getc(stream) fputc((stream))
@@ -13,7 +13,7 @@
 #include "library/stdarg.h"
 
 typedef struct {
-    int fd;  
+    int fd;
 } FILE;
 
 extern FILE *stdin;

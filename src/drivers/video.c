@@ -40,7 +40,7 @@ static char attribute = WHITE_TXT;
 static char controlBuffer[CONTROL_BUFFER_LEN];
 static size_t controlBufferPos = 0;
 static char* videoMemory = (char*) 0xb8000;
-static char videoBuffer[2 * LINE_WIDTH * TOTAL_ROWS];
+static char videoBuffer[2 * LINE_WIDTH * (TOTAL_ROWS + 1)];
 
 void setAttribute(int bg, int fg, int blink) {
     attribute = fg | (bg << 4);
@@ -60,6 +60,7 @@ void setCharacter(char c) {
 }
 
 void scrollLine(int delta) {
+
     if (delta > TOTAL_ROWS) {
         delta = TOTAL_ROWS;
     } else if (delta < 1) {
@@ -267,7 +268,7 @@ size_t writeScreen(const void* buf, size_t length) {
                             // Cursor right!
                             readControlBuffer(1);
                             if ((cursorPosition % LINE_WIDTH) + mod1 >= LINE_WIDTH) {
-                                cursorPosition = (cursorPosition / LINE_WIDTH) + 1;
+                                cursorPosition += LINE_WIDTH - (cursorPosition % LINE_WIDTH);
                             } else {
                                 cursorPosition += mod1;
                             }
@@ -301,7 +302,7 @@ size_t writeScreen(const void* buf, size_t length) {
                         case 'F':
                             // Previous line
                             readControlBuffer(1);
-                            cursorPosition -= LINE_WIDTH * mod1 - (cursorPosition % LINE_WIDTH);
+                            cursorPosition -= LINE_WIDTH * mod1 + (cursorPosition % LINE_WIDTH);
                             if (cursorPosition < 0) {
                                 cursorPosition = 0;
                             }
@@ -360,6 +361,15 @@ size_t writeScreen(const void* buf, size_t length) {
 
                             cursorPosition = ((mod1 - 1) % TOTAL_ROWS) + (cursorPosition % LINE_WIDTH);
 
+                            endControlSequence();
+                            break;
+                        case 'z':
+                            readControlBuffer(1);
+                            mod1 = cursorPosition;
+                            cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
+                            mod2 = 0;
+                            while (controlBufferPos > mod2) setCharacter(controlBuffer[mod2++]);
+                            cursorPosition = mod1;
                             endControlSequence();
                             break;
                         case 'm':
