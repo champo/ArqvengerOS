@@ -59,5 +59,40 @@ GLOBAL _int%1Handler
 
 
 ISR_ERRCODE 80, interruptDispatcher
+; IRQs Handlers
 ISR_ERRCODE 20, interruptDispatcher
 ISR_ERRCODE 21, interruptDispatcher
+
+; Exceptions Handlers
+ISR_ERRCODE 00, interruptDispatcher
+ISR_ERRCODE 01, interruptDispatcher
+ISR_ERRCODE 02, interruptDispatcher
+ISR_ERRCODE 03, interruptDispatcher
+ISR_ERRCODE 04, interruptDispatcher
+ISR_ERRCODE 05, interruptDispatcher
+ISR_ERRCODE 06, interruptDispatcher
+ISR_ERRCODE 07, interruptDispatcher
+ISR_ERRCODE 08, interruptDispatcher
+ISR_ERRCODE 09, interruptDispatcher
+ISR_ERRCODE 0A, interruptDispatcher
+ISR_ERRCODE 0B, interruptDispatcher
+ISR_ERRCODE 0C, interruptDispatcher
+ISR_ERRCODE 0D, interruptDispatcher
+ISR_ERRCODE 0E, interruptDispatcher
+ISR_ERRCODE 0F, interruptDispatcher
+ISR_ERRCODE 10, interruptDispatcher
+ISR_ERRCODE 11, interruptDispatcher
+ISR_ERRCODE 12, interruptDispatcher
+ISR_ERRCODE 13, interruptDispatcher
+ISR_ERRCODE 14, interruptDispatcher
+ISR_ERRCODE 15, interruptDispatcher
+ISR_ERRCODE 16, interruptDispatcher
+ISR_ERRCODE 17, interruptDispatcher
+ISR_ERRCODE 18, interruptDispatcher
+ISR_ERRCODE 19, interruptDispatcher
+ISR_ERRCODE 1A, interruptDispatcher
+ISR_ERRCODE 1B, interruptDispatcher
+ISR_ERRCODE 1C, interruptDispatcher
+ISR_ERRCODE 1D, interruptDispatcher
+ISR_ERRCODE 1E, interruptDispatcher
+ISR_ERRCODE 1F, interruptDispatcher
