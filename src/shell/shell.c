@@ -27,6 +27,8 @@ void addToHistory(const char* commandString);
 
 int updateCursor(size_t promptLen, int cursorPos, int delta);
 
+int useHistory(size_t promptLen, int cursorPos, char* historyBuffer);
+
 static const command commands[] = {
     { &echo, "echo" }
 };
@@ -36,6 +38,7 @@ static struct {
     int start;
     int end;
     int current;
+    char before[BUFFER_SIZE];
 } history;
 
 static termios inputStatus;
@@ -96,11 +99,24 @@ int updateCursor(size_t promptLen, int cursorPos, int delta) {
     return destPos - promptLen;
 }
 
+int useHistory(size_t promptLen, int cursorPos, char* historyBuffer) {
+
+    updateCursor(promptLen - 1, cursorPos + 1, - cursorPos - 1);
+    clearLine(ERASE_RIGHT);
+    clearScreen(CLEAR_BELOW);
+    updateCursor(promptLen - 1, 0, 1);
+
+    printf("%s", historyBuffer);
+
+    return strlen(historyBuffer);
+}
+
 void nextCommand(char* inputBuffer, const char* prompt) {
 
-    int cursorPos = 0, inputEnd = 0, i;
+    int cursorPos = 0, inputEnd = 0, i, usingHistory = 0;
     size_t promptLen = strlen(prompt);
     char in;
+    char* historyBuffer;
 
     printf("%s", prompt);
     memset(inputBuffer, 0, BUFFER_SIZE);
@@ -112,9 +128,31 @@ void nextCommand(char* inputBuffer, const char* prompt) {
                 switch (getchar()) {
                     case 'A':
                         // Up
+                        if (history.current != history.start) {
+                            history.current--;
+                            if (history.current < 0) {
+                                history.current = HISTORY_SIZE - 1;
+                            }
+
+                            inputEnd = useHistory(promptLen, cursorPos, history.input[history.current]);
+                            cursorPos = inputEnd;
+
+                            usingHistory = 1;
+                        }
                         break;
                     case 'B':
                         // Down
+                        if (usingHistory) {
+
+                            if (history.current == history.end) {
+                                usingHistory = 0;
+                                inputEnd = useHistory(promptLen, cursorPos, inputBuffer);
+                            } else {
+                                history.current = (history.current + 1) % HISTORY_SIZE;
+                                inputEnd = useHistory(promptLen, cursorPos, history.input[history.current]);
+                            }
+                            cursorPos = inputEnd;
+                        }
                         break;
                     case 'C':
                         // Right
@@ -144,6 +182,12 @@ void nextCommand(char* inputBuffer, const char* prompt) {
             }
         } else if (in == '\b') {
 
+            if (usingHistory) {
+                memcpy(inputBuffer, history.input[history.current], BUFFER_SIZE);
+                history.current = history.end;
+                usingHistory = 0;
+            }
+
             if (cursorPos > 0) {
                 inputEnd--;
 
@@ -161,6 +205,12 @@ void nextCommand(char* inputBuffer, const char* prompt) {
             }
         } else if (!isspace(in) || in == ' ') {
 
+            if (usingHistory) {
+                memcpy(inputBuffer, history.input[history.current], BUFFER_SIZE);
+                history.current = history.end;
+                usingHistory = 0;
+            }
+
             if (inputEnd + 1 < BUFFER_SIZE - 1) {
 
                 for (i = inputEnd - 1; i >= cursorPos; i--) {
@@ -173,6 +223,10 @@ void nextCommand(char* inputBuffer, const char* prompt) {
                 cursorPos = updateCursor(promptLen, inputEnd, cursorPos - inputEnd + 1);
             }
         }
+    }
+
+    if (usingHistory) {
+        memcpy(inputBuffer, history.input[history.current], BUFFER_SIZE);
     }
 
     updateCursor(promptLen, cursorPos, inputEnd - cursorPos);
