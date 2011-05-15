@@ -3,4 +3,6 @@
 
 void echo(char* argv);
 
+void manEcho(void);
+
 #endif

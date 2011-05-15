@@ -14,9 +14,18 @@
 
 #define BLINK_ATTR 0x80
 
-#define setForeground(color) setAttribute((attribute >> 3) & 0x7, (color), attribute & BLINK_ATTR)
+#define COLOR_BRIGHT_BLUE 0x9
+#define COLOR_BRIGHT_GREEN 0xA
+#define COLOR_BRIGHT_CYAN 0xB
+#define COLOR_BRIGHT_RED 0xC
+#define COLOR_BRIGHT_MAGENTA 0xD
+#define COLOR_BRIGHT_WHITE 0xF
+
+#define setForeground(color) setAttribute((attribute >> 4) & 0x7, (color), attribute & BLINK_ATTR)
 #define setBackground(color) setAttribute((color), attribute & 0xF, attribute & BLINK_ATTR)
-#define setBlink(blink) setAttribute((attribute >> 3) & 0x7, attribute & 0xF, (blink))
+#define setBlink(blink) setAttribute((attribute >> 4) & 0x7, attribute & 0xF, (blink))
+
+static void handleControlSequence(char cur);
 
 static void setAttribute(int bg, int fg, int blink);
 
@@ -240,227 +249,7 @@ size_t writeScreen(const void* buf, size_t length) {
                     // This is probably a modifier for a sequence, store!
                     controlBuffer[controlBufferPos++] = cur;
                 } else {
-                    int mod1, mod2;
-                    switch (cur) {
-                        case 'A':
-                            // Cursor up!
-                            readControlBuffer(1);
-                            if (cursorPosition < LINE_WIDTH * mod1) {
-                                cursorPosition = cursorPosition % LINE_WIDTH;
-                            } else {
-                                cursorPosition -= LINE_WIDTH * mod1;
-                            }
-
-                            endControlSequence();
-                            break;
-                        case 'B':
-                            // Cursor down!
-                            readControlBuffer(1);
-                            if (cursorPosition + mod1 * LINE_WIDTH < LINE_WIDTH * TOTAL_ROWS) {
-                                cursorPosition += mod1 * LINE_WIDTH;
-                            } else {
-                                cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH + (cursorPosition % LINE_WIDTH);
-                            }
-
-                            endControlSequence();
-                            break;
-                        case 'C':
-                            // Cursor right!
-                            readControlBuffer(1);
-                            if ((cursorPosition % LINE_WIDTH) + mod1 >= LINE_WIDTH) {
-                                cursorPosition += LINE_WIDTH - (cursorPosition % LINE_WIDTH);
-                            } else {
-                                cursorPosition += mod1;
-                            }
-
-                            endControlSequence();
-                            break;
-                        case 'D':
-                            /* Cursor left! */
-                            readControlBuffer(1);
-                            if ((cursorPosition % LINE_WIDTH) < mod1) {
-                                cursorPosition -= cursorPosition % LINE_WIDTH;
-                            } else {
-                                cursorPosition -= mod1;
-                            }
-
-                            endControlSequence();
-                            break;
-                        case 'E':
-                            // Next line
-                            readControlBuffer(1);
-                            if (cursorPosition >= (LINE_WIDTH * (TOTAL_ROWS - 1))) {
-                                cursorPosition -= cursorPosition % LINE_WIDTH;
-                            } else if (cursorPosition / LINE_WIDTH + mod1 >= TOTAL_ROWS) {
-                                cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
-                            } else {
-                                cursorPosition += LINE_WIDTH * mod1 - (cursorPosition % LINE_WIDTH);
-                            }
-
-                            endControlSequence();
-                            break;
-                        case 'F':
-                            // Previous line
-                            readControlBuffer(1);
-                            cursorPosition -= LINE_WIDTH * mod1 + (cursorPosition % LINE_WIDTH);
-                            if (cursorPosition < 0) {
-                                cursorPosition = 0;
-                            }
-
-                            endControlSequence();
-                            break;
-                        case 'G':
-                            // Jump to column
-                            readControlBuffer(1);
-                            if (mod1 < 1) {
-                                mod1 = 1;
-                            }
-                            cursorPosition += ((mod1 - 1) % LINE_WIDTH) - ((cursorPosition) % LINE_WIDTH);
-
-                            endControlSequence();
-                            break;
-                        case 'H':
-                            // Jump cursor
-                            readControlBuffer(1);
-                            if (mod1 < 1) {
-                                mod1 = 1;
-                            }
-
-                            if (mod2 < 1) {
-                                mod2 = 1;
-                            }
-
-                            cursorPosition = LINE_WIDTH * ((mod1 - 1) % TOTAL_ROWS) + ((mod2 - 1) % LINE_WIDTH);
-
-                            endControlSequence();
-                            break;
-                        case ';':
-                            // This case is related to the previos, it's the coord separator for jump cursor
-                            controlBuffer[controlBufferPos++] = ';';
-                            break;
-                        case 'J':
-                            // Erase (above|below|all)
-                            readControlBuffer(0);
-                            clearScreen(mod1);
-
-                            endControlSequence();
-                            break;
-                        case 'K':
-                            // Erase to (left|right|all)
-                            readControlBuffer(0);
-                            eraseLine(mod1);
-
-                            endControlSequence();
-                            break;
-                        case 'd':
-                            // Jump to row
-                            readControlBuffer(1);
-                            if (mod1 < 1) {
-                                mod1 = 1;
-                            }
-
-                            cursorPosition = ((mod1 - 1) % TOTAL_ROWS) + (cursorPosition % LINE_WIDTH);
-
-                            endControlSequence();
-                            break;
-                        case 'z':
-                            readControlBuffer(1);
-                            mod1 = cursorPosition;
-                            cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
-                            mod2 = 0;
-                            while (controlBufferPos > mod2) setCharacter(controlBuffer[mod2++]);
-                            cursorPosition = mod1;
-                            endControlSequence();
-                            break;
-                        case 'm':
-                            // Change color!
-                            readControlBuffer(1);
-                            switch (mod1) {
-                                case 47:
-                                    // White bg
-                                    setBackground(COLOR_WHITE);
-                                    break;
-                                case 46:
-                                    // Cyan bg
-                                    setBackground(COLOR_CYAN);
-                                    break;
-                                case 45:
-                                    // Magenta bg
-                                    setBackground(COLOR_MAGENTA);
-                                    break;
-                                case 44:
-                                    // Blue bg
-                                    setBackground(COLOR_BLUE);
-                                    break;
-                                case 42:
-                                    // Green bg
-                                    setBackground(COLOR_GREEN);
-                                    break;
-                                case 41:
-                                    // Red bg
-                                    setBackground(COLOR_RED);
-                                    break;
-                                case 49:
-                                case 40:
-                                    // Black bg
-                                    setBackground(COLOR_BLACK);
-                                    break;
-                                case 39:
-                                case 37:
-                                    // White fg
-                                    setForeground(COLOR_WHITE);
-                                    break;
-                                case 36:
-                                    // Cyan fg
-                                    setForeground(COLOR_CYAN);
-                                    break;
-                                case 35:
-                                    // Magenta fg
-                                    setForeground(COLOR_MAGENTA);
-                                    break;
-                                case 34:
-                                    // Blue fg
-                                    setForeground(COLOR_BLUE);
-                                    break;
-                                case 33:
-                                    // Yellow fg
-                                    setForeground(COLOR_YELLOW);
-                                    break;
-                                case 32:
-                                    // Green fg
-                                    setForeground(COLOR_GREEN);
-                                    break;
-                                case 31:
-                                    // Red fg
-                                    setForeground(COLOR_RED);
-                                    break;
-                                case 30:
-                                    // Black fg
-                                    setForeground(COLOR_BLACK);
-                                    break;
-                                case 25:
-                                    // Time of the Angels
-                                    // If you blink, you die
-                                    setBlink(0);
-                                    break;
-                                case 5:
-                                    // Blink!
-                                    setBlink(1);
-                                    break;
-                                case 0:
-                                    // Reset
-                                    setBlink(0);
-                                    setForeground(COLOR_BLACK);
-                                    setBackground(COLOR_WHITE);
-                                    break;
-                            }
-
-                            endControlSequence();
-                            break;
-                        default:
-                            endControlSequence();
-                            break;
-                    }
+                    handleControlSequence(cur);
                 }
             } else if (cur == CSI) {
 
@@ -477,6 +266,247 @@ size_t writeScreen(const void* buf, size_t length) {
     updateCursor();
 
     return length;
+}
+
+void handleControlSequence(char cur) {
+
+    int mod1, mod2;
+    switch (cur) {
+        case 'A':
+            // Cursor up!
+            readControlBuffer(1);
+            if (cursorPosition < LINE_WIDTH * mod1) {
+                cursorPosition = cursorPosition % LINE_WIDTH;
+            } else {
+                cursorPosition -= LINE_WIDTH * mod1;
+            }
+
+            endControlSequence();
+            break;
+        case 'B':
+            // Cursor down!
+            readControlBuffer(1);
+            if (cursorPosition + mod1 * LINE_WIDTH < LINE_WIDTH * TOTAL_ROWS) {
+                cursorPosition += mod1 * LINE_WIDTH;
+            } else {
+                cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH + (cursorPosition % LINE_WIDTH);
+            }
+
+            endControlSequence();
+            break;
+        case 'C':
+            // Cursor right!
+            readControlBuffer(1);
+            if ((cursorPosition % LINE_WIDTH) + mod1 >= LINE_WIDTH) {
+                cursorPosition += LINE_WIDTH - (cursorPosition % LINE_WIDTH);
+            } else {
+                cursorPosition += mod1;
+            }
+
+            endControlSequence();
+            break;
+        case 'D':
+            /* Cursor left! */
+            readControlBuffer(1);
+            if ((cursorPosition % LINE_WIDTH) < mod1) {
+                cursorPosition -= cursorPosition % LINE_WIDTH;
+            } else {
+                cursorPosition -= mod1;
+            }
+
+            endControlSequence();
+            break;
+        case 'E':
+            // Next line
+            readControlBuffer(1);
+            if (cursorPosition >= (LINE_WIDTH * (TOTAL_ROWS - 1))) {
+                cursorPosition -= cursorPosition % LINE_WIDTH;
+            } else if (cursorPosition / LINE_WIDTH + mod1 >= TOTAL_ROWS) {
+                cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
+            } else {
+                cursorPosition += LINE_WIDTH * mod1 - (cursorPosition % LINE_WIDTH);
+            }
+
+            endControlSequence();
+            break;
+        case 'F':
+            // Previous line
+            readControlBuffer(1);
+            cursorPosition -= LINE_WIDTH * mod1 + (cursorPosition % LINE_WIDTH);
+            if (cursorPosition < 0) {
+                cursorPosition = 0;
+            }
+
+            endControlSequence();
+            break;
+        case 'G':
+            // Jump to column
+            readControlBuffer(1);
+            if (mod1 < 1) {
+                mod1 = 1;
+            }
+            cursorPosition += ((mod1 - 1) % LINE_WIDTH) - ((cursorPosition) % LINE_WIDTH);
+
+            endControlSequence();
+            break;
+        case 'H':
+            // Jump cursor
+            readControlBuffer(1);
+            if (mod1 < 1) {
+                mod1 = 1;
+            }
+
+            if (mod2 < 1) {
+                mod2 = 1;
+            }
+
+            cursorPosition = LINE_WIDTH * ((mod1 - 1) % TOTAL_ROWS) + ((mod2 - 1) % LINE_WIDTH);
+
+            endControlSequence();
+            break;
+        case ';':
+            // This case is related to the previos, it's the coord separator for jump cursor
+            controlBuffer[controlBufferPos++] = ';';
+            break;
+        case 'J':
+            // Erase (above|below|all)
+            readControlBuffer(0);
+            clearScreen(mod1);
+
+            endControlSequence();
+            break;
+        case 'K':
+            // Erase to (left|right|all)
+            readControlBuffer(0);
+            eraseLine(mod1);
+
+            endControlSequence();
+            break;
+        case 'd':
+            // Jump to row
+            readControlBuffer(1);
+            if (mod1 < 1) {
+                mod1 = 1;
+            }
+
+            cursorPosition = ((mod1 - 1) % TOTAL_ROWS) + (cursorPosition % LINE_WIDTH);
+
+            endControlSequence();
+            break;
+        case 'z':
+            readControlBuffer(1);
+            mod1 = cursorPosition;
+            cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
+            mod2 = 0;
+            while (controlBufferPos > mod2) setCharacter(controlBuffer[mod2++]);
+            cursorPosition = mod1;
+            endControlSequence();
+            break;
+        case 'm':
+            // Change color!
+            readControlBuffer(0);
+            switch (mod1) {
+                case 1:
+                    // Bold
+                    // Isolate the foreground color to check for boldness
+                    mod2 = attribute & 0xF;
+                    if (mod2 != COLOR_BLACK && mod2 != COLOR_BROWN && mod2 < COLOR_GRAY) {
+                        setForeground(mod2 + 0x8);
+                    }
+                    break;
+                case 22:
+                    // Not bold
+                    // Isolate the foreground color to check for boldness
+                    mod2 = attribute & 0xF;
+                    if (mod2 >= COLOR_BRIGHT_BLUE && mod2 != COLOR_YELLOW) {
+                        setForeground(mod2 - 0x8);
+                    }
+                    break;
+                case 47:
+                    // White bg
+                    setBackground(COLOR_WHITE);
+                    break;
+                case 46:
+                    // Cyan bg
+                    setBackground(COLOR_CYAN);
+                    break;
+                case 45:
+                    // Magenta bg
+                    setBackground(COLOR_MAGENTA);
+                    break;
+                case 44:
+                    // Blue bg
+                    setBackground(COLOR_BLUE);
+                    break;
+                case 42:
+                    // Green bg
+                    setBackground(COLOR_GREEN);
+                    break;
+                case 41:
+                    // Red bg
+                    setBackground(COLOR_RED);
+                    break;
+                case 49:
+                case 40:
+                    // Black bg
+                    setBackground(COLOR_BLACK);
+                    break;
+                case 39:
+                case 37:
+                    // White fg
+                    setForeground(COLOR_WHITE);
+                    break;
+                case 36:
+                    // Cyan fg
+                    setForeground(COLOR_CYAN);
+                    break;
+                case 35:
+                    // Magenta fg
+                    setForeground(COLOR_MAGENTA);
+                    break;
+                case 34:
+                    // Blue fg
+                    setForeground(COLOR_BLUE);
+                    break;
+                case 33:
+                    // Yellow fg
+                    setForeground(COLOR_YELLOW);
+                    break;
+                case 32:
+                    // Green fg
+                    setForeground(COLOR_GREEN);
+                    break;
+                case 31:
+                    // Red fg
+                    setForeground(COLOR_RED);
+                    break;
+                case 30:
+                    // Black fg
+                    setForeground(COLOR_BLACK);
+                    break;
+                case 25:
+                    // Time of the Angels
+                    // If you blink, you die
+                    setBlink(0);
+                    break;
+                case 5:
+                    // Blink!
+                    setBlink(1);
+                    break;
+                case 0:
+                    // Reset
+                    setBlink(0);
+                    setForeground(COLOR_BLACK);
+                    setBackground(COLOR_WHITE);
+                    break;
+            }
+
+            endControlSequence();
+            break;
+        default:
+            endControlSequence();
+            break;
+    }
 }
 
 void updateCursor(void) {

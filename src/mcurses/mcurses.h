@@ -19,4 +19,6 @@ void setForegroundColor(int color);
 
 void setBlink(int blink);
 
+void setBold(int bold);
+
 #endif

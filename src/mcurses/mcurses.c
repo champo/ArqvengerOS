@@ -97,3 +97,12 @@ void setForegroundColor(int color) {
 void setBlink(int blink) {
     printf("\033[%dm", blink ? 5 : 25);
 }
+
+void setBold(int bold) {
+    if (bold) {
+        printf("\033[1m");
+    } else {
+        printf("\033[22m");
+    }
+}
+

@@ -1,4 +1,5 @@
 #include "shell/shell.h"
+#include "shell/info.h"
 #include "system/call/ioctl/keyboard.h"
 #include "library/stdio.h"
 #include "library/string.h"
@@ -10,18 +11,11 @@
 #define BUFFER_SIZE 250
 #define HISTORY_SIZE 50
 
-#define NUM_COMMANDS 1
-
-typedef void (*commandFunction)(char* argv);
-
-typedef struct {
-    commandFunction func;
-    const char* name;
-} command;
+#define NUM_COMMANDS 3
 
 static void nextCommand(char* inputBuffer, const char* prompt);
 
-static const command* findCommand(char* commandString);
+static const Command* findCommand(char* commandString);
 
 static void addToHistory(const char* commandString);
 
@@ -29,8 +23,12 @@ static int updateCursor(size_t promptLen, int cursorPos, int delta);
 
 static int useHistory(size_t promptLen, int cursorPos, char* historyBuffer);
 
-static const command commands[] = {
-    { &echo, "echo" }
+static void printPrompt(const char* prompt);
+
+const Command commands[] = {
+    { &echo, "echo", "Prints the arguments passed to screen.", &manEcho },
+    { &man, "man", "Display information about command execution.", &manMan },
+    { &help, "help", "This command.", &manHelp }
 };
 
 static struct {
@@ -46,7 +44,7 @@ static const termios shellStatus = { 0, 0 };
 
 void shell(void) {
 
-    const command* cmd;
+    const Command* cmd;
     static char inputBuffer[BUFFER_SIZE];
 
     history.start = 0;
@@ -69,6 +67,12 @@ void shell(void) {
             ioctl(0, TCSETS, (void*) &shellStatus);
         }
     }
+}
+
+void printPrompt(const char* prompt) {
+    setBackgroundColor(COLOR_GREEN);
+    printf("%s", prompt);
+    setBackgroundColor(COLOR_WHITE);
 }
 
 int updateCursor(size_t promptLen, int cursorPos, int delta) {
@@ -117,7 +121,7 @@ void nextCommand(char* inputBuffer, const char* prompt) {
     size_t promptLen = strlen(prompt);
     char in;
 
-    printf("%s", prompt);
+    printPrompt(prompt);
     memset(inputBuffer, 0, BUFFER_SIZE);
     while ((in = getchar()) != '\n') {
 
@@ -246,9 +250,9 @@ void addToHistory(const char* commandString) {
     }
 }
 
-const command* findCommand(char* commandString) {
+const Command* findCommand(char* commandString) {
 
-    const command* res;
+    const Command* res;
     size_t i, len;
 
     for (i = 0; i < BUFFER_SIZE - 1 && commandString[i] != ' ' && commandString[i] != 0; i++);
@@ -265,9 +269,14 @@ const command* findCommand(char* commandString) {
         }
     }
 
-    commandString[len] = 0;
+    commandString[len + 1] = 0;
     printf("Command not found: %s\n", commandString);
 
     return NULL;
+}
+
+const Command* getShellCommands(size_t* len) {
+    *len = NUM_COMMANDS;
+    return commands;
 }
 
