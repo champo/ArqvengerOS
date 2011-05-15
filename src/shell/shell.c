@@ -19,15 +19,15 @@ typedef struct {
     const char* name;
 } command;
 
-void nextCommand(char* inputBuffer, const char* prompt);
+static void nextCommand(char* inputBuffer, const char* prompt);
 
-const command* findCommand(char* commandString);
+static const command* findCommand(char* commandString);
 
-void addToHistory(const char* commandString);
+static void addToHistory(const char* commandString);
 
-int updateCursor(size_t promptLen, int cursorPos, int delta);
+static int updateCursor(size_t promptLen, int cursorPos, int delta);
 
-int useHistory(size_t promptLen, int cursorPos, char* historyBuffer);
+static int useHistory(size_t promptLen, int cursorPos, char* historyBuffer);
 
 static const command commands[] = {
     { &echo, "echo" }
@@ -53,8 +53,8 @@ void shell(void) {
     history.end = 0;
     history.current = 0;
 
-    ioctl(0, TCGETS, &inputStatus);
-    ioctl(0, TCSETS, &shellStatus);
+    ioctl(0, TCGETS, (void*) &inputStatus);
+    ioctl(0, TCSETS, (void*) &shellStatus);
 
     while (1) {
 
@@ -62,11 +62,11 @@ void shell(void) {
         cmd = findCommand(inputBuffer);
         if (cmd != NULL) {
 
-            ioctl(0, TCSETS, &inputStatus);
+            ioctl(0, TCSETS, (void*) &inputStatus);
             cmd->func(inputBuffer);
-            ioctl(0, TCGETS, &inputStatus);
+            ioctl(0, TCGETS, (void*) &inputStatus);
 
-            ioctl(0, TCSETS, &shellStatus);
+            ioctl(0, TCSETS, (void*) &shellStatus);
         }
     }
 }
@@ -116,7 +116,6 @@ void nextCommand(char* inputBuffer, const char* prompt) {
     int cursorPos = 0, inputEnd = 0, i, usingHistory = 0;
     size_t promptLen = strlen(prompt);
     char in;
-    char* historyBuffer;
 
     printf("%s", prompt);
     memset(inputBuffer, 0, BUFFER_SIZE);

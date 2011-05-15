@@ -20,9 +20,9 @@ typedef struct {
     int unget;
 } FILE;
 
-FILE *stdin;
-FILE *stdout;
-FILE *stderr;
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
 
 int fputc(char c, FILE *stream);
 int fputs(const char *s, FILE *stream);

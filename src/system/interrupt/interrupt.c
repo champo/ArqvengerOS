@@ -29,7 +29,7 @@
 #define PIC2_DATA           0xA1
 
 // 8086/88 (MCS-80/85) mode
-#define ICW4_8086           0x01        
+#define ICW4_8086           0x01
 
 /* Tell the compiler to pack the following structs to 1 byte (No 4 byte padding) */
 #pragma pack (1)
@@ -61,10 +61,10 @@ typedef struct {
 } InterruptDescriptorTableRegister;
 
 /* This is our IDT with 256 entries */
-InterruptDescriptor idt[0x100];
+static InterruptDescriptor idt[0x100];
 
-void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dword offset, byte access);
-void reMapPIC(int offset1,int offset2);
+static void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dword offset, byte access);
+static void reMapPIC(int offset1,int offset2);
 
 /* These are all ASM functions used only here, so we just keep the def here */
 void _lidt(InterruptDescriptorTableRegister* idtr);
@@ -120,7 +120,7 @@ void setupIDT(void) {
     setIdtEntry(idt, 0x80, 0x08, (dword)&_int80Handler, ACS_INT);
     setIdtEntry(idt, 0x20, 0x08, (dword)&_int20Handler, ACS_INT);
     setIdtEntry(idt, 0x21, 0x08, (dword)&_int21Handler, ACS_INT);
-    
+
     setIdtEntry(idt, 0x00, 0x08, (dword)&_int00Handler, ACS_INT);
     setIdtEntry(idt, 0x01, 0x08, (dword)&_int01Handler, ACS_INT);
     setIdtEntry(idt, 0x02, 0x08, (dword)&_int02Handler, ACS_INT);
@@ -152,7 +152,7 @@ void setupIDT(void) {
     setIdtEntry(idt, 0x1C, 0x08, (dword)&_int1CHandler, ACS_INT);
     setIdtEntry(idt, 0x1D, 0x08, (dword)&_int1DHandler, ACS_INT);
     setIdtEntry(idt, 0x1E, 0x08, (dword)&_int1EHandler, ACS_INT);
-    setIdtEntry(idt, 0x1F, 0x08, (dword)&_int1FHandler, ACS_INT);   
+    setIdtEntry(idt, 0x1F, 0x08, (dword)&_int1FHandler, ACS_INT);
 
     idtr.base = (dword) &idt;
     idtr.limit = sizeof(idt) - 1;
@@ -180,27 +180,28 @@ void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dw
 
 void reMapPIC(int offset1,int offset2){
     unsigned char mask1,mask2;
-    
+
     // Saving masks
     mask1 = inB(PIC1_DATA);
     mask2 = inB(PIC2_DATA);
-    
+
     // Starting initialization
     outB(PIC1_COMMAND,0x11);
     outB(PIC2_COMMAND,0x11);
-    
+
     // Setting PIC offset
     outB(PIC1_DATA,offset1);
     outB(PIC2_DATA,offset2);
-    
+
     // Continuing initialization
     outB(PIC1_DATA,4);
     outB(PIC2_DATA,2);
 
     outB(PIC1_DATA,ICW4_8086);
     outB(PIC2_DATA,ICW4_8086);
-    
+
     // Restore masks
     outB(PIC1_DATA,mask1);
     outB(PIC2_DATA,mask2);
 }
+
