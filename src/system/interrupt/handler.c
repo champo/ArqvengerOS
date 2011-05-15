@@ -2,6 +2,7 @@
 #include "system/tick.h"
 #include "system/call.h"
 #include "system/io.h"
+#include "system/common.h"
 #include "system/interrupt/handler.h"i
 #include "system/call/codes.h"
 
@@ -16,13 +17,13 @@ typedef void (*interruptHandler)(registers* regs);
 
 static interruptHandler table[256];
 
-#define     register(X)         table[0x##X] = &int##X 
+#define     register(X)         table[0x##X] = &int##X
 
 #define     PIC_MIN_INTNUM      32
 #define     PIC_IRQS            16
 #define     PIC_EOI             0x20
 
-#define     IN_USE_EXCEPTIONS   20   
+#define     IN_USE_EXCEPTIONS   20
 
 static const char* exceptionTable[] = { "Divide by zero", "Debugger", "NMI", "Breakpoint", "Overflow", "Bounds", "Invalid Opcode", "Coprocesor not available", "Double fault", "Coprocessor Segment Overrun", "Invalid Task State Segment", "Segment not present", "Stack fault", "General Protection", "Page Fault", "Intel Reserved", "Math Fault", "Aligment Check", "Machine Check", "Floating-Point Exception"};
 
@@ -70,7 +71,7 @@ void int80(registers* regs) {
 
     switch (regs->eax) {
 
-        case _SYS_READ: 
+        case _SYS_READ:
             regs->eax = _read((unsigned int)regs->ebx, (char*)regs->ecx, (size_t)regs->edx);
             break;
         case _SYS_WRITE:
@@ -102,9 +103,13 @@ void exceptionHandler(registers* regs){
     } else {
         exception = exceptionTable[regs->intNum];
     }
+    i = 0;
     while ( exception[i] != '\0') {
-        *screen = exception[i++];
         screen += 2;
+        *screen = exception[i++];
     }
+
+    disableInterrupts();
+    halt();
 }
 
