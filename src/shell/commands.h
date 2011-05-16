@@ -4,5 +4,6 @@
 #include "shell/echo/echo.h"
 #include "shell/man/man.h"
 #include "shell/help/help.h"
+#include "shell/sudoku/sudoku.h"
 
 #endif

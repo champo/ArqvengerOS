@@ -14,11 +14,6 @@ void echo(char* argv) {
 
 void manEcho(void) {
     setBold(1);
-    printf("echo\n");
-    setBold(0);
-    printf("\tPrint arguments to screen.\n\n");
-
-    setBold(1);
     printf("Usage:\n\t echo");
     setBold(0);
 

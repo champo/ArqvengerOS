@@ -20,12 +20,6 @@ void help(char* argv) {
 
 void manHelp(void) {
     setBold(1);
-    printf("help\n\t");
-    setBold(0);
-
-    printf("Print the list of shell commands.\n\n");
-
-    setBold(1);
     printf("Usage:\n\thelp\n");
     setBold(0);
 }

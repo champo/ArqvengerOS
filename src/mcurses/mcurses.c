@@ -14,7 +14,7 @@ void moveCursorInColumn(int r) {
 }
 
 void clearScreen(int type) {
-    if (type != CLEAR_BELOW || type != CLEAR_ALL || type != CLEAR_ABOVE) {
+    if (type != CLEAR_BELOW && type != CLEAR_ALL && type != CLEAR_ABOVE) {
         type = CLEAR_BELOW;
     }
 
@@ -22,7 +22,7 @@ void clearScreen(int type) {
 }
 
 void clearLine(int type) {
-    if (type != ERASE_RIGHT || type != ERASE_ALL || type != ERASE_LEFT) {
+    if (type != ERASE_RIGHT && type != ERASE_ALL && type != ERASE_LEFT) {
         type = ERASE_RIGHT;
     }
 

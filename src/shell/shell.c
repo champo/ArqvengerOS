@@ -11,7 +11,7 @@
 #define BUFFER_SIZE 250
 #define HISTORY_SIZE 50
 
-#define NUM_COMMANDS 3
+#define NUM_COMMANDS 4
 
 static void nextCommand(char* inputBuffer, const char* prompt);
 
@@ -28,7 +28,8 @@ static void printPrompt(const char* prompt);
 const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho },
     { &man, "man", "Display information about command execution.", &manMan },
-    { &help, "help", "This command.", &manHelp }
+    { &help, "help", "This command.", &manHelp },
+    { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku }
 };
 
 static struct {
@@ -70,9 +71,9 @@ void shell(void) {
 }
 
 void printPrompt(const char* prompt) {
-    setBackgroundColor(COLOR_GREEN);
+    setForegroundColor(COLOR_GREEN);
     printf("%s", prompt);
-    setBackgroundColor(COLOR_WHITE);
+    setForegroundColor(COLOR_WHITE);
 }
 
 int updateCursor(size_t promptLen, int cursorPos, int delta) {

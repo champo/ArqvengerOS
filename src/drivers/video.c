@@ -52,7 +52,7 @@ static char* videoMemory = (char*) 0xb8000;
 static char videoBuffer[2 * LINE_WIDTH * (TOTAL_ROWS + 1)];
 
 void setAttribute(int bg, int fg, int blink) {
-    attribute = fg | (bg << 4);
+    attribute = (fg & 0xF) | ((bg & 0xF) << 4);
     if (blink) {
         attribute |= BLINK_ATTR;
     }
@@ -422,65 +422,65 @@ void handleControlSequence(char cur) {
                         setForeground(mod2 - 0x8);
                     }
                     break;
-                case 47:
+                case 37:
                     // White bg
                     setBackground(COLOR_WHITE);
                     break;
-                case 46:
+                case 36:
                     // Cyan bg
                     setBackground(COLOR_CYAN);
                     break;
-                case 45:
+                case 35:
                     // Magenta bg
                     setBackground(COLOR_MAGENTA);
                     break;
-                case 44:
+                case 34:
                     // Blue bg
                     setBackground(COLOR_BLUE);
                     break;
-                case 42:
+                case 32:
                     // Green bg
                     setBackground(COLOR_GREEN);
                     break;
-                case 41:
+                case 31:
                     // Red bg
                     setBackground(COLOR_RED);
                     break;
-                case 49:
-                case 40:
+                case 39:
+                case 30:
                     // Black bg
                     setBackground(COLOR_BLACK);
                     break;
-                case 39:
-                case 37:
+                case 49:
+                case 47:
                     // White fg
                     setForeground(COLOR_WHITE);
                     break;
-                case 36:
+                case 46:
                     // Cyan fg
                     setForeground(COLOR_CYAN);
                     break;
-                case 35:
+                case 45:
                     // Magenta fg
                     setForeground(COLOR_MAGENTA);
                     break;
-                case 34:
+                case 44:
                     // Blue fg
                     setForeground(COLOR_BLUE);
                     break;
-                case 33:
+                case 43:
                     // Yellow fg
                     setForeground(COLOR_YELLOW);
                     break;
-                case 32:
+                case 42:
                     // Green fg
                     setForeground(COLOR_GREEN);
                     break;
-                case 31:
+                case 41:
                     // Red fg
                     setForeground(COLOR_RED);
                     break;
-                case 30:
+                case 40:
                     // Black fg
                     setForeground(COLOR_BLACK);
                     break;

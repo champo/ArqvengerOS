@@ -42,6 +42,12 @@ int displayManual(char* name) {
     for (i = 0; i < numCommands; i++) {
 
         if (strncmp(commands[i].name, realStart, nameLen) == 0) {
+
+            setBold(1);
+            printf("%s\n", commands[i].name);
+            setBold(0);
+            printf("\t%s\n\n", commands[i].desc);
+
             if (commands[i].man != NULL) {
                 commands[i].man();
             }
@@ -53,11 +59,6 @@ int displayManual(char* name) {
 }
 
 void manMan(void) {
-    setBold(1);
-    printf("man\n");
-    setBold(0);
-    printf("\tDisplays command manual pages.\n\n");
-
     setBold(1);
     printf("Usage:\n\tman");
     setBold(0);
