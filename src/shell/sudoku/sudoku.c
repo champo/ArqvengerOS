@@ -166,7 +166,16 @@ void sudoku(char* argv) {
 
             placeNumber(&state, in);
             if (state.placed == 81 && state.errors == 0) {
-                //TODO: Congratulate him
+
+                setForegroundColor(COLOR_GREEN);
+                moveCursor(boardTop + 10 * 2, boardLeft);
+                printf("Congratulations! You have solved it correctly.");
+
+                moveCursor(boardTop + 10 * 2 + 1, boardLeft);
+                printf("Press enter to exit.");
+                setForegroundColor(COLOR_WHITE);
+
+                while (getchar() != '\n');
                 break;
             }
         }
