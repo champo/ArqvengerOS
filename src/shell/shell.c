@@ -127,7 +127,7 @@ void nextCommand(char* inputBuffer, const char* prompt) {
     while ((in = getchar()) != '\n') {
 
         if (in == '\033') {
-            if (getchar() == '[') {
+            if (getchar() == CSI) {
                 // We know this! Yay!
                 switch (getchar()) {
                     case 'A':
@@ -181,6 +181,11 @@ void nextCommand(char* inputBuffer, const char* prompt) {
                     case 'F':
                         // End
                         cursorPos = updateCursor(promptLen, cursorPos, inputEnd - cursorPos);
+                        break;
+                    case CSI:
+                        //This is a function key
+                        in = getchar();
+                        //TODO: Change to tty "in - 'A'"
                         break;
                 }
             }

@@ -39,6 +39,11 @@
 #define SCROLL_LOCK 0x46
 #define NUM_LOCK 0x45
 
+#define F1_CODE 0x3B
+#define F2_CODE 0x3C
+#define F3_CODE 0x3D
+#define F4_CODE 0x3E
+
 static char normalCodeTable[] = {
         0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
         '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -205,6 +210,13 @@ void readScanCode(void) {
             case END_CODE:
                 if (!isBreak && (escaped || !kbStatus.num)) {
                     addInput("\033[F", 3);
+                }
+                break;
+            default:
+                if (F1_CODE <= makeCode && makeCode <= F4_CODE) {
+                    char mod = makeCode - F1_CODE + 'A';
+                    addInput("\033[[", 3);
+                    addInput(&mod, 1);
                 }
                 break;
         }
