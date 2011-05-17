@@ -5,4 +5,6 @@
 
 size_t writeScreen(const void* buf, size_t length);
 
+void initScreen(void);
+
 #endif

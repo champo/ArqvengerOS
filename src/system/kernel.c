@@ -1,7 +1,7 @@
 #include "system/interrupt.h"
 #include "shell/shell.h"
 #include "library/stdio.h"
-#include "system/call.h"
+#include "drivers/video.h"
 
 void kmain(void);
 
@@ -21,8 +21,10 @@ void kmain(void) {
     stdout = &files[1];
     stderr = &files[2];
 
+    initScreen();
+
     // This dandy line, resets the cursor and clears the screen
-    _write(1, "\033[1;1H\033[2J", 10);
+    writeScreen("\033[1;1H\033[2J", 10);
 
     setupIDT();
     while (1) {

@@ -32,7 +32,7 @@ const Command commands[] = {
     { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku }
 };
 
-static struct {
+struct {
     char input[HISTORY_SIZE][BUFFER_SIZE];
     int start;
     int end;
@@ -185,7 +185,8 @@ void nextCommand(char* inputBuffer, const char* prompt) {
                     case CSI:
                         //This is a function key
                         in = getchar();
-                        //TODO: Change to tty "in - 'A'"
+                        printf("\033[%dZ", in - 'A');
+                        //TODO: Change shell
                         break;
                 }
             }

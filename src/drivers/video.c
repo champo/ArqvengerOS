@@ -8,7 +8,7 @@
 
 #define CONTROL_BUFFER_LEN 40
 #define readControlBuffer(def) parseControlBuffer(&mod1, &mod2, def)
-#define endControlSequence() escaped = csi = controlBufferPos = 0
+#define endControlSequence() status->escaped = status->csi = status->controlBufferPos = 0
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')
 
@@ -21,9 +21,7 @@
 #define COLOR_BRIGHT_MAGENTA 0xD
 #define COLOR_BRIGHT_WHITE 0xF
 
-#define setForeground(color) setAttribute((attribute >> 4) & 0x7, (color), attribute & BLINK_ATTR)
-#define setBackground(color) setAttribute((color), attribute & 0xF, attribute & BLINK_ATTR)
-#define setBlink(blink) setAttribute((attribute >> 4) & 0x7, attribute & 0xF, (blink))
+#define NUM_SCREENS 4
 
 static void handleControlSequence(char cur);
 
@@ -43,29 +41,89 @@ static void setCharacter(char c);
 
 static void scrollLine(int delta);
 
-static int cursorPosition = 0;
-static int escaped = 0, csi = 0;
-static char attribute = WHITE_TXT;
-static char controlBuffer[CONTROL_BUFFER_LEN];
-static size_t controlBufferPos = 0;
-static char* videoMemory = (char*) 0xb8000;
-static char videoBuffer[2 * LINE_WIDTH * (TOTAL_ROWS + 1)];
+static void setForeground(int color);
 
-void setAttribute(int bg, int fg, int blink) {
-    attribute = (fg & 0xF) | ((bg & 0xF) << 4);
-    if (blink) {
-        attribute |= BLINK_ATTR;
+static void setBackground(int color);
+
+static void setBlink(int blink);
+
+static void changeScreen(int screen);
+
+static void flipBuffer(int lineOffset);
+
+static char* videoMemory = (char*) 0xb8000;
+
+typedef struct {
+    int cursorPosition;
+    int escaped;
+    int csi;
+    char attribute;
+    char controlBuffer[CONTROL_BUFFER_LEN];
+    size_t controlBufferPos;
+    char videoBuffer[2 * LINE_WIDTH * (TOTAL_ROWS + 1)];
+} ScreenStatus;
+
+static ScreenStatus screens[NUM_SCREENS];
+static ScreenStatus* status;
+
+void initScreen(void) {
+
+    int i;
+    for (i = NUM_SCREENS; i >= 0; i--) {
+        status = &screens[i];
+
+        status->cursorPosition = 0;
+        status->escaped = 0;
+        status->csi = 0;
+
+        setAttribute(COLOR_BLACK, COLOR_WHITE, 0);
+
+        status->controlBufferPos = 0;
     }
 }
 
+void flipBuffer(int lineOffset) {
+
+    int i;
+    for (i = 0; i < 2 * LINE_WIDTH * TOTAL_ROWS; i++) {
+        videoMemory[i] = status->videoBuffer[i];
+    }
+}
+
+void changeScreen(int screen) {
+
+    status = &screens[screen % NUM_SCREENS];
+    flipBuffer(0);
+}
+
+void setAttribute(int bg, int fg, int blink) {
+
+    status->attribute = (fg & 0xF) | ((bg & 0xF) << 4);
+    if (blink) {
+        status->attribute |= BLINK_ATTR;
+    }
+}
+
+void setForeground(int color) {
+    setAttribute((status->attribute >> 4) & 0x7, color, status->attribute & BLINK_ATTR);
+}
+
+void setBackground(int color) {
+    setAttribute(color, status->attribute & 0xF, status->attribute & BLINK_ATTR);
+}
+
+void setBlink(int blink) {
+    setAttribute((status->attribute >> 4) & 0x7, status->attribute & 0xF, blink);
+}
+
 void setCharacter(char c) {
-    videoMemory[2*cursorPosition] = c;
-    videoMemory[2*cursorPosition + 1] = attribute;
+    videoMemory[2*status->cursorPosition] = c;
+    videoMemory[2*status->cursorPosition + 1] = status->attribute;
 
-    videoBuffer[2*cursorPosition] = c;
-    videoBuffer[2*cursorPosition + 1] = attribute;
+    status->videoBuffer[2*status->cursorPosition] = c;
+    status->videoBuffer[2*status->cursorPosition + 1] = status->attribute;
 
-    cursorPosition++;
+    status->cursorPosition++;
 }
 
 void scrollLine(int delta) {
@@ -79,24 +137,22 @@ void scrollLine(int delta) {
     int i, j;
     // Move the video buffer up one line
     for (j = 0, i = delta * 2 * LINE_WIDTH; i < 2 * LINE_WIDTH * TOTAL_ROWS; i++, j++) {
-        videoBuffer[j] = videoBuffer[i];
+        status->videoBuffer[j] = status->videoBuffer[i];
     }
 
     // Clear the lines that scrolled up
     for (i = LINE_WIDTH * (TOTAL_ROWS - delta); i < LINE_WIDTH * TOTAL_ROWS; i++) {
-        videoBuffer[2 * i] = ' ';
-        videoBuffer[2 * i + 1] = attribute;
+        status->videoBuffer[2 * i] = ' ';
+        status->videoBuffer[2 * i + 1] = status->attribute;
     }
 
     // Reflect the changes to screen
-    for (i = 0; i < 2 * LINE_WIDTH * TOTAL_ROWS; i++) {
-        videoMemory[i] = videoBuffer[i];
-    }
+    flipBuffer(0);
 }
 
 void eraseLine(int type) {
 
-    int start, end, line = cursorPosition / LINE_WIDTH;
+    int start, end, line = status->cursorPosition / LINE_WIDTH;
     switch (type) {
         case ERASE_ALL:
             start = line * LINE_WIDTH;
@@ -104,11 +160,11 @@ void eraseLine(int type) {
             break;
         case ERASE_LEFT:
             start = line * LINE_WIDTH;
-            end = cursorPosition;
+            end = status->cursorPosition;
             break;
         case ERASE_RIGHT:
         default:
-            start = cursorPosition + 1;
+            start = status->cursorPosition + 1;
             end = (line + 1) * LINE_WIDTH;
             break;
     }
@@ -126,11 +182,11 @@ void clearScreen(int type) {
             break;
         case CLEAR_ABOVE:
             start = 0;
-            end = LINE_WIDTH * (cursorPosition / LINE_WIDTH);
+            end = LINE_WIDTH * (status->cursorPosition / LINE_WIDTH);
             break;
         case CLEAR_BELOW:
         default:
-            start = (1 + cursorPosition / LINE_WIDTH) * LINE_WIDTH;
+            start = (1 + status->cursorPosition / LINE_WIDTH) * LINE_WIDTH;
             end = TOTAL_ROWS * LINE_WIDTH;
             break;
     }
@@ -142,10 +198,10 @@ void setBlank(int start, int end) {
 
     while (start < end) {
         videoMemory[2*start] = ' ';
-        videoMemory[2*start + 1] = attribute;
+        videoMemory[2*start + 1] = status->attribute;
 
-        videoBuffer[2*start] = ' ';
-        videoBuffer[2*start + 1] = attribute;
+        status->videoBuffer[2*start] = ' ';
+        status->videoBuffer[2*start + 1] = status->attribute;
         start++;
     }
 }
@@ -153,23 +209,23 @@ void setBlank(int start, int end) {
 void parseControlBuffer(int* a, int* b, int def) {
 
     // Set the null at the end, and then parse it
-    if (controlBufferPos) {
+    if (status->controlBufferPos) {
 
         size_t i = 0;
         int t = 0;
 
-        while (i < controlBufferPos && controlBuffer[i] != ';') {
-            t = t*10 + (controlBuffer[i] - '0');
+        while (i < status->controlBufferPos && status->controlBuffer[i] != ';') {
+            t = t*10 + (status->controlBuffer[i] - '0');
             i++;
         }
         *a = t;
 
-        if (i != controlBufferPos) {
+        if (i != status->controlBufferPos) {
             i++;
 
             t = 0;
-            while (i < controlBufferPos) {
-                t = t*10 + (controlBuffer[i] - '0');
+            while (i < status->controlBufferPos) {
+                t = t*10 + (status->controlBuffer[i] - '0');
                 i++;
             }
 
@@ -192,37 +248,37 @@ size_t writeScreen(const void* buf, size_t length) {
 
     for (aux = 0; aux < length; aux++) {
         cur = str[aux];
-        if (!escaped) {
+        if (!status->escaped) {
 
             if (cur != ESCAPE_CODE) {
 
                 int end;
                 switch (cur) {
                     case '\n':
-                        cursorPosition = LINE_WIDTH * (cursorPosition / LINE_WIDTH + 1);
+                        status->cursorPosition = LINE_WIDTH * (status->cursorPosition / LINE_WIDTH + 1);
                         break;
                     case '\r':
-                        cursorPosition -= cursorPosition % LINE_WIDTH;
+                        status->cursorPosition -= status->cursorPosition % LINE_WIDTH;
                         break;
                     case '\t':
-                        if ((cursorPosition % LINE_WIDTH) + 4 >= LINE_WIDTH) {
-                            end = (cursorPosition / LINE_WIDTH + 1) - 1;
+                        if ((status->cursorPosition % LINE_WIDTH) + 4 >= LINE_WIDTH) {
+                            end = (status->cursorPosition / LINE_WIDTH + 1) - 1;
                         } else {
-                            end = cursorPosition + 4;
+                            end = status->cursorPosition + 4;
                         }
 
-                        while (cursorPosition < end) {
+                        while (status->cursorPosition < end) {
                             setCharacter(' ');
                         }
                         break;
                     case '\v':
-                        cursorPosition += LINE_WIDTH;
+                        status->cursorPosition += LINE_WIDTH;
                         break;
                     case '\b':
-                        if (cursorPosition > 0) {
-                            cursorPosition -= 1;
+                        if (status->cursorPosition > 0) {
+                            status->cursorPosition -= 1;
                             setCharacter(' ');
-                            cursorPosition -= 1;
+                            status->cursorPosition -= 1;
                         }
                         break;
                     default:
@@ -230,31 +286,31 @@ size_t writeScreen(const void* buf, size_t length) {
                         break;
                 }
 
-                if (cursorPosition >= LINE_WIDTH * TOTAL_ROWS) {
+                if (status->cursorPosition >= LINE_WIDTH * TOTAL_ROWS) {
                     scrollLine(1);
-                    cursorPosition -= LINE_WIDTH;
-                } else if (cursorPosition < 0) {
-                    cursorPosition = 0;
+                    status->cursorPosition -= LINE_WIDTH;
+                } else if (status->cursorPosition < 0) {
+                    status->cursorPosition = 0;
                 }
             } else {
                 // We have an escape code! Let's have some fun :D
-                escaped = 1;
+                status->escaped = 1;
             }
         } else {
 
-            if (csi) {
+            if (status->csi) {
 
                 // We've already read ^[[ so now we go on to check what command we're given
                 if (isdigit(cur)) {
                     // This is probably a modifier for a sequence, store!
-                    controlBuffer[controlBufferPos++] = cur;
+                    status->controlBuffer[status->controlBufferPos++] = cur;
                 } else {
                     handleControlSequence(cur);
                 }
             } else if (cur == CSI) {
 
                 // We have the Control Sequence Indicator, yay!
-                csi = 1;
+                status->csi = 1;
             } else {
 
                 // This wasn't anything we know, so we end the escape sequence
@@ -272,13 +328,18 @@ void handleControlSequence(char cur) {
 
     int mod1, mod2;
     switch (cur) {
+        case 'Z':
+            readControlBuffer(0);
+            changeScreen(mod1);
+            endControlSequence();
+            break;
         case 'A':
             // Cursor up!
             readControlBuffer(1);
-            if (cursorPosition < LINE_WIDTH * mod1) {
-                cursorPosition = cursorPosition % LINE_WIDTH;
+            if (status->cursorPosition < LINE_WIDTH * mod1) {
+                status->cursorPosition = status->cursorPosition % LINE_WIDTH;
             } else {
-                cursorPosition -= LINE_WIDTH * mod1;
+                status->cursorPosition -= LINE_WIDTH * mod1;
             }
 
             endControlSequence();
@@ -286,10 +347,10 @@ void handleControlSequence(char cur) {
         case 'B':
             // Cursor down!
             readControlBuffer(1);
-            if (cursorPosition + mod1 * LINE_WIDTH < LINE_WIDTH * TOTAL_ROWS) {
-                cursorPosition += mod1 * LINE_WIDTH;
+            if (status->cursorPosition + mod1 * LINE_WIDTH < LINE_WIDTH * TOTAL_ROWS) {
+                status->cursorPosition += mod1 * LINE_WIDTH;
             } else {
-                cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH + (cursorPosition % LINE_WIDTH);
+                status->cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH + (status->cursorPosition % LINE_WIDTH);
             }
 
             endControlSequence();
@@ -297,10 +358,10 @@ void handleControlSequence(char cur) {
         case 'C':
             // Cursor right!
             readControlBuffer(1);
-            if ((cursorPosition % LINE_WIDTH) + mod1 >= LINE_WIDTH) {
-                cursorPosition += LINE_WIDTH - (cursorPosition % LINE_WIDTH);
+            if ((status->cursorPosition % LINE_WIDTH) + mod1 >= LINE_WIDTH) {
+                status->cursorPosition += LINE_WIDTH - (status->cursorPosition % LINE_WIDTH);
             } else {
-                cursorPosition += mod1;
+                status->cursorPosition += mod1;
             }
 
             endControlSequence();
@@ -308,10 +369,10 @@ void handleControlSequence(char cur) {
         case 'D':
             /* Cursor left! */
             readControlBuffer(1);
-            if ((cursorPosition % LINE_WIDTH) < mod1) {
-                cursorPosition -= cursorPosition % LINE_WIDTH;
+            if ((status->cursorPosition % LINE_WIDTH) < mod1) {
+                status->cursorPosition -= status->cursorPosition % LINE_WIDTH;
             } else {
-                cursorPosition -= mod1;
+                status->cursorPosition -= mod1;
             }
 
             endControlSequence();
@@ -319,12 +380,12 @@ void handleControlSequence(char cur) {
         case 'E':
             // Next line
             readControlBuffer(1);
-            if (cursorPosition >= (LINE_WIDTH * (TOTAL_ROWS - 1))) {
-                cursorPosition -= cursorPosition % LINE_WIDTH;
-            } else if (cursorPosition / LINE_WIDTH + mod1 >= TOTAL_ROWS) {
-                cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
+            if (status->cursorPosition >= (LINE_WIDTH * (TOTAL_ROWS - 1))) {
+                status->cursorPosition -= status->cursorPosition % LINE_WIDTH;
+            } else if (status->cursorPosition / LINE_WIDTH + mod1 >= TOTAL_ROWS) {
+                status->cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
             } else {
-                cursorPosition += LINE_WIDTH * mod1 - (cursorPosition % LINE_WIDTH);
+                status->cursorPosition += LINE_WIDTH * mod1 - (status->cursorPosition % LINE_WIDTH);
             }
 
             endControlSequence();
@@ -332,9 +393,9 @@ void handleControlSequence(char cur) {
         case 'F':
             // Previous line
             readControlBuffer(1);
-            cursorPosition -= LINE_WIDTH * mod1 + (cursorPosition % LINE_WIDTH);
-            if (cursorPosition < 0) {
-                cursorPosition = 0;
+            status->cursorPosition -= LINE_WIDTH * mod1 + (status->cursorPosition % LINE_WIDTH);
+            if (status->cursorPosition < 0) {
+                status->cursorPosition = 0;
             }
 
             endControlSequence();
@@ -345,7 +406,7 @@ void handleControlSequence(char cur) {
             if (mod1 < 1) {
                 mod1 = 1;
             }
-            cursorPosition += ((mod1 - 1) % LINE_WIDTH) - ((cursorPosition) % LINE_WIDTH);
+            status->cursorPosition += ((mod1 - 1) % LINE_WIDTH) - ((status->cursorPosition) % LINE_WIDTH);
 
             endControlSequence();
             break;
@@ -360,13 +421,13 @@ void handleControlSequence(char cur) {
                 mod2 = 1;
             }
 
-            cursorPosition = LINE_WIDTH * ((mod1 - 1) % TOTAL_ROWS) + ((mod2 - 1) % LINE_WIDTH);
+            status->cursorPosition = LINE_WIDTH * ((mod1 - 1) % TOTAL_ROWS) + ((mod2 - 1) % LINE_WIDTH);
 
             endControlSequence();
             break;
         case ';':
             // This case is related to the previos, it's the coord separator for jump cursor
-            controlBuffer[controlBufferPos++] = ';';
+            status->controlBuffer[status->controlBufferPos++] = ';';
             break;
         case 'J':
             // Erase (above|below|all)
@@ -389,17 +450,17 @@ void handleControlSequence(char cur) {
                 mod1 = 1;
             }
 
-            cursorPosition = ((mod1 - 1) % TOTAL_ROWS) + (cursorPosition % LINE_WIDTH);
+            status->cursorPosition = ((mod1 - 1) % TOTAL_ROWS) + (status->cursorPosition % LINE_WIDTH);
 
             endControlSequence();
             break;
         case 'z':
             readControlBuffer(1);
-            mod1 = cursorPosition;
-            cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
+            mod1 = status->cursorPosition;
+            status->cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
             mod2 = 0;
-            while (controlBufferPos > mod2) setCharacter(controlBuffer[mod2++]);
-            cursorPosition = mod1;
+            while (status->controlBufferPos > mod2) setCharacter(status->controlBuffer[mod2++]);
+            status->cursorPosition = mod1;
             endControlSequence();
             break;
         case 'm':
@@ -409,7 +470,7 @@ void handleControlSequence(char cur) {
                 case 1:
                     // Bold
                     // Isolate the foreground color to check for boldness
-                    mod2 = attribute & 0xF;
+                    mod2 = status->attribute & 0xF;
                     if (mod2 != COLOR_BLACK && mod2 != COLOR_BROWN && mod2 < COLOR_GRAY) {
                         setForeground(mod2 + 0x8);
                     }
@@ -417,7 +478,7 @@ void handleControlSequence(char cur) {
                 case 22:
                     // Not bold
                     // Isolate the foreground color to check for boldness
-                    mod2 = attribute & 0xF;
+                    mod2 = status->attribute & 0xF;
                     if (mod2 >= COLOR_BRIGHT_BLUE && mod2 != COLOR_YELLOW) {
                         setForeground(mod2 - 0x8);
                     }
@@ -513,10 +574,10 @@ void updateCursor(void) {
 
     // cursor LOW port to vga INDEX register
     outB(0x3D4, 0x0F);
-    outB(0x3D5, (unsigned char)(cursorPosition&0xFF));
+    outB(0x3D5, (unsigned char)(status->cursorPosition&0xFF));
 
     // cursor HIGH port to vga INDEX register
     outB(0x3D4, 0x0E);
-    outB(0x3D5, (unsigned char )((cursorPosition>>8)&0xFF));
+    outB(0x3D5, (unsigned char )((status->cursorPosition>>8)&0xFF));
 }
 
