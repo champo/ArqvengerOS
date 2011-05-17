@@ -22,7 +22,7 @@ size_t strlen(const char *s) {
  */
 char *strcpy(char *s, const char *ct) {
     int i = 0;
-    
+
     while(ct[i] != '\0'){
         s[i] = ct[i];
         i++;
@@ -32,26 +32,26 @@ char *strcpy(char *s, const char *ct) {
     return s;
 }
 
-/** 
+/**
  * Copies a maximum of n characters from ct to n
  */
 char *strncpy(char *s, const char *ct, size_t n) {
-    
+
     int i;
 
     for(i = 0; i<n && ct[i] != '\0'; i++) {
         s[i] = ct[i];
     }
     s[i] = '\0';
-    
+
     return s;
 }
 
-/** 
+/**
  * Concatenates string s with string ct
  */
 char *strcat(char *s, const char *ct) {
-    
+
     int i = 0;
     int j = 0;
 
@@ -63,17 +63,17 @@ char *strcat(char *s, const char *ct) {
         s[i] = ct[j];
         i++;
         j++;
-    } 
+    }
 
     s[i] = '\0';
     return s;
 }
 
-/** 
+/**
  * Concatenates a maximum of n characters from string ct to string s
  */
 char *strncat(char *s, const char *ct, size_t n) {
-    
+
     int i = 0;
     int j = 0;
 
@@ -91,7 +91,7 @@ char *strncat(char *s, const char *ct, size_t n) {
     return s;
 }
 
-/** 
+/**
  * Returns a pointer to the first appearance of c in cs
  */
 char *strchr(const char *cs, char c) {
@@ -105,7 +105,7 @@ char *strchr(const char *cs, char c) {
     return(cs[i] == '\0' ? NULL : (cs + i));
 }
 
-/** 
+/**
  * Returns a pointer to the last appearance of c in cs
  */
 char *strrchr(const char *cs, char c) {
@@ -115,8 +115,8 @@ char *strrchr(const char *cs, char c) {
 
     while(cs[i] != '\0') {
         if(cs[i] == c) {
-            last = i;   
-        }     
+            last = i;
+        }
         i++;
     }
 
@@ -128,7 +128,7 @@ char *strrchr(const char *cs, char c) {
  * Compares strings cs and ct.
  */
 int strcmp(const char *cs, const char *ct) {
-    
+
     return strncmp(cs, ct, INT_MAX);
 }
 
@@ -136,14 +136,14 @@ int strcmp(const char *cs, const char *ct) {
  * Compares at most n characters of strings cs and ct.
  */
 int strncmp(const char *cs, const char *ct, size_t n) {
-    
+
     int i = 0;
 
     while (cs[i] == ct[i] && cs[i] != '\0' && i < n) {
         i++;
     }
 
-    if (cs[i] == ct[i]) {
+    if (i == n || cs[i] == ct[i]) {
         return 0;
     }
 
@@ -154,7 +154,7 @@ int strncmp(const char *cs, const char *ct, size_t n) {
  *  Sets n characters of s with c
  */
 void *memset(void *s, char c, size_t n) {
-    
+
     int i = 0;
 
     while(i < n){
@@ -167,7 +167,7 @@ void *memset(void *s, char c, size_t n) {
 
 /**
  * Copies n characters from ct to s
- */ 
+ */
 void *memcpy(void *s, const void *ct, size_t n) {
 
     int i = 0;
@@ -186,16 +186,16 @@ void *memcpy(void *s, const void *ct, size_t n) {
 void *memchr(const void *cs, char c, size_t n){
 
     int i = 0;
-    
+
     while(i < n && *((char *) cs + i) != c) {
-        i++;    
+        i++;
     }
 
     return *((char *) cs + i) == c ? cs + i : NULL;
 }
 
 /**
- * Compares the first n characters of cs and ct 
+ * Compares the first n characters of cs and ct
  */
 int memcmp(const void *cs, const void *ct, size_t n) {
 
@@ -217,7 +217,7 @@ int memcmp(const void *cs, const void *ct, size_t n) {
  * Reverses the string
  */
 char *reverse(char * s) {
-    
+
     int i = 0;
     int len = strlen(s) - 1;
     char buff[len + 2];
