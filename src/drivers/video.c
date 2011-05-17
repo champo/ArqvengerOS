@@ -69,7 +69,7 @@ static ScreenStatus* status;
 void initScreen(void) {
 
     int i;
-    for (i = NUM_SCREENS; i >= 0; i--) {
+    for (i = NUM_SCREENS - 1; i >= 0; i--) {
         status = &screens[i];
 
         status->cursorPosition = 0;
@@ -79,6 +79,8 @@ void initScreen(void) {
         setAttribute(COLOR_BLACK, COLOR_WHITE, 0);
 
         status->controlBufferPos = 0;
+
+        clearScreen(CLEAR_ALL);
     }
 }
 
@@ -93,7 +95,9 @@ void flipBuffer(int lineOffset) {
 void changeScreen(int screen) {
 
     status = &screens[screen % NUM_SCREENS];
+
     flipBuffer(0);
+    updateCursor();
 }
 
 void setAttribute(int bg, int fg, int blink) {

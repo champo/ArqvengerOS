@@ -8,12 +8,14 @@
 #include "shell/commands.h"
 #include "mcurses/mcurses.h"
 
-#define BUFFER_SIZE 250
+#define BUFFER_SIZE 500
 #define HISTORY_SIZE 50
+
+#define NUM_SHELLS 4
 
 #define NUM_COMMANDS 4
 
-static void nextCommand(char* inputBuffer, const char* prompt);
+static const Command* nextCommand(const char* prompt);
 
 static const Command* findCommand(char* commandString);
 
@@ -32,38 +34,57 @@ const Command commands[] = {
     { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku }
 };
 
-struct {
+typedef struct {
     char input[HISTORY_SIZE][BUFFER_SIZE];
     int start;
     int end;
     int current;
     char before[BUFFER_SIZE];
-} history;
+} History;
 
-static termios inputStatus;
+typedef struct {
+    History history;
+    char buffer[BUFFER_SIZE];
+    int inputEnd;
+    int cursor;
+    int usingHistory;
+    int started;
+    termios inputStatus;
+} Shell;
+
 static const termios shellStatus = { 0, 0 };
+static Shell shells[NUM_SHELLS];
+static int currentShellNumber;
+static History* history;
+static Shell* cur;
 
 void shell(void) {
 
     const Command* cmd;
-    static char inputBuffer[BUFFER_SIZE];
+    int i;
+    for (i = NUM_SHELLS - 1; i >= 0; i--) {
+        cur = &shells[i];
+        history = &cur->history;
+        cur->history.start = 0;
+        cur->history.end = 0;
+        cur->history.current = 0;
+        cur->started = 0;
+    }
 
-    history.start = 0;
-    history.end = 0;
-    history.current = 0;
+    currentShellNumber = 0;
+    cur->started = 1;
 
-    ioctl(0, TCGETS, (void*) &inputStatus);
+    ioctl(0, TCGETS, (void*) &cur->inputStatus);
     ioctl(0, TCSETS, (void*) &shellStatus);
 
     while (1) {
 
-        nextCommand(inputBuffer, "> ");
-        cmd = findCommand(inputBuffer);
+        cmd = nextCommand("guest");
         if (cmd != NULL) {
 
-            ioctl(0, TCSETS, (void*) &inputStatus);
-            cmd->func(inputBuffer);
-            ioctl(0, TCGETS, (void*) &inputStatus);
+            ioctl(0, TCSETS, (void*) &cur->inputStatus);
+            cmd->func(cur->buffer);
+            ioctl(0, TCGETS, (void*) &cur->inputStatus);
 
             ioctl(0, TCSETS, (void*) &shellStatus);
         }
@@ -72,7 +93,7 @@ void shell(void) {
 
 void printPrompt(const char* prompt) {
     setForegroundColor(COLOR_GREEN);
-    printf("%s", prompt);
+    printf("%s@tty%d >", prompt, currentShellNumber);
     setForegroundColor(COLOR_WHITE);
 }
 
@@ -116,14 +137,18 @@ int useHistory(size_t promptLen, int cursorPos, char* historyBuffer) {
     return strlen(historyBuffer);
 }
 
-void nextCommand(char* inputBuffer, const char* prompt) {
+const Command* nextCommand(const char* prompt) {
 
-    int cursorPos = 0, inputEnd = 0, i, usingHistory = 0;
-    size_t promptLen = strlen(prompt);
+    size_t promptLen = strlen(prompt) + 7;
+    int i;
     char in;
 
+    cur->cursor = 0;
+    cur->inputEnd = 0;
+    cur->usingHistory = 0;
+
     printPrompt(prompt);
-    memset(inputBuffer, 0, BUFFER_SIZE);
+    memset(cur->buffer, 0, BUFFER_SIZE);
     while ((in = getchar()) != '\n') {
 
         if (in == '\033') {
@@ -132,128 +157,138 @@ void nextCommand(char* inputBuffer, const char* prompt) {
                 switch (getchar()) {
                     case 'A':
                         // Up
-                        if (history.current != history.start) {
-                            history.current--;
-                            if (history.current < 0) {
-                                history.current = HISTORY_SIZE - 1;
+                        if (history->current != history->start) {
+                            history->current--;
+                            if (history->current < 0) {
+                                history->current = HISTORY_SIZE - 1;
                             }
 
-                            inputEnd = useHistory(promptLen, cursorPos, history.input[history.current]);
-                            cursorPos = inputEnd;
+                            cur->inputEnd = useHistory(promptLen, cur->cursor, history->input[history->current]);
+                            cur->cursor = cur->inputEnd;
 
-                            usingHistory = 1;
+                            cur->usingHistory = 1;
                         }
                         break;
                     case 'B':
                         // Down
-                        if (usingHistory) {
+                        if (cur->usingHistory) {
 
-                            if (history.current == history.end) {
-                                usingHistory = 0;
-                                inputEnd = useHistory(promptLen, cursorPos, inputBuffer);
+                            if (history->current == history->end) {
+                                cur->usingHistory = 0;
+                                cur->inputEnd = useHistory(promptLen, cur->cursor, cur->buffer);
                             } else {
-                                history.current = (history.current + 1) % HISTORY_SIZE;
-                                inputEnd = useHistory(promptLen, cursorPos, history.input[history.current]);
+                                history->current = (history->current + 1) % HISTORY_SIZE;
+                                cur->inputEnd = useHistory(promptLen, cur->cursor, history->input[history->current]);
                             }
-                            cursorPos = inputEnd;
+                            cur->cursor = cur->inputEnd;
                         }
                         break;
                     case 'C':
                         // Right
-                        if (cursorPos == inputEnd) {
+                        if (cur->cursor == cur->inputEnd) {
                             break;
                         }
 
-                        cursorPos = updateCursor(promptLen, cursorPos, 1);
+                        cur->cursor = updateCursor(promptLen, cur->cursor, 1);
                         break;
                     case 'D':
                         // Left
-                        if (cursorPos == 0) {
+                        if (cur->cursor == 0) {
                             break;
                         }
 
-                        cursorPos = updateCursor(promptLen, cursorPos, -1);
+                        cur->cursor = updateCursor(promptLen, cur->cursor, -1);
                         break;
                     case 'H':
                         // Home
-                        cursorPos = updateCursor(promptLen, cursorPos, -cursorPos);
+                        cur->cursor = updateCursor(promptLen, cur->cursor, -cur->cursor);
                         break;
                     case 'F':
                         // End
-                        cursorPos = updateCursor(promptLen, cursorPos, inputEnd - cursorPos);
+                        cur->cursor = updateCursor(promptLen, cur->cursor, cur->inputEnd - cur->cursor);
                         break;
                     case CSI:
                         //This is a function key
                         in = getchar();
-                        printf("\033[%dZ", in - 'A');
-                        //TODO: Change shell
+                        currentShellNumber = (in - 'A') % NUM_SHELLS;
+                        printf("\033[%dZ", currentShellNumber);
+
+                        cur = &shells[currentShellNumber];
+                        history = &cur->history;
+
+                        if (cur->started == 0) {
+                            cur->started = 1;
+                            return NULL;
+                        }
                         break;
                 }
             }
         } else if (in == '\b') {
 
-            if (usingHistory) {
-                memcpy(inputBuffer, history.input[history.current], BUFFER_SIZE);
-                history.current = history.end;
-                usingHistory = 0;
+            if (cur->usingHistory) {
+                memcpy(cur->buffer, history->input[history->current], BUFFER_SIZE);
+                history->current = history->end;
+                cur->usingHistory = 0;
             }
 
-            if (cursorPos > 0) {
-                inputEnd--;
+            if (cur->cursor > 0) {
+                cur->inputEnd--;
 
-                for (i = cursorPos - 1; i < inputEnd; i++) {
-                    inputBuffer[i] = inputBuffer[i + 1];
+                for (i = cur->cursor - 1; i < cur->inputEnd; i++) {
+                    cur->buffer[i] = cur->buffer[i + 1];
                 }
-                inputBuffer[inputEnd] = ' ';
+                cur->buffer[cur->inputEnd] = ' ';
 
                 // Move back once to step on the previous text
-                cursorPos = updateCursor(promptLen, cursorPos, -1);
-                printf("%s", inputBuffer + cursorPos);
-                cursorPos = updateCursor(promptLen, inputEnd + 1, cursorPos - inputEnd - 1);
+                cur->cursor = updateCursor(promptLen, cur->cursor, -1);
+                printf("%s", cur->buffer + cur->cursor);
+                cur->cursor = updateCursor(promptLen, cur->inputEnd + 1, cur->cursor - cur->inputEnd - 1);
 
-                inputBuffer[inputEnd] = 0;
+                cur->buffer[cur->inputEnd] = 0;
             }
         } else if (!isspace(in) || in == ' ') {
 
-            if (usingHistory) {
-                memcpy(inputBuffer, history.input[history.current], BUFFER_SIZE);
-                history.current = history.end;
-                usingHistory = 0;
+            if (cur->usingHistory) {
+                memcpy(cur->buffer, history->input[history->current], BUFFER_SIZE);
+                history->current = history->end;
+                cur->usingHistory = 0;
             }
 
-            if (inputEnd + 1 < BUFFER_SIZE - 1) {
+            if (cur->inputEnd + 1 < BUFFER_SIZE - 1) {
 
-                for (i = inputEnd - 1; i >= cursorPos; i--) {
-                    inputBuffer[i + 1] = inputBuffer[i];
+                for (i = cur->inputEnd - 1; i >= cur->cursor; i--) {
+                    cur->buffer[i + 1] = cur->buffer[i];
                 }
-                inputBuffer[cursorPos] = in;
-                inputEnd++;
+                cur->buffer[cur->cursor] = in;
+                cur->inputEnd++;
 
-                printf("%s", inputBuffer + cursorPos);
-                cursorPos = updateCursor(promptLen, inputEnd, cursorPos - inputEnd + 1);
+                printf("%s", cur->buffer + cur->cursor);
+                cur->cursor = updateCursor(promptLen, cur->inputEnd, cur->cursor - cur->inputEnd + 1);
             }
         }
     }
 
-    if (usingHistory) {
-        memcpy(inputBuffer, history.input[history.current], BUFFER_SIZE);
+    if (cur->usingHistory) {
+        memcpy(cur->buffer, history->input[history->current], BUFFER_SIZE);
     }
 
-    updateCursor(promptLen, cursorPos, inputEnd - cursorPos);
+    updateCursor(promptLen, cur->cursor, cur->inputEnd - cur->cursor);
     putchar('\n');
-    addToHistory(inputBuffer);
+    addToHistory(cur->buffer);
+
+    return findCommand(cur->buffer);
 }
 
 void addToHistory(const char* commandString) {
 
-    strncpy(history.input[history.end], commandString, BUFFER_SIZE - 1);
-    history.input[history.end][BUFFER_SIZE - 1] = 0;
+    strncpy(history->input[history->end], commandString, BUFFER_SIZE - 1);
+    history->input[history->end][BUFFER_SIZE - 1] = 0;
 
-    history.end = (history.end + 1) % HISTORY_SIZE;
-    history.current = history.end;
+    history->end = (history->end + 1) % HISTORY_SIZE;
+    history->current = history->end;
 
-    if (history.start == history.end) {
-        history.start = (history.start + 1) % HISTORY_SIZE;
+    if (history->start == history->end) {
+        history->start = (history->start + 1) % HISTORY_SIZE;
     }
 }
 
