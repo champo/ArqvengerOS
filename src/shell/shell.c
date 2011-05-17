@@ -27,6 +27,10 @@ static int useHistory(size_t promptLen, int cursorPos, char* historyBuffer);
 
 static void printPrompt(const char* prompt);
 
+static void autoComplete(const char* prompt);
+
+static void addToInput(size_t promptLen, const char* in, size_t len);
+
 const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho },
     { &man, "man", "Display information about command execution.", &manMan },
@@ -223,6 +227,16 @@ const Command* nextCommand(const char* prompt) {
                         break;
                 }
             }
+        } else if (in == '\t') {
+
+            if (cur->usingHistory) {
+                memcpy(cur->buffer, history->input[history->current], BUFFER_SIZE);
+                history->current = history->end;
+                cur->usingHistory = 0;
+            }
+
+            autoComplete(prompt);
+
         } else if (in == '\b') {
 
             if (cur->usingHistory) {
@@ -246,6 +260,7 @@ const Command* nextCommand(const char* prompt) {
 
                 cur->buffer[cur->inputEnd] = 0;
             }
+
         } else if (!isspace(in) || in == ' ') {
 
             if (cur->usingHistory) {
@@ -254,18 +269,8 @@ const Command* nextCommand(const char* prompt) {
                 cur->usingHistory = 0;
             }
 
-            if (cur->inputEnd + 1 < BUFFER_SIZE - 1) {
-
-                for (i = cur->inputEnd - 1; i >= cur->cursor; i--) {
-                    cur->buffer[i + 1] = cur->buffer[i];
-                }
-                cur->buffer[cur->cursor] = in;
-                cur->inputEnd++;
-
-                printf("%s", cur->buffer + cur->cursor);
-                cur->cursor = updateCursor(promptLen, cur->inputEnd, cur->cursor - cur->inputEnd + 1);
-            }
-        }
+            addToInput(promptLen, &in, 1);
+       }
     }
 
     if (cur->usingHistory) {
@@ -277,6 +282,25 @@ const Command* nextCommand(const char* prompt) {
     addToHistory(cur->buffer);
 
     return findCommand(cur->buffer);
+}
+
+void addToInput(size_t promptLen, const char* in, size_t len) {
+
+    int i;
+    if (cur->inputEnd + len < BUFFER_SIZE - 1) {
+
+        for (i = cur->inputEnd - 1; i >= cur->cursor; i--) {
+            cur->buffer[i + len] = cur->buffer[i];
+        }
+
+        for (i = 0; i < len; i++) {
+            cur->buffer[cur->cursor] = in[i];
+        }
+        cur->inputEnd += len;
+
+        printf("%s", cur->buffer + cur->cursor);
+        cur->cursor = updateCursor(promptLen, cur->inputEnd, cur->cursor - cur->inputEnd + 1);
+    }
 }
 
 void addToHistory(const char* commandString) {
@@ -320,5 +344,42 @@ const Command* findCommand(char* commandString) {
 const Command* getShellCommands(size_t* len) {
     *len = NUM_COMMANDS;
     return commands;
+}
+
+void autoComplete(const char* prompt) {
+
+    int i, candidates = 0, len, last = 0;
+    char* fragment;
+
+    for (i = cur->cursor - 1; i >= 0 && cur->buffer[i] != ' '; i--);
+    if (i == -1) {
+        i = 0;
+    }
+
+    len = cur->cursor - i;
+    fragment = cur->buffer + i;
+
+    if (len == 0) {
+        candidates = NUM_COMMANDS;
+    } else {
+
+        for (i = 0; i < NUM_COMMANDS; i++) {
+            if (strncmp(fragment, commands[i].name, len) == 0) {
+                candidates++;
+                last = i;
+            }
+        }
+    }
+
+    if (candidates == 0) {
+        //TODO: System speaker?
+        return;
+    } else if (candidates == 1) {
+        //Complete it :D
+        addToInput(strlen(prompt) + 7, commands[last].name + len, strlen(commands[last].name) - len);
+    } else {
+        // Show a list of possibles
+        i = 1;
+    }
 }
 
