@@ -294,7 +294,7 @@ void addToInput(size_t promptLen, const char* in, size_t len) {
         }
 
         for (i = 0; i < len; i++) {
-            cur->buffer[cur->cursor] = in[i];
+            cur->buffer[cur->cursor + i] = in[i];
         }
         cur->inputEnd += len;
 
@@ -330,7 +330,7 @@ const Command* findCommand(char* commandString) {
 
     for (i = 0; i < NUM_COMMANDS; i++) {
         res = &commands[i];
-        if (strncmp(res->name, commandString, len) == 0) {
+        if (strncmp(res->name, commandString, strlen(res->name)) == 0) {
             return res;
         }
     }
@@ -379,7 +379,24 @@ void autoComplete(const char* prompt) {
         addToInput(strlen(prompt) + 7, commands[last].name + len, strlen(commands[last].name) - len);
     } else {
         // Show a list of possibles
-        i = 1;
+        candidates = 0;
+        for (i = 0; i < NUM_COMMANDS; i++) {
+            if (strncmp(fragment, commands[i].name, len) == 0) {
+                if ((candidates % 2) == 0) {
+                    putchar('\n');
+                    moveCursorInRow(4);
+                } else {
+                    moveCursorInRow(LINE_WIDTH / 2 + 4);
+                }
+
+                candidates++;
+                printf("%s", commands[i].name);
+            }
+        }
+        putchar('\n');
+        printPrompt(prompt);
+        printf("%s", cur->buffer);
+        updateCursor(strlen(prompt) + 7, cur->inputEnd, cur->cursor - cur->inputEnd);
     }
 }
 
