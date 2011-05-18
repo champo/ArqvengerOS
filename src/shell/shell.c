@@ -349,6 +349,7 @@ const Command* getShellCommands(size_t* len) {
 void autoComplete(const char* prompt) {
 
     int i, candidates = 0, len, last = 0;
+    size_t promptLen, addedLen;
     char* fragment;
 
     for (i = cur->cursor - 1; i >= 0 && cur->buffer[i] != ' '; i--);
@@ -371,12 +372,16 @@ void autoComplete(const char* prompt) {
         }
     }
 
+    promptLen = strlen(prompt) + 7;
     if (candidates == 0) {
         //TODO: System speaker?
         return;
     } else if (candidates == 1) {
         //Complete it :D
-        addToInput(strlen(prompt) + 7, commands[last].name + len, strlen(commands[last].name) - len);
+
+        addedLen = strlen(commands[last].name) - len;
+        addToInput(promptLen, commands[last].name + len, addedLen);
+        updateCursor(promptLen, cur->cursor, addedLen - 1);
     } else {
         // Show a list of possibles
         candidates = 0;
@@ -396,7 +401,7 @@ void autoComplete(const char* prompt) {
         putchar('\n');
         printPrompt(prompt);
         printf("%s", cur->buffer);
-        updateCursor(strlen(prompt) + 7, cur->inputEnd, cur->cursor - cur->inputEnd);
+        updateCursor(promptLen, cur->inputEnd, cur->cursor - cur->inputEnd);
     }
 }
 
