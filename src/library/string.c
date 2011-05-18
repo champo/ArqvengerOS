@@ -39,7 +39,7 @@ char *strncpy(char *s, const char *ct, size_t n) {
 
     int i;
 
-    for(i = 0; i<n && ct[i] != '\0'; i++) {
+    for(i = 0; (unsigned int)i < n && ct[i] != '\0'; i++) {
         s[i] = ct[i];
     }
     s[i] = '\0';
@@ -81,7 +81,7 @@ char *strncat(char *s, const char *ct, size_t n) {
         i++;
     }
 
-    while(ct[j] != '\0' && j<n) {
+    while(ct[j] != '\0' && (unsigned int)j < n) {
         s[i] = ct[j];
         i++;
         j++;
@@ -139,11 +139,11 @@ int strncmp(const char *cs, const char *ct, size_t n) {
 
     int i = 0;
 
-    while (cs[i] == ct[i] && cs[i] != '\0' && i < n) {
+    while (cs[i] == ct[i] && cs[i] != '\0' && (unsigned int)i < n) {
         i++;
     }
 
-    if (i == n || cs[i] == ct[i]) {
+    if ((unsigned int)i == n || cs[i] == ct[i]) {
         return 0;
     }
 
@@ -157,7 +157,7 @@ void *memset(void *s, char c, size_t n) {
 
     int i = 0;
 
-    while(i < n){
+    while((unsigned int)i < n){
         *((char *) s + i) = c;
         i++;
     }
@@ -172,7 +172,7 @@ void *memcpy(void *s, const void *ct, size_t n) {
 
     int i = 0;
 
-    while (i < n) {
+    while ((unsigned int)i < n) {
         *((char *) s + i) = *((char *)ct + i);
         i++;
     }
@@ -187,11 +187,11 @@ void *memchr(const void *cs, char c, size_t n){
 
     int i = 0;
 
-    while(i < n && *((char *) cs + i) != c) {
+    while((unsigned int)i < n && *((char *) cs + i) != c) {
         i++;
     }
 
-    return *((char *) cs + i) == c ? cs + i : NULL;
+    return *((char *) cs + i) == c ? (char *)cs + i : NULL;
 }
 
 /**
@@ -201,7 +201,7 @@ int memcmp(const void *cs, const void *ct, size_t n) {
 
     int i = 0;
 
-    while (*((char *) cs + i) == *((char *) ct +i) && i < n) {
+    while (*((char *) cs + i) == *((char *) ct +i) && (unsigned int)i < n) {
         i++;
     }
 
