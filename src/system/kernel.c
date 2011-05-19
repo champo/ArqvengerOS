@@ -27,10 +27,10 @@ void kmain(void) {
     writeScreen("\033[1;1H\033[2J", 10);
 
     setupIDT();
-   
+    
     while (1) {
         
-       /shell();
+       shell();
     }
 }
 
