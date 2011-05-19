@@ -64,7 +64,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
     while(format[i] != '\0') {
         if(format[i] == '%') {
             if(systemWrite(stream,format + lastprint, i - lastprint)
-                 != -(unsigned int)(i - lastprint) ) {
+                 != i - lastprint ) {
                 return -1;
             }
 
@@ -75,7 +75,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                 case 'i':
                     sizestring = itoa(buffint,va_arg(arg,int));
                     plus += sizestring;
-                    if(systemWrite(stream,buffint,sizestring) != (unsigned int)sizestring) {
+                    if(systemWrite(stream,buffint,sizestring) != sizestring) {
                         return -1;
                     }
                     symb++;
@@ -89,7 +89,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                     buffstring = va_arg(arg,char *);
                     sizestring = strlen(buffstring);
                     plus += sizestring;
-                    if (systemWrite(stream,buffstring,sizestring) != (unsigned int)sizestring) {
+                    if (systemWrite(stream,buffstring,sizestring) != sizestring) {
                         return -1;
                     }
                     symb++;
@@ -107,7 +107,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
         }
     }
     if(systemWrite(stream,format + lastprint, i - lastprint)
-                 != (unsigned int)(i - lastprint) ) {
+                 != (i - lastprint) ) {
         return -1;
     }
     return i - symb + plus;
@@ -180,7 +180,7 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
 
     int i = 0;
     int j;
-    int converted;
+    int converted = 0;
     char buff[MAX_BUF];
     char cur;
     char *tempstring;
@@ -188,19 +188,27 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
     while (format[i] != '\0') {
         if (!isspace(format[i])) {
             if (format[i] != '%') {
-                if (format[i] != fgetc(stream)) {
+                cur = fgetc(stream);
+                if (format[i] != cur) {
+                    ungetc(cur, stream);
                     return EOF;
                 }
             } else {
                 i++;
                 switch (format[i]) {
                     case '%':
-                        if (fgetc(stream) != '%') {
+                        cur = fgetc(stream);
+                        if (cur != '%') {
+                            ungetc(cur, stream);
                             return EOF;
                         }
                         break;
                     case 'c':
-                        *(va_arg(arg, char *)) = fgetc(stream);
+                        cur = fgetc(stream);
+                        if (cur == EOF) {
+                            return EOF;
+                        }
+                        *(va_arg(arg, char *)) = cur;
                         converted++;
                         break;
                     case 's':
@@ -212,12 +220,14 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                             cur = fgetc(stream);
                             j++;
                         }
+                        tempstring[j] = '\0';
                         converted++;
                         break;
                     case 'i':
                     case 'd':
                         cur = fgetc(stream);
                         if (!isdigit(cur) && cur != '-') {
+                            ungetc(cur, stream);
                             return EOF;
                         }
                         j = 0;
@@ -226,6 +236,7 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                             j++;
                             cur = fgetc(stream);
                             if(!isdigit(cur)){
+                                ungetc(cur, stream);
                                 return EOF;
                             }
                         }
@@ -238,17 +249,14 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                             cur = fgetc(stream);
                         }
 
-
+                        ungetc(cur,stream); 
                         *(va_arg(arg, int *)) = atoi(buff);
                         converted ++;
-                        if (cur == EOF) {
-                            return converted;
-                        }
+                       
                         break;
                 }
             }
         }
-
         i++;
     }
     return converted;
