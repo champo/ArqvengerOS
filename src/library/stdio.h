@@ -36,5 +36,7 @@ int ungetc(int c, FILE *stream);
 int vfscanf(FILE *stream, const char *format, va_list arg);
 int scanf(const char *format, ...);
 int getfd(FILE *stream);
+int vscanf(const char *format, va_list arg);
+int fscanf(FILE *stream, const char *format, ...);
 
 #endif
