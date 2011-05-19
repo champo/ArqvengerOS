@@ -27,17 +27,10 @@ void kmain(void) {
     writeScreen("\033[1;1H\033[2J", 10);
 
     setupIDT();
-    char c;
-    int i;
-    char *s;
-    putchar(scanf("h%cl a%%%ihola", &c, &i) + '0');
-    putchar('\n');
-    putchar(c);
-    putchar('\n');
-    printf("%i",i);
+   
     while (1) {
         
-        //shell();
+       /shell();
     }
 }
 
