@@ -354,7 +354,12 @@ void autoComplete(const char* prompt) {
 
     for (i = cur->cursor - 1; i >= 0 && cur->buffer[i] != ' '; i--);
     if (i == -1) {
+        // We're at the first word
         i = 0;
+    } else if (i != cur->inputEnd) {
+        // This isn't the first word, so the for loop will end at the space
+        // We need to skip that space, and take what's after
+        i++;
     }
 
     len = cur->cursor - i;
@@ -372,6 +377,7 @@ void autoComplete(const char* prompt) {
         }
     }
 
+    printf("\033[%dz", len);
     promptLen = strlen(prompt) + 7;
     if (candidates == 0) {
         //TODO: System speaker?
@@ -380,8 +386,11 @@ void autoComplete(const char* prompt) {
         //Complete it :D
 
         addedLen = strlen(commands[last].name) - len;
-        addToInput(promptLen, commands[last].name + len, addedLen);
-        updateCursor(promptLen, cur->cursor, addedLen - 1);
+        // If the addedLen is 0 then the word is already complete! There's nothng to add
+        if (addedLen != 0) {
+            addToInput(promptLen, commands[last].name + len, addedLen);
+            updateCursor(promptLen, cur->cursor, addedLen - 1);
+        }
     } else {
         // Show a list of possibles
         candidates = 0;
