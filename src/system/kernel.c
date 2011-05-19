@@ -30,7 +30,7 @@ void kmain(void) {
    
     while (1) {
         
-       /shell();
+       shell();
     }
 }
 
