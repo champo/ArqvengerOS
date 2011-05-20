@@ -13,7 +13,7 @@
 
 #define NUM_SHELLS 4
 
-#define NUM_COMMANDS 4
+#define NUM_COMMANDS 5
 
 static const Command* nextCommand(const char* prompt);
 
@@ -35,7 +35,8 @@ const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho },
     { &man, "man", "Display information about command execution.", &manMan },
     { &help, "help", "This command.", &manHelp },
-    { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku }
+    { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku },
+    { &calc, "calc", "Use a simple calculator", &manCalc}
 };
 
 typedef struct {

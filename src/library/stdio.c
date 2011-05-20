@@ -264,7 +264,8 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                             cur = fgetc(stream);
                         }
 
-                        ungetc(cur,stream); 
+                        ungetc(cur,stream);
+                        buff[j] = '\0'; 
                         *(va_arg(arg, int *)) = atoi(buff);
                         converted ++;
                        
