@@ -215,6 +215,7 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                             cur = fgetc(stream);
                         }
                         if (cur == EOF || cur == '\n') {
+                            ungetc(cur,stream);
                             return converted;
                         }
                         *(va_arg(arg, char *)) = cur;
