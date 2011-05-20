@@ -47,8 +47,12 @@ void calc(void) {
                         printf("%d", ans);
                         break;
                     case '/':
-                        ans = num1 / num2;
-                        printf("%d", ans);
+                        if(num2 != 0) {
+                            ans = num1 / num2;
+                            printf("%d", ans);
+                        } else {
+                            printf("Exception, cannot divide by 0");
+                        }
                         break;
                     default:
                         printf("Wrong operator, use only +, -, * and /");
