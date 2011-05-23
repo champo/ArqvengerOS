@@ -1,7 +1,9 @@
 #include "shell/calc/calc.h"
 #include "library/stdio.h"
+#include "library/string.h"
 #include "mcurses/mcurses.h"
 #define cleanbuffer() while(getchar()!='\n')
+#define MAXLINE 500
 
 void manCalc(void) {
     setBold(1);
@@ -17,47 +19,57 @@ void manCalc(void) {
 void calc(void) {
     int num1;
     int num2;
-    int ans;
+    int ans = 0;
     char c;
+    int flag = 1;
+    char string[MAXLINE];
     
     printf("(Calc) > ");
-    while(scanf("quit") == EOF && scanf("exit")) {
-        printf("\n(Calc) > ");
-        if(scanf("help") != EOF) {
-            printf("Inside the calc program you can do simple math calculations "
-            "between integer numbers with the format \"X symb Y\", X and Y "
-            "representing numbers and symb being a +. -, * or /. Also, you can "
-            "use quit or exit to finish the program.");
-        } else {
-            if(scanf("%d%c%d", &num1, &c, &num2) == EOF) {
-                printf("Wrong expression, Use help command for instructions.");
-                
-            } else {
-                switch(c){
-                    case '+':
-                        ans = num1 + num2;
-                        printf("%d", ans); 
-                        break;
-                    case '-':
-                        ans = num1 - num2;
-                        printf("%d", ans);
-                        break;
-                    case '*':
-                        ans = num1 * num2;
-                        printf("%d", ans);
-                        break;
-                    case '/':
+    while (flag) {
+        if (scanf("%d%c%d", &num1, &c, &num2) == 3) {
+            switch (c) {
+                case '+':
+                    ans = num1 + num2;
+                    printf("%d", ans); 
+                    break;
+                case '-':
+                    ans = num1 - num2;
+                    printf("%d", ans);
+                    break;
+                case '*':
+                    ans = num1 * num2;
+                    printf("%d", ans);
+                    break;
+                case '/':
+                    if(num2 != 0) {
                         ans = num1 / num2;
                         printf("%d", ans);
-                        break;
-                    default:
-                        printf("Wrong operator, use only +, -, * and /");
-                        break;
+                    } else {
+                        printf("Exception, cannot divide by 0");
+                    }
+                    break;
+                default:
+                    printf("Wrong operator, use only +, -, * and /");
+                    break;
+            }
+        } else {
+            scanf("%s", string);
+            if (!strcmp("quit", string) || !strcmp("exit", string)) {
+                flag = 0;
+            } else {
+                if (!strcmp("help", string)) {
+                    printf("Inside the calc program you can do simple math calculations "
+                    "between integer numbers with the format \"X symb Y\", X and Y "
+                    "representing numbers and symb being a +. -, * or /. Also, you can "
+                    "use quit or exit to finish the program.");  
+                } else {
+                    printf("Wrong expression, Use help command for instructions.");
                 }
-            }         
+            }
         }
-        printf("\n(Calc) > ");
         cleanbuffer();
+        if (flag) {
+            printf("\n(Calc) > "); 
+        }
     }
-    cleanbuffer();
 }

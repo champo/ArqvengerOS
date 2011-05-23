@@ -189,33 +189,34 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
         if (!isspace(format[i])) {
             if (format[i] != '%') {
                 cur = fgetc(stream);
-                while (isspace(cur)) {
+                while (isspace(cur) && cur != '\n') {
                     cur = fgetc(stream);
                 }
                 if (format[i] != cur) {
                     ungetc(cur, stream);
-                    return EOF;
+                    return converted;
                 }
             } else {
                 i++;
                 switch (format[i]) {
                     case '%':
                         cur = fgetc(stream);
-                        while (isspace(cur)) {
+                        while (isspace(cur) && cur != '\n') {
                             cur = fgetc(stream);
                         }
                         if (cur != '%') {
                             ungetc(cur, stream);
-                            return EOF;
+                            return converted;
                         }
                         break;
                     case 'c':
                         cur = fgetc(stream);
-                        while (isspace(cur)) {
+                        while (isspace(cur) && cur != '\n') {
                             cur = fgetc(stream);
                         }
-                        if (cur == EOF) {
-                            return EOF;
+                        if (cur == EOF || cur == '\n') {
+                            ungetc(cur,stream);
+                            return converted;
                         }
                         *(va_arg(arg, char *)) = cur;
                         converted++;
@@ -223,27 +224,28 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                     case 's':
                         tempstring = va_arg(arg, char *);
                         cur = fgetc(stream);
-                        while (isspace(cur)) {
+                        while (isspace(cur) && cur != '\n') {
                             cur = fgetc(stream);
                         }
                         j = 0;
-                        while (!isspace(cur) && cur != EOF) {
+                        while (!isspace(cur) && cur != EOF && cur != '\n') {
                             tempstring[j] = cur;
                             cur = fgetc(stream);
                             j++;
                         }
+                        ungetc(cur,stream);
                         tempstring[j] = '\0';
                         converted++;
                         break;
                     case 'i':
                     case 'd':
                         cur = fgetc(stream);
-                        while (isspace(cur)){
+                        while (isspace(cur) && cur != '\n'){
                             cur = fgetc(stream);
                         }
                         if (!isdigit(cur) && cur != '-') {
                             ungetc(cur, stream);
-                            return EOF;
+                            return converted;
                         }
                         j = 0;
                         if (cur == '-') {
@@ -252,7 +254,7 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                             cur = fgetc(stream);
                             if(!isdigit(cur)){
                                 ungetc(cur, stream);
-                                return EOF;
+                                return converted;
                             }
                         }
                         buff[j] = cur;

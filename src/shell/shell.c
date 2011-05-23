@@ -379,7 +379,6 @@ void autoComplete(const char* prompt) {
         }
     }
 
-    printf("\033[%dz", len);
     promptLen = strlen(prompt) + 7;
     if (candidates == 0) {
         //TODO: System speaker?

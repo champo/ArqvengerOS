@@ -86,7 +86,14 @@ void addInput(const char* str, size_t len) {
 
     size_t i;
     for (i = 0; i < len && bufferEnd < BUFFER_SIZE; i++) {
-        inputBuffer[bufferEnd++] = str[i];
+
+        if (status.canon && str[i] == '\b') {
+            if (bufferEnd > 0) {
+                bufferEnd--;
+            }
+        } else {
+            inputBuffer[bufferEnd++] = str[i];
+        }
     }
 
     if (status.echo) {
@@ -137,7 +144,7 @@ void readScanCode(void) {
     int makeCode = scanCode - isBreak * MIN_BREAK_CODE;
 
     char* codeTable;
-    if (kbStatus.shift) {
+    if (kbStatus.shift || kbStatus.caps) {
         codeTable = shiftCodeTable;
     } else if (kbStatus.alt) {
         codeTable = altCodeTable;
@@ -222,7 +229,6 @@ void readScanCode(void) {
         }
     } else if (bufferEnd < BUFFER_SIZE && !isBreak) {
         // We know how to map this, yay!
-        //TODO: Handle caps lock
         addInput(&codeTable[makeCode], 1);
     }
 
