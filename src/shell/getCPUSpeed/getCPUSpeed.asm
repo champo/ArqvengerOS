@@ -1,40 +1,43 @@
-EXTERN getTicksSinceStart
 GLOBAL  getCPUSpeedHandler
 
 getCPUSpeedHandler:
-	;wait until the timer interrupt has been called.
-	call getTicksSinceStart 
-	mov  ebx, eax
+    ;wait until the timer interrupt has been called.
+    mov eax, 191    ; Calling the ticks syscall 
+    int 80h 
+	
+    mov  ebx, eax
 
-wait_irq0:
-    call getTicksSinceStart
-	cmp  ebx, eax
-	jz   wait_irq0
-	;read time stamp counter
+waitIrq0:
+    mov eax, 191    ; Calling the ticks syscall 
+    int 80h 
+	
+    cmp  ebx, eax
+	jz   waitIrq0
+	; Getting clocks cycles since the processor started
 	rdtsc         
 	mov  [timeStampCounterLow], eax
 	mov  [timeStampCounterHigh], edx
-    ; Set time delay value ticks.
+    ; Setting number of ticks to wait
 	add  ebx, 2            
-    ; remember: so far ebx = ~[irq0]-1, so the next tick is
-	; two steps ahead of the current ebx ;)
 
-wait_for_elapsed_ticks:
-	call getTicksSinceStart
-    ; Have we hit the delay?
+waitForElapsedTicks:
+    mov eax, 191    ;Calling the ticks syscall 
+    int 80h 
+    
+    ; Have we reached the number of ticks we previously set? 
     cmp  ebx, eax 
-	jnz  wait_for_elapsed_ticks
+	jnz  waitForElapsedTicks
+
 	rdtsc
-    ; Calculate TSC
+    ; Calculating clock cycles elapsed
     sub eax, [timeStampCounterLow] 
-   	sbb edx, [timeStampCounterLow]
-   	; f(total_ticks_per_Second) =  (1 / total_ticks_per_Second) * 1,000,000
-   	; This adjusts for MHz.
-	; so for this: f(100) = (1/100) * 1,000,000 = 10000
-	mov ebx, 10000
+   	sbb edx, [timeStampCounterHigh]
+
+   	; microSeconds  =  ( numberOfTicks / totalTicksPerSecond) * 1,000,000
+	; so for this: microSeconds = (1/100) * 1,000,000 = 10000
+	mov ebx,10000 
 	div ebx
-	; ax contains measured speed in MHz
-	;mov ~[mhz], ax
+	; eax contains measured speed in MHz
     ret 
 
 [SECTION .data]

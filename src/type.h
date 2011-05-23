@@ -7,4 +7,6 @@ typedef unsigned char byte;
 typedef short word;
 typedef int dword;
 
+typedef unsigned int time_t;
+
 #endif

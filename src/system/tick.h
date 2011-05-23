@@ -3,5 +3,5 @@
 #include "type.h"
 
 void timerTick(void);
-size_t getTicksSinceStart(void);
+size_t _getTicksSinceStart(void);
 #endif

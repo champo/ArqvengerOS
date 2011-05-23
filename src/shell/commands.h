@@ -8,5 +8,6 @@
 #include "shell/help/help.h"
 #include "shell/sudoku/sudoku.h"
 #include "shell/calc/calc.h"
+#include "shell/getCPUSpeed/getCPUSpeed.h"
 
 #endif

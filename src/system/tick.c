@@ -8,6 +8,6 @@ void timerTick(void) {
     ticksSinceStart++;
 }
 
-size_t getTicksSinceStart(void) {
+size_t _getTicksSinceStart(void) {
     return ticksSinceStart;
 }

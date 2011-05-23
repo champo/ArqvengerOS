@@ -77,8 +77,15 @@ void int80(registers* regs) {
         case _SYS_WRITE:
             regs->eax = _write((unsigned int)regs->ebx, (const char*)regs->ecx, (size_t)regs->edx);
             break;
+        case _SYS_TIME:
+            regs->eax = _time(regs->ebx);
+            break;
         case _SYS_IOCTL:
             regs->eax = _ioctl(regs->ebx, regs->ecx, (void*)regs->edx);
+            break;
+        case _SYS_TICKS:
+            regs->eax = _getTicksSinceStart();
+            break;
     }
 }
 
@@ -86,9 +93,18 @@ void exceptionHandler(registers* regs){
     char* screen = (char*) 0xb8000;
     int i = 0;
     const char* message = "Unhandled CPU exception: ";
+    while (i != 2*80*25) {
+        *screen = ' ';
+        screen += 2;
+        i += 2;
+    }
+    i = 0;
+    screen = (char*) 0xb8000;
     while ( message[i] != '\0') {
         *screen = message[i++];
-        screen += 2;
+        screen++;
+        *screen = 0x07;
+        screen++;
     }
 
     *screen = (regs->intNum/10)+'0';
