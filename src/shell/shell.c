@@ -331,7 +331,7 @@ const Command* findCommand(char* commandString) {
 
     for (i = 0; i < NUM_COMMANDS; i++) {
         res = &commands[i];
-        if (strncmp(res->name, commandString, strlen(res->name)) == 0) {
+        if (strncmp(res->name, commandString, len) == 0) {
             return res;
         }
     }
