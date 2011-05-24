@@ -280,6 +280,31 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                         converted ++;
                        
                         break;
+                    case 'u':
+                        cur = fgetc(stream);
+                        while (isspace(cur) && cur != '\n'){
+                            cur = fgetc(stream);
+                        }
+                        if (!isdigit(cur)) {
+                            ungetc(cur, stream);
+                            return converted;
+                        }
+                        j = 0;
+                        buff[j] = cur;
+                        j++;
+                        cur = fgetc(stream);
+                        while(isdigit(cur)) {
+                            buff[j] = cur;
+                            j++;
+                            cur = fgetc(stream);
+                        }
+
+                        ungetc(cur,stream);
+                        buff[j] = '\0'; 
+                        *(va_arg(arg, int *)) = atou(buff);
+                        converted ++;
+
+                        break;
                 }
             }
         }
