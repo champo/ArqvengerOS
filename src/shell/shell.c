@@ -396,6 +396,8 @@ void autoComplete(const char* prompt) {
         }
     } else {
 
+        int cursorPos = cur->cursor;
+
         // Show a list of possibles
         candidates = 0;
         for (i = 0; i < NUM_COMMANDS; i++) {
@@ -415,7 +417,8 @@ void autoComplete(const char* prompt) {
         printPrompt(prompt);
         printf("%s", cur->buffer);
 
-        updateCursor(promptLen, cur->cursor);
+        cur->cursor = cur->inputEnd;
+        updateCursor(promptLen, cursorPos);
     }
 }
 
