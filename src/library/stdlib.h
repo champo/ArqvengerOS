@@ -6,6 +6,10 @@ int atoi(const char *s);
 
 int itoa(char *s, int n);
 
+unsigned int atou(const char *s);
+
+int utoa(char *s, unsigned int n);
+
 int rand(void);
 
 void srand(unsigned int seed);

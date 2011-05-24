@@ -75,13 +75,21 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                 case 'i':
                     sizestring = itoa(buffint,va_arg(arg,int));
                     plus += sizestring;
-                    if(systemWrite(stream,buffint,sizestring) != sizestring) {
+                    if (systemWrite(stream,buffint,sizestring) != sizestring) {
+                        return -1;
+                    }
+                    symb++;
+                    break;
+                case 'u':
+                    sizestring = utoa(buffint,va_arg(arg, unsigned int));
+                    plus += sizestring;
+                    if (systemWrite(stream,buffint,sizestring) != sizestring) {
                         return -1;
                     }
                     symb++;
                     break;
                 case 'c':
-                    if(fputc(va_arg(arg,int), stream) == EOF) {
+                    if (fputc(va_arg(arg,int), stream) == EOF) {
                         return -1;
                     }
                     break;
