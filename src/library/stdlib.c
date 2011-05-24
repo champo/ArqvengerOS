@@ -74,3 +74,42 @@ void srand(unsigned int seed) {
     randSeed = seed;
 }
 
+unsigned int atou(const char *s) {
+
+    int i = 0;
+    unsigned int ans = 0;
+
+    while(isspace(s[i])) {
+        i++;
+    }
+
+
+    while(isdigit(s[i])){
+        ans *= 10;
+        ans = ans + s[i] - '0';
+        i++;
+    }
+
+    return ans;
+}
+
+int utoa(char *s, unsigned int n){
+
+    int i = 0;
+    int aux;
+
+
+    do {
+        aux = n%10;
+        s[i] = aux + '0';
+        n = n / 10;
+        i++;
+    } while(n > 0);
+
+
+    s[i] = '\0';
+
+    reverse(s);
+
+    return i;
+}
