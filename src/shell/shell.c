@@ -23,7 +23,7 @@ static void addToHistory(const char* commandString);
 
 static void updateCursor(size_t promptLen, int delta);
 
-static int useHistory(size_t promptLen, char* historyBuffer);
+static int replaceInput(size_t promptLen, char* buffer);
 
 static void printPrompt(const char* prompt);
 
@@ -81,6 +81,8 @@ void shell(void) {
     currentShellNumber = 0;
     cur->started = 1;
 
+    // We always need to set the status needed by the shell, and then reset
+    // it to the default, to make sure the input behaviour is as expected.
     ioctl(0, TCGETS, (void*) &cur->inputStatus);
     ioctl(0, TCSETS, (void*) &shellStatus);
 
@@ -126,16 +128,24 @@ void updateCursor(size_t promptLen, int destPos) {
     cur->cursor = destPos - promptLen - 1;
 }
 
-int useHistory(size_t promptLen, char* historyBuffer) {
+/**
+ * Replace the current input with the content of buffer, on screen.
+ *
+ * @param promptLen The lenght of the prompt.
+ * @param buffer The buffer to be printed.
+ *
+ * @return the size of the buffer printed.
+ */
+int replaceInput(size_t promptLen, char* buffer) {
 
     updateCursor(promptLen, -1);
     clearLine(ERASE_RIGHT);
     clearScreen(CLEAR_BELOW);
     updateCursor(promptLen, 0);
 
-    printf("%s", historyBuffer);
+    printf("%s", buffer);
 
-    return strlen(historyBuffer);
+    return strlen(buffer);
 }
 
 const Command* nextCommand(const char* prompt) {
@@ -144,14 +154,17 @@ const Command* nextCommand(const char* prompt) {
     int i;
     char in;
 
+    // We reset the input status.
     cur->cursor = 0;
     cur->inputEnd = 0;
     cur->usingHistory = 0;
 
     printPrompt(prompt);
+    // We set the whole string to null for safety.
     memset(cur->buffer, 0, BUFFER_SIZE);
     while ((in = getchar()) != '\n') {
 
+        // Check for control sequences, these are things like arrow keys and such.
         if (in == '\033') {
             if (getchar() == CSI) {
                 // We know this! Yay!
@@ -164,7 +177,9 @@ const Command* nextCommand(const char* prompt) {
                                 history->current = HISTORY_SIZE - 1;
                             }
 
-                            cur->inputEnd = useHistory(promptLen, history->input[history->current]);
+                            cur->inputEnd = replaceInput(
+                                promptLen, history->input[history->current]
+                            );
                             cur->cursor = cur->inputEnd;
 
                             cur->usingHistory = 1;
@@ -176,10 +191,12 @@ const Command* nextCommand(const char* prompt) {
 
                             if (history->current == history->end) {
                                 cur->usingHistory = 0;
-                                cur->inputEnd = useHistory(promptLen, cur->buffer);
+                                cur->inputEnd = replaceInput(promptLen, cur->buffer);
                             } else {
                                 history->current = (history->current + 1) % HISTORY_SIZE;
-                                cur->inputEnd = useHistory(promptLen, history->input[history->current]);
+                                cur->inputEnd = replaceInput(
+                                    promptLen, history->input[history->current]
+                                );
                             }
                             cur->cursor = cur->inputEnd;
                         }
@@ -212,6 +229,7 @@ const Command* nextCommand(const char* prompt) {
                         //This is a function key
                         in = getchar();
                         currentShellNumber = (in - 'A') % NUM_SHELLS;
+                        // This tells the tty driver to change shell
                         printf("\033[%dZ", currentShellNumber);
 
                         cur = &shells[currentShellNumber];
@@ -289,16 +307,20 @@ const Command* nextCommand(const char* prompt) {
 void addToInput(size_t promptLen, const char* in, size_t len) {
 
     int i, destPos;
+    // We only write when we have enough space
     if (cur->inputEnd + len < BUFFER_SIZE - 1) {
 
+        // Move the characters after the cursor to make room for the new text
         for (i = cur->inputEnd - 1; i >= cur->cursor; i--) {
             cur->buffer[i + len] = cur->buffer[i];
         }
 
+        // Copy the new input to the buffer
         for (i = 0; i < len; i++) {
             cur->buffer[cur->cursor + i] = in[i];
         }
 
+        // Print the buffer starting from cursor and update the cursor to reflect this
         printf("%s", cur->buffer + cur->cursor);
 
         destPos = cur->cursor + len;
@@ -306,6 +328,7 @@ void addToInput(size_t promptLen, const char* in, size_t len) {
         cur->inputEnd += len;
         cur->cursor = cur->inputEnd;
 
+        // Now move the cursor to where it ought to be
         updateCursor(promptLen, destPos);
     }
 }
@@ -328,17 +351,22 @@ const Command* findCommand(char* commandString) {
     const Command* res;
     size_t i, len;
 
+    // Find the end of the first word
     for (len = 0; len < BUFFER_SIZE && commandString[len] != ' ' && commandString[len] != 0; len++);
 
     if (len > 0) {
+
+        // Compare the first word to every command available
         for (i = 0; i < NUM_COMMANDS; i++) {
             res = &commands[i];
             if (strncmp(res->name, commandString, len) == 0) {
+                // We found one :D Let's just return it
                 return res;
             }
         }
     }
 
+    // Ooops, no such command, let's let the user know.
     commandString[len + 1] = 0;
     printf("Command not found: %s\n", commandString);
 
@@ -356,6 +384,7 @@ void autoComplete(const char* prompt) {
     size_t promptLen, addedLen;
     char* fragment;
 
+    // Let's find the start of the word before the cursor
     for (i = cur->cursor - 1; i >= 0 && cur->buffer[i] != ' '; i--);
     if (i == -1) {
         // We're at the first word
@@ -370,9 +399,12 @@ void autoComplete(const char* prompt) {
     fragment = cur->buffer + i;
 
     if (len == 0) {
+        // Every command is fair game
         candidates = NUM_COMMANDS;
     } else {
 
+        // Count possible matches
+        // Keep record of the last one, incase only one is found
         for (i = 0; i < NUM_COMMANDS; i++) {
             if (strncmp(fragment, commands[i].name, len) == 0) {
                 candidates++;
@@ -398,7 +430,7 @@ void autoComplete(const char* prompt) {
 
         int cursorPos = cur->cursor;
 
-        // Show a list of possibles
+        // Show a list of possibles, using one line per 2 commands
         candidates = 0;
         for (i = 0; i < NUM_COMMANDS; i++) {
             if (strncmp(fragment, commands[i].name, len) == 0) {
@@ -414,6 +446,8 @@ void autoComplete(const char* prompt) {
             }
         }
         putchar('\n');
+
+        // We need to reprint the prompt and reposition the cursor afterwards
         printPrompt(prompt);
         printf("%s", cur->buffer);
 

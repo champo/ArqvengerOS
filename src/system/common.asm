@@ -4,6 +4,7 @@ _isIF:
     push ebp
     mov ebp, esp
 
+    ; Push the flags, then pop'em and check the IF flag
     pushf
     pop ax
     and eax, 512 
