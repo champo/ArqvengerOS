@@ -39,7 +39,7 @@ const Command commands[] = {
     { &help, "help", "This command.", &manHelp },
     { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku },
     { &calc, "calc", "Use a simple calculator", &manCalc},
-    { &getCPUSpeed, "getCPUSpeed", "Get the CPU speed", &manGetCPUSpeed}
+    { &getCPUSpeed, "getCPUSpeed", "Get the CPU speed", &manGetCPUSpeed},
     { &fortune, "fortune", "Receive awesome knowledge.", &manFortune}
 };
 

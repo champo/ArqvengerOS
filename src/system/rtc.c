@@ -61,7 +61,9 @@ time_t getTime(time_t *tp) {
 void readRTCRegisters(RTCRegisters *regs){
     int format;
     //unsigned char aux = 0;
-    
+   
+    //TODO this is something we should do but apparently it doesn't work
+    //  stays or goes??
     // Getting the RTC register A
     // If RTC in update mode wait until it finish updating
     //while (aux != 0x80 ) { 
@@ -109,15 +111,6 @@ void readRTCRegisters(RTCRegisters *regs){
             regs->hours = (regs->hours == 12)? 0 : regs->hours + 12;
         }
     }
-    
-    //printf("format  %d \n",format);
-    //printf("regs->seconds %d \n",regs->seconds);
-    //printf("regs->minutes %d \n",regs->minutes);
-    //printf("regs->hours %d \n",regs->hours);
-    //printf("regs->day %d \n",regs->day);
-    //printf("regs->month %d \n",regs->month);
-    //printf("regs->year %d \n",regs->year);
-    //printf("regs->century %d\n",regs->century);
 }
 
 
