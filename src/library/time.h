@@ -3,6 +3,7 @@
 
 #include "type.h"
 
+
 time_t time(time_t *tp);
 
 #endif
