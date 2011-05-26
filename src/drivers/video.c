@@ -51,6 +51,8 @@ static void changeScreen(int screen);
 
 static void flipBuffer(int lineOffset);
 
+static void changeColor(int mod1);
+
 static char* videoMemory = (char*) 0xb8000;
 
 typedef struct {
@@ -66,6 +68,9 @@ typedef struct {
 static ScreenStatus screens[NUM_SCREENS];
 static ScreenStatus* status;
 
+/**
+ * Initialize the screen and all needed status for tty emulation.
+ */
 void initScreen(void) {
 
     int i;
@@ -84,6 +89,11 @@ void initScreen(void) {
     }
 }
 
+/**
+ * Draw the current buffer to screen.
+ *
+ * @param lineOffset not implemented.
+ */
 void flipBuffer(int lineOffset) {
 
     int i;
@@ -92,34 +102,73 @@ void flipBuffer(int lineOffset) {
     }
 }
 
+/**
+ * Change the active screen. This refreshes the screen.
+ *
+ * @param screen the number of the screen to set.
+ */
 void changeScreen(int screen) {
-
     status = &screens[screen % NUM_SCREENS];
 
     flipBuffer(0);
     updateCursor();
 }
 
+/**
+ * Set the video attribute.
+ *
+ * @param bg The background color.
+ * @param fg The foreground color.
+ * @param blink Whether to blink or not.
+ */
 void setAttribute(int bg, int fg, int blink) {
 
+    /*
+     * The attribute byte is split into 3. The 4 least significant bits go to
+     * the foreground color, the 3 bits following the background color and the
+     * last bite to blink.
+     */
     status->attribute = (fg & 0xF) | ((bg & 0xF) << 4);
     if (blink) {
         status->attribute |= BLINK_ATTR;
     }
 }
 
+/**
+ * Set the foreground color.
+ *
+ * @param color The color to set.
+ */
 void setForeground(int color) {
     setAttribute((status->attribute >> 4) & 0x7, color, status->attribute & BLINK_ATTR);
 }
 
+/**
+ * Set the background color.
+ *
+ * @param color The color to set.
+ */
 void setBackground(int color) {
     setAttribute(color, status->attribute & 0xF, status->attribute & BLINK_ATTR);
 }
 
+/**
+ * Set the blink attribute.
+ *
+ * @param color Whether to blink or not.
+ */
 void setBlink(int blink) {
     setAttribute((status->attribute >> 4) & 0x7, status->attribute & 0xF, blink);
 }
 
+/**
+ * Set the current position to a character, and increase the cursor.
+ *
+ * This write to both the buffer and the video memory.
+ * The attribute correspoding to the position is set to the global attribute.
+ *
+ * @param c The character to set.
+ */
 void setCharacter(char c) {
     videoMemory[2*status->cursorPosition] = c;
     videoMemory[2*status->cursorPosition + 1] = status->attribute;
@@ -130,6 +179,11 @@ void setCharacter(char c) {
     status->cursorPosition++;
 }
 
+/**
+ * Scroll the screen delta lines.
+ *
+ * @param delta A natural number indicating the number of lines to scroll.
+ */
 void scrollLine(int delta) {
 
     if (delta > TOTAL_ROWS) {
@@ -154,6 +208,16 @@ void scrollLine(int delta) {
     flipBuffer(0);
 }
 
+/**
+ * Erase the characters in the current line.
+ *
+ * The characters to be erased are determined by type. It can take:
+ * - ERASE_ALL: Delete all characters in the current line.
+ * - ERASE_LEFT: Erase all characters left of the cursor.
+ * - ERASE_RIGHT: Erase all characters right of the cursor.
+ *
+ * @param type The type of erase to perform.
+ */
 void eraseLine(int type) {
 
     int start, end, line = status->cursorPosition / LINE_WIDTH;
@@ -176,6 +240,16 @@ void eraseLine(int type) {
     setBlank(start, end);
 }
 
+/**
+ * Clear part of the screen.
+ *
+ * The part of the screen of the be cleared is determined by type, it can take:
+ * - CLEAR_ALL: Clear all of the screen
+ * - CLEAR_ABOVE: Clear all the lines above, including the current.
+ * - CLEAR_BELOW: Clear all the lines below.
+ *
+ *  @param type The part of the screen to clear.
+ */
 void clearScreen(int type) {
 
     int start, end;
@@ -198,6 +272,12 @@ void clearScreen(int type) {
     setBlank(start, end);
 }
 
+/**
+ * Set the part of the screen between start and end to ' '.
+ *
+ * @param start The start position.
+ * @parma end The end position.
+ */
 void setBlank(int start, int end) {
 
     while (start < end) {
@@ -210,6 +290,13 @@ void setBlank(int start, int end) {
     }
 }
 
+/**
+ * Parse the control buffer data.
+ *
+ * @param a A pointer to the place where the 1st int parsed will be stored.
+ * @param b A pointer to the place where the 2nd int parsed will be stored.
+ * @param def A default value to set if no value can be parsed.
+ */
 void parseControlBuffer(int* a, int* b, int def) {
 
     // Set the null at the end, and then parse it
@@ -243,6 +330,19 @@ void parseControlBuffer(int* a, int* b, int def) {
     }
 }
 
+/**
+ * Write a string of bytes to screen.
+ *
+ * This function parses some control sequences that modifiy the screen status.
+ * These start with "\e[" and are followed by a series of parameters.
+ *
+ * {@see handleControlSequence}
+ *
+ * @param buf The buffer from which to read the string of bytes.
+ * @param length the number of bytes to read.
+ *
+ * @return The number of bytes written to screen.
+ */
 size_t writeScreen(const void* buf, size_t length) {
 
     const char* str = (const char*) buf;
@@ -328,11 +428,39 @@ size_t writeScreen(const void* buf, size_t length) {
     return length;
 }
 
+/**
+ * Handle a control sequence input.
+ *
+ * This handles all characters after a control sequence indicator "\e[".
+ * When the sequence is finished, is determined by if the character added
+ * is not recognised by this function.
+ *
+ * The control sequences handled are (n and m are used to indicate optional
+ *  numeric arguments, all positions start at 1, not 0):
+ * - "\e[nZ" Change the current tty to tty n, defaults to 0.
+ * - "\e[nA" Move the cursor up n times. Defaults to 1.
+ * - "\e[nB" Move the cursor down n times. Defaults to 1.
+ * - "\e[nC" Move the cursor right n times. Defaults to 1.
+ * - "\e[nD" Move the cursor left n times. Defaults to 1.
+ * - "\e[nE" Move the cursor n lines down. Defaults to 1.
+ * - "\e[nF" Move the cursor n lines up. Defaults to 1.
+ * - "\e[nG" Jump the cursor to column n in the current row. Defaults to 1.
+ * - "\e[n;mH" Jump the cursor to row n, column m in the screen. Default is 1,1.
+ * - "\e[nJ" Clear the screen, see {@link clearScreen} for params.
+ * - "\e[nK" Erase the current line, see {@link eraseLine} for params.
+ * - "\e[nD" Jump to row n in the current column. Defaults to 1.
+ * - "\e[nz" Takes any number of numerical arguments separated by ; and prints
+ *   them in the bottom left corner of the screen.
+ * - "\e[nm" Change the current attribute, see {@link changeColor}.
+ *
+ * @param cur An input character to the control sequence.
+ */
 void handleControlSequence(char cur) {
 
     int mod1, mod2;
     switch (cur) {
         case 'Z':
+            // Change the current tty (Not an xterm sequence)
             readControlBuffer(0);
             changeScreen(mod1);
             endControlSequence();
@@ -470,102 +598,7 @@ void handleControlSequence(char cur) {
         case 'm':
             // Change color!
             readControlBuffer(0);
-            switch (mod1) {
-                case 1:
-                    // Bold
-                    // Isolate the foreground color to check for boldness
-                    mod2 = status->attribute & 0xF;
-                    if (mod2 != COLOR_BLACK && mod2 != COLOR_BROWN && mod2 < COLOR_GRAY) {
-                        setForeground(mod2 + 0x8);
-                    }
-                    break;
-                case 22:
-                    // Not bold
-                    // Isolate the foreground color to check for boldness
-                    mod2 = status->attribute & 0xF;
-                    if (mod2 >= COLOR_BRIGHT_BLUE && mod2 != COLOR_YELLOW) {
-                        setForeground(mod2 - 0x8);
-                    }
-                    break;
-                case 37:
-                    // White bg
-                    setBackground(COLOR_WHITE);
-                    break;
-                case 36:
-                    // Cyan bg
-                    setBackground(COLOR_CYAN);
-                    break;
-                case 35:
-                    // Magenta bg
-                    setBackground(COLOR_MAGENTA);
-                    break;
-                case 34:
-                    // Blue bg
-                    setBackground(COLOR_BLUE);
-                    break;
-                case 32:
-                    // Green bg
-                    setBackground(COLOR_GREEN);
-                    break;
-                case 31:
-                    // Red bg
-                    setBackground(COLOR_RED);
-                    break;
-                case 39:
-                case 30:
-                    // Black bg
-                    setBackground(COLOR_BLACK);
-                    break;
-                case 49:
-                case 47:
-                    // White fg
-                    setForeground(COLOR_WHITE);
-                    break;
-                case 46:
-                    // Cyan fg
-                    setForeground(COLOR_CYAN);
-                    break;
-                case 45:
-                    // Magenta fg
-                    setForeground(COLOR_MAGENTA);
-                    break;
-                case 44:
-                    // Blue fg
-                    setForeground(COLOR_BLUE);
-                    break;
-                case 43:
-                    // Yellow fg
-                    setForeground(COLOR_YELLOW);
-                    break;
-                case 42:
-                    // Green fg
-                    setForeground(COLOR_GREEN);
-                    break;
-                case 41:
-                    // Red fg
-                    setForeground(COLOR_RED);
-                    break;
-                case 40:
-                    // Black fg
-                    setForeground(COLOR_BLACK);
-                    break;
-                case 25:
-                    // Time of the Angels
-                    // If you blink, you die
-                    setBlink(0);
-                    break;
-                case 5:
-                    // Blink!
-                    setBlink(1);
-                    break;
-                case 0:
-                    // Reset
-                    setBlink(0);
-                    setForeground(COLOR_BLACK);
-                    setBackground(COLOR_WHITE);
-                    break;
-            }
-
+            changeColor(mod1);
             endControlSequence();
             break;
         default:
@@ -574,6 +607,139 @@ void handleControlSequence(char cur) {
     }
 }
 
+/**
+ * Change the current screen color as needed by the "\e[nm" sequence.
+ *
+ * The numerical argument determins the color to be changed, and to what.
+ * It can take one of the following values:
+ * - 1: Make the font bold.
+ * - 22: Disable bold.
+ * - 37: Set the background white.
+ * - 36: Set the background cyan.
+ * - 35: Set the background magenta.
+ * - 34: Set the background blue.
+ * - 33: Set the background green.
+ * - 32: Set the background red.
+ * - 31: Set the background black.
+ * - 39: Set the background black.
+ * - 49: Set the foreground white.
+ * - 47: Set the foreground white.
+ * - 46: Set the foreground cyan.
+ * - 45: Set the foreground magenta.
+ * - 44: Set the foreground blue.
+ * - 43: Set the foreground yellow.
+ * - 42: Set the foreground green.
+ * - 41: Set the foreground red.
+ * - 40: Set the foreground black.
+ * - 25: Disable blink.
+ * - 5: Enable blink.
+ * - 0: Reset the colors to default.
+ *
+ * @param mod1 The numerical argument passed to the sequence.
+ */
+void changeColor(int mod1) {
+
+    int mod2;
+    switch (mod1) {
+        case 1:
+            // Bold
+            // Isolate the foreground color to check for boldness
+            mod2 = status->attribute & 0xF;
+            if (mod2 != COLOR_BLACK && mod2 != COLOR_BROWN && mod2 < COLOR_GRAY) {
+                setForeground(mod2 + 0x8);
+            }
+            break;
+        case 22:
+            // Not bold
+            // Isolate the foreground color to check for boldness
+            mod2 = status->attribute & 0xF;
+            if (mod2 >= COLOR_BRIGHT_BLUE && mod2 != COLOR_YELLOW) {
+                setForeground(mod2 - 0x8);
+            }
+            break;
+        case 37:
+            // White bg
+            setBackground(COLOR_WHITE);
+            break;
+        case 36:
+            // Cyan bg
+            setBackground(COLOR_CYAN);
+            break;
+        case 35:
+            // Magenta bg
+            setBackground(COLOR_MAGENTA);
+            break;
+        case 34:
+            // Blue bg
+            setBackground(COLOR_BLUE);
+            break;
+        case 32:
+            // Green bg
+            setBackground(COLOR_GREEN);
+            break;
+        case 31:
+            // Red bg
+            setBackground(COLOR_RED);
+            break;
+        case 39:
+        case 30:
+            // Black bg
+            setBackground(COLOR_BLACK);
+            break;
+        case 49:
+        case 47:
+            // White fg
+            setForeground(COLOR_WHITE);
+            break;
+        case 46:
+            // Cyan fg
+            setForeground(COLOR_CYAN);
+            break;
+        case 45:
+            // Magenta fg
+            setForeground(COLOR_MAGENTA);
+            break;
+        case 44:
+            // Blue fg
+            setForeground(COLOR_BLUE);
+            break;
+        case 43:
+            // Yellow fg
+            setForeground(COLOR_YELLOW);
+            break;
+        case 42:
+            // Green fg
+            setForeground(COLOR_GREEN);
+            break;
+        case 41:
+            // Red fg
+            setForeground(COLOR_RED);
+            break;
+        case 40:
+            // Black fg
+            setForeground(COLOR_BLACK);
+            break;
+        case 25:
+            // Time of the Angels
+            // If you blink, you die
+            setBlink(0);
+            break;
+        case 5:
+            // Blink!
+            setBlink(1);
+            break;
+        case 0:
+            // Reset
+            setBlink(0);
+            setForeground(COLOR_BLACK);
+            setBackground(COLOR_WHITE);
+            break;
+    }
+}
+
+/**
+ * Update the video cursor position to match the current logic position.
+ */
 void updateCursor(void) {
 
     // cursor LOW port to vga INDEX register

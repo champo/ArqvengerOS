@@ -13,7 +13,7 @@ void manCalc(void) {
     printf("Once inside the calc program you can do simple math calculations "
             "between integer numbers with the format \"X symb Y\", X and Y "
             "representing numbers and symb being a +. -, * or /. Also, you can "
-            "use quit or exit to finish the program.");
+            "use quit or exit to finish the program.\n");
 }
 
 void calc(void) {

@@ -15,6 +15,8 @@ void reboot(void) {
 
     // We use the keyboard driver to reset the CPU
     disableInterrupts();
+
+    // We need to consume everything in the keyboard buffers
     do {
 
         aux = inB(INTERFACE_PORT);

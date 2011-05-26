@@ -1,0 +1,126 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{t1enc}
+\usepackage[spanish]{babel}
+\usepackage[pdftex,usenames,dvipsnames]{color}
+\usepackage[pdftex]{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\lstset{language=C}
+\lstset{showstringspaces=false}
+\lstset{basicstyle=\ttfamily,}
+
+\begin{document}
+
+\begin{titlepage}
+        \thispagestyle{empty}
+        \begin{center}
+                \includegraphics{./images/itba.jpg}
+                \vfill
+                \Huge{Arquitectura de las Computadoras}\\
+                \vspace{1cm}
+                \huge{Trabajo Práctico Especial}\\
+        \end{center}
+        \vspace{2cm}
+        \large{
+                \begin{tabular}{lcrc}
+                        \textbf{Alvaro Crespo} & & 47283 & \ \ \texttt{acrespo@alu.itba.edu.ar}\\
+                        \textbf{Juan Pablo Civile} & & 50753 & \ \ \texttt{jcivile@alu.itba.edu.ar}\\
+                        \textbf{Dario Susnisky} & & 48083 & \ \ \texttt{dsusnisk@alu.itba.edu.ar}\\
+                        \\ 
+                \end{tabular}
+        }
+        \vfill
+        \flushright{1 de Junio del 2011}
+\end{titlepage}
+
+\setcounter{page}{1}
+
+\tableofcontents
+\newpage
+
+\section{Resumen}
+
+\section{Diseño del Kernel}
+    Las funcionalidades del kernel fueron desarrolladas incrementalmente. Inicialmente, optamos por implementar las system calls read y write de una manera muy sencilla.
+    Una vez que teniamos esta version desarrollada, comenzamos a pensar como interactuan estas con las aplicaciones. 
+    Al estar usando read y write como las define Linux, decidimos investigar el I/O de teclado y video en las terminales de sistemas Unix-compatible.
+    Dado que el objetivo no del desarrollo no es diseñar un sistema operativo nuevo, optamos por ser lo mas compatibles con Linux posible.
+
+    Investigando aprendimos que Linux maneja esta interaccion de una manera que emula las viejas terminales de mainframes. 
+    Esto significa, que hay solo 3 operaciones posibles: read, write e ioctl.
+    ioctl es una system call que permite comunicarse con los drivers detras de un dado archivo de maneras especificas a cada driver.
+    Esta es la llamada que permite manipular el IO para obtener los distintos comportamientos observados en una consola en Linux.
+    Tambien encontramos que las terminales aceptan las llamadas escape sequences, que permiten realizar operaciones especiales sobre la pantalla, como manipular el color y el cursor.
+
+    En fin, esto derivo en la creacion de una emulacion de una tty a nivel kernel.
+    Si bien la emulacion es limitada, es en parte compatible con la mayoria de las shells modernas de Linux.
+    Para esto se crearon los drivers de video y teclado, con los cuales se comunica desde las aplicaciones usando read, write e ioctl.
+    Dado que no existen mas drivers, read y write se comunican directamente con los drivers.
+
+    Esta emulacion nos permitio gran flexibilidad y aporto un nivel de funcionalidad muy alto para el desarrollo de aplicaciones.
+    Por ejemplo, se presto con facilidad a la implementacion de multiples tty.
+
+    \subsection{Interrupciones}
+
+    \subsection{Terminales}
+        \subsubsection{Entrada}
+            La entrada se maneja mediante un buffer, que es actualizado cuando el PIC dispara una interrupcion de parte del controlador de teclado.
+            Cuando esta interrupcion se dispara, se interpreta los codigos enviados por el teclado y se agregan al buffer.
+            La interpretacion de estos codigos, difiere segun el estado de ciertas teclas, como serlo Alt, Ctrl, Shift y Bloc Mayus.
+            Luego, este buffer puede ser consultado utilizando la llamada read sobre la entrada standard.
+
+            Como fue mencionado anteriormente, las terminales soportan varios modos de entrada.
+            Por simplicidad, y por que proveen suficiente funcionalidad, se implementaron 4 modos en total.
+            Que modo se utiliza se puede manipular con la llamada ioctl.
+
+            El modo esta determinado por 2 flags: canon y echo.
+            Canon activa y desactiva el modo Canonico de la terminal.
+            Mientra que echo activa y desactiva si los caracteres leidos son impresos a pantalla por la terminal.
+
+            El modo canonico determina un gran factor del comportamiento de llamar a read sobre la entrada standard.
+            Si este esta activado, read funciona como buffereado por linea, o sea, lee de a lineas.
+            Esto significa que en una dada llamada, read va a retornar como mucho una linea, y no va a retornar, hasta que tenga por lo menos una linea en su buffer.
+            Si bien las terminales de linux permiten manipular que determina un fin de linea, nosotros tomamos \n como fin de linea.
+            Si el modo canonico no esta activado, read se comporta como su definicion dice, lee n bytes, sin importar si hay lineas o no.
+
+            Ademas de soportar estos 4 modos, el driver interpreta teclas especiales, como lo son las flechas.
+            Algunas de estas teclas, como ser Bloc Mayus, Num Lock y Scroll Lock son manejadas internamente por el driver.
+            Otras como las flechas, Inicio, Fin y las teclas de Funcion, se guardan como parte de la entrada previa conversion a escape sequences.
+
+            Por limitaciones del sistema, al no tener multi tarea, el buffer de teclado es uno solo, compartido por todas las terminales.
+
+        \subsubsection{Salida}
+            La comunicacion entre el driver de salida de una terminal y la controladora de video se hace mediante el sector de video mapeado a memoria.
+            Este permite suficiente flexibilidad para nuestros objetivos, y a su vez es muy simple de utilizar.
+            La unica excepcion es la manipulacion del cursor grafico, que se hace utilizando in y out, ya que no encontramos si la posicion del mismo esta mapeada en alguna parte de memoria.
+
+            El driver permite manipular todos sus aspectos mediante llamadas a write.
+            Este acepta escape sequences que dejan realizar un gran abanico de operaciones sobre la salida.
+            El listado de esta se puede encontrar en el anexo <<Completar aca>>.
+            
+            En este nivel se maneja un buffer de salida donde se guarda una copia del estado actual de la pantalla.
+            Esto es asi por 2 motivos.
+            Primero, para evitar lecturas a la memoria de video cuando es necesario hacer scroll de pantalla.
+            Segundo, es un elemento crucial a la hora de implementar multiples terminales.
+            Cada terminal tiene su propio estado en el driver de salida, incluyendo su propio buffer, a diferencia del driver de entrada.
+            Cuando es pedido, el driver cambia que estado usa, efectivamente cambiando de terminal.
+
+\section{Libreria standard}
+
+\section{Shell}
+    Contamos con una shell por cada terminal.
+    Esta utiliza al maximo las capacidades de la terminal, comunicandose siempre por la libreria standard.
+    La shell manipula el modo de la entrada de la terminal para permitirse manipular la entrada con gran precision.
+    Se desactiva tanto el echo como el modo canonico, o sea, lo ingresado llega solo a la shell y sin esperar a que se complete la linea.
+    Esto le permite al ususario editar su comando a medida que lo escribe, auto completar y poder moverse por el historial de comandos.
+
+    El comando sudoku demuestra la capacidad de la terminal, haciendo uso de los colores y la posibilidad de mover el cursor a placer.
+
+    Se menciono antes que por la limitacion de ser mono tarea, hay un solo buffer de teclado.
+    Esto se nota tambien a nivel shell ya que solo se permite cambiar entre terminales cuando se esta ingresando un comando.
+
+\end{document}

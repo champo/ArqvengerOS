@@ -82,6 +82,14 @@ static void addInput(const char* str, size_t len);
 
 static void setLeds(void);
 
+/**
+ * Add a string of input with a fixed lenght to the keyboard buffer.
+ *
+ * This transforms raw input as needed, and echos to screen if needed.
+ *
+ * @param str a string with at least len chars
+ * @param len The number of chars to add from str
+ */
 void addInput(const char* str, size_t len) {
 
     size_t i;
@@ -99,6 +107,7 @@ void addInput(const char* str, size_t len) {
     if (status.echo) {
 
         if (str[0] == ESCAPE_CHAR) {
+            // A escape char is not printable, so we transform into something that is.
             writeScreen("^[", 2);
             if (i > 1) {
                 writeScreen(str + 1, i - 1);
@@ -109,6 +118,9 @@ void addInput(const char* str, size_t len) {
     }
 }
 
+/**
+ * Set the keyboard leds using the global state.
+ */
 void setLeds(void) {
 
     byte leds = 0;
@@ -123,6 +135,8 @@ void setLeds(void) {
         leds |= 1;
     }
 
+    // The keyboard buffer needs to be empty beforre setting these values
+    // We assume that this is safe, since we have just read the values
     while (inB(KEYBOARD_CTRL_PORT) & 0x2);
     outB(KEYBOARD_IO_PORT, LED_CODE);
 
@@ -130,6 +144,9 @@ void setLeds(void) {
     outB(KEYBOARD_IO_PORT, leds);
 }
 
+/**
+ * Read & processs a scan code from the keyboard buffer.
+ */
 void readScanCode(void) {
 
     unsigned char scanCode = inB(KEYBOARD_IO_PORT);
@@ -153,7 +170,7 @@ void readScanCode(void) {
     }
 
     if (escaped || makeCode > LAST_CODE_IN_TABLE || !codeTable[makeCode]) {
-        // This can't be mapped to an ascii, so let's handle it on it's own
+        // These can't be mapped to an ascii, so let's handle it on it's own
         switch (makeCode) {
             case CTRL_CODE:
                 kbStatus.ctrl = !isBreak;
@@ -235,6 +252,18 @@ void readScanCode(void) {
     escaped = 0;
 }
 
+/**
+ * Read into buffer from the keyboard buffer.
+ *
+ * The behaviour of this function is determined by the canon flag in termios.
+ * If set, this will behave as if input was line buffered, and will return
+ * as much as one line. Otherwise, it will behave as the definition implies.
+ *
+ * @param buffer a place to write the output to.
+ * @param count the number of bytes to read.
+ *
+ * @return the number of bytes read.
+ */
 size_t readKeyboard(void* buffer, size_t count) {
 
     char* buf = (char*) buffer;
@@ -297,6 +326,14 @@ size_t readKeyboard(void* buffer, size_t count) {
     return c;
 }
 
+/**
+ * Interface into driver-specific details.
+ *
+ * @param cmd The command to execute.
+ * @param argp Extra parameters as needed, or not, by the command to execute.
+ *
+ * @return a status code, 0 on success, -1 on error.
+ */
 int ioctlKeyboard(int cmd, void* argp) {
 
     termios* param;
