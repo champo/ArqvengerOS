@@ -1,7 +1,6 @@
 #include "library/time.h"
 #include "system/call/codes.h"
 #include "library/string.h"
-#include "library/stdio.h"
 #include "library/stdlib.h"
 
 extern size_t systemCall(int eax, int ebx, int ecx, int edx);
@@ -10,25 +9,31 @@ static int dayOfWeek(int year, int month, int day);
 static void initTm(struct tm *date); 
 void dateFromDayNumber(int *date, time_t daysSinceEpoch);
 
+static char string[30];
+
 time_t time(time_t *tp) {
     return systemCall(_SYS_TIME,tp,0,0);
 }
 
+
+// This function, as the one from the C standard library returns a char pointer.
+// This represents a problem if we can't dinamically allocate memory, so we decided to 
+// restrict the function and store the variable as  global. This means that succesive
+// calls to asctime will overwrite it. The user should take this into consideration when 
+// using it.
 char* asctime(struct tm *tp ) {
-    struct tm *date;
+    struct tm date;
     if ( tp == NULL  ) {
-        initTm(date);    
-    } else {
-        date = tp;
-    }
+        initTm(&date);
+        tp = &date;
+    }      
 
     int i = 0;
     int curPos = 0;
-    char string[30];
     char* day,*month;
     char aux[5];
     
-    switch (date->wday) {
+    switch (tp->wday) {
         case 0:
             day = "Sun";
             break;
@@ -55,7 +60,7 @@ char* asctime(struct tm *tp ) {
     curPos += 3;
     string[curPos++] = ' ';
     
-    switch(date->mon) {
+    switch(tp->mon) {
         case 1:
             month = "Jan"; 
             break;
@@ -95,36 +100,34 @@ char* asctime(struct tm *tp ) {
     }
     strcpy(string + curPos,month);
     curPos += 3;
+    
     string[curPos++] = ' ';
     
-    itoa(aux,date->mday);
+    itoa(aux,tp->mday);
     strcpy(string + curPos, aux);
-    curPos += (date->mday >= 10)? 3:2;
+    curPos += (tp->mday >= 10)? 2:1;
+    string[curPos++] = ' ';
      
-    itoa(aux,date->hour);
+    itoa(aux,tp->hour);
     strcpy(string + curPos, aux);
-    curPos += (date->hour >= 10)? 2:1;
+    curPos += (tp->hour >= 10)? 2:1;
     string[curPos++] = ':';
 
-    itoa(aux,date->min);
+    itoa(aux,tp->min);
     strcpy(string + curPos, aux);
-    curPos += (date->min >= 10)? 2:1;
+    curPos += (tp->min >= 10)? 2:1;
     string[curPos++] = ':';
     
-    itoa(aux,date->sec);
+    itoa(aux,tp->sec);
     strcpy(string + curPos, aux);
-    curPos += (date->sec >= 10)? 2:1;
+    curPos += (tp->sec >= 10)? 2:1;
     string[curPos++] = ' ';
     
-    itoa(aux,date->year);
+    itoa(aux,tp->year);
     strcpy(string + curPos, aux);
     curPos += 4;
-    string[curPos++] = '\n';
     string[curPos] = '\0';
 
-    for(i = 0; i < curPos;i++) {
-        printf("%c",string[i]);
-    }
     return string;
 }
 

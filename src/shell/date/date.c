@@ -9,7 +9,7 @@
 void date(char* argv) {
     
     char *str = asctime(NULL);
-    printf("%s",str);
+    printf("%s \n",str);
 }
 
 void manDate(void) {
