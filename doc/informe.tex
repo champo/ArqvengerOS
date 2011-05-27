@@ -27,9 +27,9 @@
         \vspace{2cm}
         \large{
                 \begin{tabular}{lcrc}
-                        \textbf{Alvaro Crespo} & & 47283 & \ \ \texttt{acrespo@alu.itba.edu.ar}\\
-                        \textbf{Juan Pablo Civile} & & 50753 & \ \ \texttt{jcivile@alu.itba.edu.ar}\\
-                        \textbf{Dario Susnisky} & & 48083 & \ \ \texttt{dsusnisk@alu.itba.edu.ar}\\
+                        \textbf{Alvaro Crespo} & & 50758 & \ \ \texttt{acrespo@alu.itba.edu.ar}\\
+                        \textbf{Juan Pablo Civile} & & 50453 & \ \ \texttt{jcivile@alu.itba.edu.ar}\\
+                        \textbf{Dario Susnisky} & & 50592 & \ \ \texttt{dsusnisk@alu.itba.edu.ar}\\
                         \\ 
                 \end{tabular}
         }
@@ -110,6 +110,28 @@
             Cuando es pedido, el driver cambia que estado usa, efectivamente cambiando de terminal.
 
 \section{Libreria standard}
+    Para poder realizar nuestro trabajo practico, era necesario implementar cierta funcionalidad de la libreria standard de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por Kernighan y Ritchie.
+    Finalemente, una vez realizada esta libreria, su funcionalidad podia ser aplicada en diferentes lugares del trabajo practico.
+
+    Implementar la libreria standard de C de forma completa era innecesario para nuestros objetivos finales, por eso es que a la hora de hacerla, elegimos un subconjunto de la misma. El criterio para esta seleccion fue tomar las funciones que eran totalmente necesarias para nuestra implementacion y ademas, otras que creiamos que cuya funcionalidad podria llegar a ser util en un futuro, en caso de querer extender la funcionalidad de nuestro trabajo.
+    Asimismo, el mismo criterio fue tomado para desarrollar la funcionalidad de funciones particulares. Vease como ejemplo la funcion printf, que no permite hacer todo lo que permite hacer la libreria standard original (solo se pueden imprimir integers, strings, chars y unsigned ints).
+
+    Por otra parte, en ciertos momentos nos vimos bajo la necesidad de imlpementar funciones no especificadas en El lenguaje de programacion C. Un muy buen ejemplo era la funcion reverse que da vuelta el contenido de un string. En estos casos, se implementaron las funciones y fueron agregadas en los archivos correspondientes (en este caso en string.c). Estas funciones fueron extensiones de nuestra libreria standard que fueron tomadas a gusto y bajo necesidad.
+
+    Nuestra libreria standard incluye: funciones para el control del tipo de datos (isdigit, isspace, islower, isupper, isalpha y isalnum), funciones para entrada y salida de texto (fputc, putc , putchar, puts, fputs, vfprinf, vprintf, fprintf, printf, fgetc, getc, getchar, vfscanf, vscanf, fscanf y scanf), funciones para conversion de numeros a texto y viceversa (itoa, atoi, utoa y atou), generacino de numeros al azar (rand y srand), manejo de cadenas de caracteres(strlen, strcpy, strncpy, strcmp, strncmp, strchr, strrchr, strcat, strncat, reverse), cierto manejo de sectores en memoria(memcpy, memchr, memset, memcmp), acceso simple al reloj para obtener el tiempo, manejo de argumentos variables y la definicion de ciertas constantes necesarias
+
+    A continuacion se presentara la especificacion de ciertas funciones que creemos que vale la pena destacar ya sea por su funcionalidad o por problemas que nos encontramos a la hora de implementarlas:
+
+    \subsection{Putc}
+        Al comenzar, lo escencial era poder imprimir en pantalla. Por esto, una primer version primitiva de putc simplemente se encargaba de esto, llamando de forma directa a una funcion write que imprimia en pantalla. De a poco putc fue evolucionando y paso a hacer llamadas a sistema de forma correcta para imprimir como debia.
+        Luego, comenzamos a tomar en cuenta que las funciones originales de la libreria estandar, a la hora de imprimir, tomaban en cuenta en que archivo o flujo estaban imprimiendo. Al ver esto, tomamos la decision de implementar una rudimentaria version de la estructura de datos FILE con su file descriptor correcto. Asi, tambien fueron definidas como estructuras de tipo FILE, stdin, stdout y stderr acorde al estandar. Dada la funcionalidad de nuestro trabajo, no tiene sentido alguno llamar funciones como fputc con streams que no sean la salida estandar, pero se ha dejado la posiblidad para posibles expansiones de este trabajo.
+        Por ultimo cabe destacar que en versiones finales, funciones como putc terminaron siendo simples macros que llaman a una funcion mas generica como fputc.
+
+    \subsection{Printf}
+        Como ya fue mencionado, a la hora de implementar printf, hubo que elegir un subconjunto de los tipos de datos que podia imprimir printf. Implementarla de forma completa hubiese sido innecesario para nuestro trabajo. Printf es un muy buen ejemplo de como al realizar una funcion, es evidente la necesidad de otras funciones de la libreria standard a un no implementadas. Al momento de tener que imprimir un numero entero, era intuitivo la necesidad de una funcion como itoa, para poder imprimir un integer de forma sencilla. Esta secuencia era natural al escribir la libreria standard y obviamente, este era otro muy buen criterio para decidir que funcionalidades implementar.
+
+    \subsection{Scanf}    
+        A la hora de implementar scanf, primero hubo que tener cuidados similares a los que se tuvieron en printf. Durante la implementacion surgio la necesidad de devolver al flujo el ultimo caracter consumido, lo cual naturalmente termino siendo traducido en nuestra funcion ungetc. ungetc es un ejemplo de como hubo que modificar cierto codigo viejo (en las estructuras de tipo FILE y en la funcion fputc) a partir de funcionalidades necesarias sobre la marcha.
 
 \section{Shell}
     Contamos con una shell por cada terminal.
@@ -119,6 +141,10 @@
     Esto le permite al ususario editar su comando a medida que lo escribe, auto completar y poder moverse por el historial de comandos.
 
     El comando sudoku demuestra la capacidad de la terminal, haciendo uso de los colores y la posibilidad de mover el cursor a placer.
+    
+    La funcion del comando calc es el de denotar el funcionamiento de scanf, leyendo asi ciertos patrones. Es una calculadora muy rudimentaria y posee ciertos problemas respecto a como exhibe los datos. Sin embargo la consideramos suficiente como para mostrar el funcionamiento de scanf.
+    
+    Por ultimo, el comando fortune, ademas de ser un comando divertido de implementar, vuelve a mostrar otro uso de rand de la libreria standard.
 
     Se menciono antes que por la limitacion de ser mono tarea, hay un solo buffer de teclado.
     Esto se nota tambien a nivel shell ya que solo se permite cambiar entre terminales cuando se esta ingresando un comando.

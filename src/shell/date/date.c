@@ -1,5 +1,6 @@
 #include "shell/date/date.h"
 #include "library/stdio.h"
+#include "library/stdlib.h"
 #include "library/string.h"
 #include "mcurses/mcurses.h"
 #include "system/rtc.h"
@@ -7,18 +8,8 @@
 
 void date(char* argv) {
     
-    RTCRegisters regs;
-    readRTCRegisters(&regs);
-    
-    struct tm aux;
-    aux.sec = regs.seconds;
-    aux.min = regs.minutes; 
-    aux.hour= regs.hours;
-    aux.mday= regs.day;
-    aux.mon = regs.month;
-    aux.year= regs.year + regs.century*100;
-    char *str = asctime(&aux);
-    printf("%s",str);
+    char *str = asctime(NULL);
+    printf("%s \n",str);
 }
 
 void manDate(void) {
