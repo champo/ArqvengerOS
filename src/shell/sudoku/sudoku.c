@@ -3,6 +3,7 @@
 #include "library/stdio.h"
 #include "library/stdlib.h"
 #include "library/ctype.h"
+#include "library/time.h"
 #include "system/call/ioctl/keyboard.h"
 
 #define NUM_BOARDS 20
@@ -119,7 +120,7 @@ static int numPlays = 0;
 
 void sudoku(char* argv) {
 
-    //TODO: Properly seed rand and make this throw random boards
+    srand(time(NULL));
     char* board = boards[rand() % NUM_BOARDS];
     board = boards[numPlays++ % NUM_BOARDS];
     int in, i, j;

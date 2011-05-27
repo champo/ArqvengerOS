@@ -2,7 +2,7 @@
 #include "library/stdio.h"
 #include "library/stdlib.h"
 #include "mcurses/mcurses.h"
-
+#include "library/time.h"
 #define CANT_FORTUNES 10
 
 void fortune(void) {
@@ -17,7 +17,7 @@ void fortune(void) {
                         "Uno de los mejores momentos en la vida es cuando encontras un carribar" ,
                         "La batata macabra arranca aca! \nMarta jamas agarraba la bata.\nLa bata faltaba!\nY Marta andaba. \nNAAAAAH" ,
                          };
-    //srand(1);
+    srand(time(NULL));
     printf("%s\n", phrases[rand() % CANT_FORTUNES]);
 }
 

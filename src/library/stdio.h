@@ -8,7 +8,6 @@
 #define putc(x, stream) fputc((x), (stream))
 #define puts(s) fputs((s),stdout)
 #define EOF -1
-#define NULL (void *)0
 #define getc(stream) fputc((stream))
 #define getchar() fgetc(stdin)
 
