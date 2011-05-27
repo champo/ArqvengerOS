@@ -1,5 +1,6 @@
 #include "type.h"
 #include "library/stdio.h"
+#include "library/stdlib.h"
 #include "limits.h"
 #include "string.h"
 
