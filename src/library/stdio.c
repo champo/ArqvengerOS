@@ -19,14 +19,18 @@ size_t systemWrite(FILE *stream, const char *cs, size_t n);
 size_t systemRead(FILE *stream, void *buf, size_t n);
 
 /**
- * Insert a character into standard output
+ * Insert a character into the given stream.
+ *
+ * It returns the value of the caracter and in case of failiure it returns EOF.
  */
 int fputc(char c, FILE *stream) {
     return (systemWrite(stream, &c, 1) == 1? c : EOF);
 }
 
 /**
- * Print a line in the standard output
+ * Print a line in the given stream.
+ *
+ * It returns the number of characters printed and in case of failiure it returns EOF.
  */
 int fputs(const char *s, FILE *stream) {
 
@@ -49,7 +53,9 @@ int getfd(FILE *stream) {
 }
 
 /**
- * Prints with format given the FILE and the va_list initiated
+ * Prints with format given the FILE and the va_list initiated.
+ *
+ *  It returns the number of characters printed or -1 in case of failiure.
  */
 int vfprintf(FILE *stream, const char *format, va_list arg) {
 
@@ -122,7 +128,9 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
 }
 
 /**
- *  Prints with format on stdout
+ *  Prints with format on stdout.
+ *
+ *  Returns the same as vfprintf.
  */
 int printf(const char *format, ...) {
 
@@ -132,7 +140,9 @@ int printf(const char *format, ...) {
 }
 
 /**
- * Prints with format given an output
+ * Prints with format given an output.
+ *
+ * Returns the same as vfprintf.
  */
 int fprintf(FILE *stream, const char *format, ...) {
 
@@ -142,7 +152,9 @@ int fprintf(FILE *stream, const char *format, ...) {
 }
 
 /**
- * Prints with a format given with the variable list ap initialized
+ * Prints with a format given with the variable list ap initialized.
+ *
+ * Returns the same as vfprintf.
  */
 int vprintf(const char *format, va_list arg) {
 
@@ -170,7 +182,9 @@ size_t ioctl(FILE *stream, int cmd, void *argp) {
 }
 
 /**
- * Returns the next character of stream
+ * Returns the next character of stream.
+ *
+ * In case of failiure it returns EOF.
  */
 int fgetc(FILE *stream) {
     char c;
@@ -182,7 +196,9 @@ int fgetc(FILE *stream) {
 }
 
 /**
- *Deals with formatted input conversion given a stream and a list of arguments
+ * Deals with formatted input conversion given a stream and a list of arguments.
+ *
+ * It returns the number of converted variables.
  */
 int vfscanf(FILE *stream, const char *format, va_list arg) {
 
@@ -314,7 +330,9 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
 }
 
 /**
- *  Prepares the character c to be read the next time you access stream
+ *  Prepares the character c to be read the next time you access stream.
+ *
+ *  Returns the same character or EOF in case of failiure.
  */
 int ungetc(int c, FILE *stream) {
     if (c == EOF || stream->flag) {
@@ -326,7 +344,9 @@ int ungetc(int c, FILE *stream) {
 }
 
 /**
- * Deals with a formatted input
+ * Deals with a formatted input.
+ *
+ * Returns the same as vfscanf.
  */
 int scanf(const char *format, ...) {
 
@@ -336,14 +356,18 @@ int scanf(const char *format, ...) {
 }
 
 /**
- *  Deals with a formatted input given the initialized variables list
+ *  Deals with a formatted input given the initialized variables list.
+ *
+ *  Returns the same as vfscanf.
  */
 int vscanf(const char *format, va_list arg) {
     return vfscanf(stdin, format, arg);
 }
 
 /**
- * Deals with a formatted input given a stream
+ * Deals with a formatted input given a stream.
+ *
+ * Returns the same as vfscanf.
  */
 int fscanf(FILE *stream, const char *format, ...){
     va_list ap;

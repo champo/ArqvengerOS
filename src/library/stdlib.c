@@ -5,7 +5,7 @@
 static size_t randSeed;
 
 /**
- * Converts a string to its equivalent int
+ * Converts a string to its equivalent int.
  */
 int atoi(const char *s) {
 
@@ -34,6 +34,11 @@ int atoi(const char *s) {
     return (negative * ans);
 }
 
+/**
+ * Converts an int to its equivalent string.
+ *
+ * Returns the lenght of the string.
+ */
 int itoa(char *s, int n){
 
     int i = 0;
@@ -64,16 +69,25 @@ int itoa(char *s, int n){
     return i;
 }
 
+/**
+ * Returns a random number.
+ */
 int rand(void) {
 
     randSeed = (size_t) ((1103515245UL * (unsigned long) randSeed + 12345UL) % (1<<30));
     return (int) (randSeed >> 2);
 }
 
+/**
+ * Sets the seed for the random number generation.
+ */
 void srand(unsigned int seed) {
     randSeed = seed;
 }
 
+/**
+ * Converts a string to its equivalent unsigned int.
+ */
 unsigned int atou(const char *s) {
 
     int i = 0;
@@ -93,6 +107,11 @@ unsigned int atou(const char *s) {
     return ans;
 }
 
+/**
+ * Converts an unsigned int to its equivalent string.
+ *
+ * Returns the lenght of the string.
+ */
 int utoa(char *s, unsigned int n){
 
     int i = 0;
