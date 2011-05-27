@@ -1,5 +1,7 @@
 EXTERN  int08, int09, interruptDispatcher
 
+; Defines a macro that takes as an argument the interrupt number.
+; Calls that interrupt.
 %macro CALLER 1
     ; Save the current execution context
     pusha   
@@ -31,39 +33,44 @@ EXTERN  int08, int09, interruptDispatcher
 %endmacro
 
 
-; Defines a macro that takes as an argument the
-; interrupt number
+; Defines a macro that takes as an argument the interrupt number.
+; Uses the CALLER macro to call the corresponding interrupt.
+; Pushes a 0 as the error code.
 %macro ISR_NOERRCODE 2 
 GLOBAL _int%1Handler   
   _int%1Handler:
     cli
 
-    ; Save the error code (errCode)
+    ; Save the error code (errCode).
     push 0         
-    ; Save the interrupt number (intNum)
+    ; Save the interrupt number (intNum).
     push %1h      
     CALLER %2
 %endmacro
 
-; Idem, but without adding the cero error code
+; Idem, but pushing a 1 as the error code.
 %macro ISR_ERRCODE 2   
 GLOBAL _int%1Handler
   _int%1Handler:
     cli
-
-    push 0
-    ; Save the interrupt number (intNum)
+    
+    ; Save the error code (errCode).
+     push 1
+    ; Save the interrupt number (intNum).
     push %1h       
     CALLER %2
 %endmacro
 
+; Definition of the interrupt handlers
 
 ISR_ERRCODE 80, interruptDispatcher
+
 ; IRQs Handlers
+
 ISR_ERRCODE 20, interruptDispatcher
 ISR_ERRCODE 21, interruptDispatcher
 
-; Exceptions Handlers
+; Definition of exceptions Handlers
 ISR_ERRCODE 00, interruptDispatcher
 ISR_ERRCODE 01, interruptDispatcher
 ISR_ERRCODE 02, interruptDispatcher

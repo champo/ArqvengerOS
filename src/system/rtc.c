@@ -32,18 +32,18 @@ int readCentury(void);
 time_t getTime(time_t *tp) {
     RTCRegisters regs;
     readRTCRegisters(&regs); 
-    //epoch jan 1 1970
+
     int thisYear = (regs.century * 100) + regs.year;
     unsigned int daysSinceEpoch = 0;
     int i;
-    for(i = 1970; i < thisYear; i++) {
+    for (i = 1970; i < thisYear; i++) {
         if (ISLEAPYEAR(i) ) {
             daysSinceEpoch += 366;
         } else {
             daysSinceEpoch += 365;
         }
     }
-    for( i = 1; i < regs.month; i++) {
+    for (i = 1; i < regs.month; i++) {
         switch (i) {
         case JAN: case MAR: case MAY: case JUL: case AUG: case OCT: case DEC:
             daysSinceEpoch += 31;
@@ -63,20 +63,6 @@ time_t getTime(time_t *tp) {
 
 void readRTCRegisters(RTCRegisters *regs){
     int format;
-    //unsigned char aux = 0;
-   
-    //TODO this is something we should do but apparently it doesn't work
-    //  stays or goes??
-    // Getting the RTC register A
-    // If RTC in update mode wait until it finish updating
-    //while (aux != 0x80 ) { 
-     //   outB(RTCADDRESS, 10);    
-      //  aux= inB(RTCDATA);
-    //printf("aux = %d\n",aux);
-    //}
-    
-    //outB(RTCADDRESS, 11);
-    //outB(RTCDATA, 4);
     
     // Getting format register    
     outB(RTCADDRESS, 11);

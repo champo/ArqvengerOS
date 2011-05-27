@@ -10,7 +10,7 @@ typedef struct {
    int gs, fs, es, ds;
    int edi, esi, ebp, esp, ebx, edx, ecx, eax;
    int intNum, errCode;
-  // int eip, cs, eflags, useresp, ss;
+   int eip, cs, eflags, useresp, ss;
 } registers;
 
 typedef void (*interruptHandler)(registers* regs);
@@ -25,7 +25,13 @@ static interruptHandler table[256];
 
 #define     IN_USE_EXCEPTIONS   20
 
-static const char* exceptionTable[] = { "Divide by zero", "Debugger", "NMI", "Breakpoint", "Overflow", "Bounds", "Invalid Opcode", "Coprocesor not available", "Double fault", "Coprocessor Segment Overrun", "Invalid Task State Segment", "Segment not present", "Stack fault", "General Protection", "Page Fault", "Intel Reserved", "Math Fault", "Aligment Check", "Machine Check", "Floating-Point Exception"};
+static const char* exceptionTable[] = { "Divide by zero", "Debugger", "NMI", "Breakpoint", "Overflow",
+                                         "Bounds", "Invalid Opcode", "Coprocesor not available", 
+                                         "Double fault", "Coprocessor Segment Overrun",
+                                         "Invalid Task State Segment", "Segment not present",
+                                         "Stack fault", "General Protection", "Page Fault",
+                                         "Intel Reserved", "Math Fault", "Aligment Check",
+                                         "Machine Check", "Floating-Point Exception"};
 
 static void int20(registers* regs);
 static void int21(registers* regs);
@@ -33,14 +39,30 @@ static void int80(registers* regs);
 static void exceptionHandler(registers* regs);
 void interruptDispatcher(registers regs);
 
+
+
+/**
+ * Interrupt 20h. Handles the IRQ0 also know as timmer tick.
+ *
+ *  @param regs Pointer to struct containing micro's registers.
+ */
 void int20(registers* regs) {
     timerTick();
 }
 
+/**
+ * Interrupt 21h. Handles the IRQ1, the interrupt from keyboard.
+ * 
+ *  @param regs Pointer to struct containing micro's registers.
+ */
 void int21(registers* regs ) {
     readScanCode();
 }
 
+/**
+ * Register interrupts in the handler table.
+ *
+ */
 void setInterruptHandlerTable(void) {
     int i;
     for (i = 0;i < 32;i++) {
@@ -52,6 +74,15 @@ void setInterruptHandlerTable(void) {
     register(80);
 }
 
+/**
+ * Call the apropiate interrupt.
+ *
+ * It makes use of the HandlerTable, in which previously all interrupts were
+ * registered. In the case of a PIC interrupt, it informs the corresponding
+ * PIC when the interrupt has been handled.
+ *   
+ *  @param regs Pointer to struct containing micro's registers.
+ */
 void interruptDispatcher(registers regs) {
 
     (*table[regs.intNum])(&regs);
@@ -67,6 +98,11 @@ void interruptDispatcher(registers regs) {
     }
 }
 
+/**
+ * Interrupt 80h. Handles the system calls.
+ *
+ *  @param regs Pointer to struct containing micro's registers.
+ */
 void int80(registers* regs) {
 
     switch (regs->eax) {
@@ -89,6 +125,11 @@ void int80(registers* regs) {
     }
 }
 
+/**
+ * Handles the exceptions.
+ *
+ *  @param regs Pointer to struct containing micro's registers.
+ */
 void exceptionHandler(registers* regs){
     char* screen = (char*) 0xb8000;
     int i = 0;
