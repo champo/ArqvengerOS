@@ -353,16 +353,21 @@ const Command* findCommand(char* commandString) {
 
     const Command* res;
     size_t i, len;
+    char oldChar;
 
     // Find the end of the first word
     for (len = 0; len < BUFFER_SIZE && commandString[len] != ' ' && commandString[len] != 0; len++);
 
+    oldChar = commandString[len + 1];
+    commandString[len + 1] = 0;
     if (len > 0) {
 
         // Compare the first word to every command available
         for (i = 0; i < NUM_COMMANDS; i++) {
             res = &commands[i];
-            if (strncmp(res->name, commandString, len) == 0) {
+            if (strcmp(res->name, commandString) == 0) {
+
+                commandString[len + 1] = oldChar;
                 // We found one :D Let's just return it
                 return res;
             }
@@ -370,7 +375,7 @@ const Command* findCommand(char* commandString) {
     }
 
     // Ooops, no such command, let's let the user know.
-    commandString[len + 1] = 0;
+
     printf("Command not found: %s\n", commandString);
 
     return NULL;
