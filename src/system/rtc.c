@@ -20,11 +20,14 @@
 
 static enum months {JAN = 1, FEB, MAR, APRIL, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC };
 
-typedef struct {
-    int seconds,minutes,hours,day,month,year,century;
-} RTCRegisters;
+int readSeconds(void);
+int readRinutes(void);
+int readHours(void);
+int readDay(void);
+int readMonth(void);
+int readYear(void);
+int readCentury(void);
 
-void readRTCRegisters(RTCRegisters *regs);
 
 time_t getTime(time_t *tp) {
     RTCRegisters regs;

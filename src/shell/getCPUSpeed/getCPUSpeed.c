@@ -2,8 +2,6 @@
 #include "library/stdio.h"
 #include "mcurses/mcurses.h"
 
-#include "system/rtc.h"
-#include "library/time.h"
 int getCPUSpeedHandler(void);
 
 void getCPUSpeed(char* argv) {

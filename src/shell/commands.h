@@ -10,5 +10,5 @@
 #include "shell/calc/calc.h"
 #include "shell/getCPUSpeed/getCPUSpeed.h"
 #include "shell/fortune/fortune.h"
-
+#include "shell/date/date.h"
 #endif
