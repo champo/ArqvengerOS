@@ -3,7 +3,7 @@
 #include "library/stdlib.h"
 #include "mcurses/mcurses.h"
 #include "library/time.h"
-#define CANT_FORTUNES 18
+#define CANT_FORTUNES 19
 
 void fortune(void) {
     char *phrases[] = { "The Arqvengers manifest: \n\nYet to be done..." , 
@@ -24,7 +24,8 @@ void fortune(void) {
                         "Happiness only real when shared. - Into the Wild.",
                         "It's only after we've lost everything that we're free to do anything. - Fight Club.",
                         "Don't give up!Never give up!Never back down!!! - Never Back Down.",
-                        "No matter what happens, control the outcome. It's on you. - Never Back Down."
+                        "No matter what happens, control the outcome. It's on you. - Never Back Down.",
+                        "It's not a bug, it's a feature"
             };
     srand(time(NULL));
     printf("%s\n", phrases[rand() % CANT_FORTUNES]);
