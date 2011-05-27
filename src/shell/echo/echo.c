@@ -3,7 +3,6 @@
 #include "library/stdlib.h"
 #include "library/string.h"
 #include "mcurses/mcurses.h"
-#include "library/stdlib.h"
 
 void echo(char* argv) {
 
