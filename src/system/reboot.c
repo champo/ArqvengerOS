@@ -10,6 +10,13 @@
 #define KDATA_FLAG 0x1
 #define UDATA_FLAG 0x2
 
+
+/**
+ * Reboot the system. 
+ * 
+ * It restarts the system by telling the keyboard driver to tell the  CPU
+ * to reset itself. 
+ */
 void reboot(void) {
     char aux;
 

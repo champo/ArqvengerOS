@@ -10,7 +10,10 @@
  * If the parameter tp is non-NULL, the return value is also stored in the 
  * memory pointed to by tp.
  *
- * @param tp Pointer to a unsigned int where the result
+ * @param tp Pointer to a unsigned int where, if it is not NULL the result
+ * 	     will be stored.
+ * 
+ * @return The amount of second since Epoch. 
  */
 time_t _time(time_t *tp) {
     return getTime(tp);

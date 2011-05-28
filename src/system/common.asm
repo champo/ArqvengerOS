@@ -1,5 +1,6 @@
 GLOBAL _isIF
 
+; Checks whether the Interrupt Flag is set or not.
 _isIF:
     push ebp
     mov ebp, esp
