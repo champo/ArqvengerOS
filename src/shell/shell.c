@@ -358,8 +358,8 @@ const Command* findCommand(char* commandString) {
     // Find the end of the first word
     for (len = 0; len < BUFFER_SIZE && commandString[len] != ' ' && commandString[len] != 0; len++);
 
-    oldChar = commandString[len + 1];
-    commandString[len + 1] = 0;
+    oldChar = commandString[len];
+    commandString[len] = 0;
     if (len > 0) {
 
         // Compare the first word to every command available
@@ -367,7 +367,7 @@ const Command* findCommand(char* commandString) {
             res = &commands[i];
             if (strcmp(res->name, commandString) == 0) {
 
-                commandString[len + 1] = oldChar;
+                commandString[len] = oldChar;
                 // We found one :D Let's just return it
                 return res;
             }
