@@ -14,7 +14,7 @@
 #define CENTURYREGISTER     0x32
 
 
-#define BCDTOBINARY(X)      (((X) & 0xF0) >> 1) + (((X) & 0xF0) >> 3) + ((X) & 0xf) 
+#define BCDTOBINARY(X)      (((X) & 0xF0) >> 1) + (((X) & 0xF0) >> 3) + ((X) & 0xf)
 #define ISLEAPYEAR(i)       (((i) % 4 == 0 && (i) % 100 != 0) || (i) % 400 == 0)
 #define SECONDSINDAY        86400
 
@@ -25,29 +25,29 @@ typedef struct {
 } RTCRegisters;
 
 
-int readSeconds(void);
-int readRinutes(void);
-int readHours(void);
-int readDay(void);
-int readMonth(void);
-int readYear(void);
-int readCentury(void);
-void readRTCRegisters(RTCRegisters *regs);
+static int readSeconds(void);
+static int readRinutes(void);
+static int readHours(void);
+static int readDay(void);
+static int readMonth(void);
+static int readYear(void);
+static int readCentury(void);
+static void readRTCRegisters(RTCRegisters *regs);
 
 /**
  * Return the time since Epoch (00:00:00 UTC, January 1, 1970), measured in seconds.
- * 
+ *
  * It serves as a link between kernel and user space, enabling a user to interact
  * with the information offered by the RTC.
- * 
+ *
  * @param tp Pointer to a unsigned int where, if it is not NULL the result
  * 	     will be stored.
- * 
+ *
  * @return The amount of second since Epoch.
  */
 time_t getTime(time_t *tp) {
     RTCRegisters regs;
-    readRTCRegisters(&regs); 
+    readRTCRegisters(&regs);
 
     int thisYear = (regs.century * 100) + regs.year;
     unsigned int daysSinceEpoch = 0;
@@ -69,51 +69,51 @@ time_t getTime(time_t *tp) {
             break;
         case FEB:
             daysSinceEpoch += (ISLEAPYEAR(i))?29:28;
-            break;   
+            break;
         }
     }
     daysSinceEpoch += regs.day;
-    return (daysSinceEpoch * SECONDSINDAY) + (regs.hours * 3600) + (regs.minutes * 60) + regs.seconds ;    
+    return (daysSinceEpoch * SECONDSINDAY) + (regs.hours * 3600) + (regs.minutes * 60) + regs.seconds ;
 }
 
 /**
  * Read the registers from the Real Time Clock.
- * 
+ *
  * It reads the registers from the RTC and stores the data in the struct which
  * pointer it receives. It handles the different types of format in which the data
  * is stored in the RTC registers.
- * 
+ *
  * @param regs Pointer to struct where the data from RTC registers will be stored.
- * 
+ *
  */
 void readRTCRegisters(RTCRegisters *regs){
     int format;
-    
-    // Getting format register    
+
+    // Getting format register
     outB(RTCADDRESS, 11);
     format = inB(RTCDATA);
-    
+
     // Getting seconds
     regs->seconds = readSeconds();
-    
+
     // Getting minutes
     regs->minutes = readMinutes();
-    
+
     // Getting hours (value may be 12hs o 24hs format)
     regs->hours = readHours();
-    
+
     // Getting day of the month
     regs->day = readDay();
-    
+
     // Getting month
     regs->month = readMonth();
-    
+
     // Getting year
     regs->year = readYear();
-    
+
     // Getting century
     regs->century = readCentury();
-    
+
     // If in BCD mode, convert to binary
     if ((format & 0x02) ==  0x02 ) {
        regs->seconds = BCDTOBINARY(regs->seconds);
@@ -124,8 +124,8 @@ void readRTCRegisters(RTCRegisters *regs){
        regs->year = BCDTOBINARY(regs->year);
        regs->century = BCDTOBINARY(regs->century);
     }
-    
-    // If in 12 hs mode, convert to 24 hs mode 
+
+    // If in 12 hs mode, convert to 24 hs mode
     if ((format & 0x04) == 0x04) {
       // Masking off the pm/am bit
         if ( (regs->hours & 0x80) == 0x80 ) {
@@ -138,7 +138,7 @@ void readRTCRegisters(RTCRegisters *regs){
 
 /**
  * Read the RTC seconds register.
- * 
+ *
  * @return An integer representing the data stored in the register (different formats).
  */
 int readSeconds(void) {
@@ -148,17 +148,17 @@ int readSeconds(void) {
 
 /**
  * Read the RTC minutes register.
- * 
+ *
  * @return An integer representing the data stored in the register (different formats).
  */
-int readMinutes(void) { 
+int readMinutes(void) {
     outB(RTCADDRESS, MINUTESREGISTER);
     return  inB(RTCDATA);
 }
 
 /**
  * Read the RTC hours register.
- * 
+ *
  * @return An integer representing the data stored in the register (different formats).
  */
 int readHours(void) {
@@ -168,7 +168,7 @@ int readHours(void) {
 
 /**
  * Read the RTC day of the month register.
- * 
+ *
  * @return An integer representing the data stored in the register (different formats).
  */
 int readDay(void) {
@@ -178,7 +178,7 @@ int readDay(void) {
 
 /**
  * Read the RTC month register.
- * 
+ *
  * @return An integer representing the data stored in the register (different formats).
  */
 int readMonth(void) {
@@ -188,7 +188,7 @@ int readMonth(void) {
 
 /**
  * Read the RTC year register.
- * 
+ *
  * @return An integer representing the data stored in the register (different formats).
  */
 int readYear(void) {
@@ -198,7 +198,7 @@ int readYear(void) {
 
 /**
  * Read the RTC century register.
- * 
+ *
  * @return An integer representing the data stored in the register (different formats).
  */
 int readCentury(void) {

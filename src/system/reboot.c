@@ -12,10 +12,10 @@
 
 
 /**
- * Reboot the system. 
- * 
+ * Reboot the system.
+ *
  * It restarts the system by telling the keyboard driver to tell the  CPU
- * to reset itself. 
+ * to reset itself.
  */
 void reboot(void) {
     char aux;

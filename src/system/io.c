@@ -3,9 +3,9 @@
 
 /**
  * Wrapper function of inline assembler instruction inb.
- * 
+ *
  * @param port The number of the port to be accessed.
- * 
+ *
  * @return The data read from the port.
  */
 inline unsigned char inB(unsigned short port) {
@@ -17,7 +17,7 @@ inline unsigned char inB(unsigned short port) {
 
 /**
  * Wrapper function of inline assembler instruction outb.
- * 
+ *
  * @param port The number of the port to be accessed.
  * @param data The data to be written to port.
  */

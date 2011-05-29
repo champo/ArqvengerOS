@@ -178,7 +178,7 @@ void setupIDT(void) {
 
 /**
  * Loads an interrupt in the IDT.
- * 
+ *
  * @param table Adress of the IDT struct.
  * @param entry The number of the interrupt.
  * @param segmentSelector The selector of the segment in which the interrupt will be stored.
@@ -194,13 +194,14 @@ void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dw
     item->access = access;
     item->cero = 0x00;
 }
+
 /**
  * Remaps the PIC.
  *
  * Initially, in real mode, the first 32 positions of the IDT are occupied by the exceptions
  * and the PIC's interrupts, IRQs. This function moves the IRQs in the IDT, so they
  *  don't overlap with the exceptions.
- * 
+ *
  * @param offset1 The offset of the position where the IRQ0 was.
  * @param offset2 The offset of the position where the IRQ0 will be moved.
  */
