@@ -68,6 +68,9 @@ static int currentShellNumber;
 static History* history;
 static Shell* cur;
 
+/**
+ * Shell entry poing.
+ */
 void shell(void) {
 
     const Command* cmd;
@@ -103,12 +106,23 @@ void shell(void) {
     }
 }
 
+/**
+ * Print the prompt.
+ *
+ * @param prompt The prompt to print.
+ */
 void printPrompt(const char* prompt) {
     setForegroundColor(COLOR_GREEN);
     printf("%s@tty%d >", prompt, currentShellNumber);
     setForegroundColor(COLOR_WHITE);
 }
 
+/**
+ * Update the cursor position to a new value.
+ *
+ * @param promptLen The len of the prompt.
+ * @param destPos The position to set the cursor to.
+ */
 void updateCursor(size_t promptLen, int destPos) {
 
     // We always have to be extra careful with the fact
@@ -151,6 +165,13 @@ int replaceInput(size_t promptLen, char* buffer) {
     return strlen(buffer);
 }
 
+/**
+ * Parse & find the next command.
+ *
+ * @param prompt The prompt to print.
+ *
+ * @return The command to execute, if one was found, NULL otherwise.
+ */
 const Command* nextCommand(const char* prompt) {
 
     size_t promptLen = strlen(prompt) + 7;
@@ -307,6 +328,13 @@ const Command* nextCommand(const char* prompt) {
     return findCommand(cur->buffer);
 }
 
+/**
+ * Add a string of length len to the input.
+ *
+ * @param promptLen The length of the prompt.
+ * @param in The string to add. Doesn't need to be NULL terminated.
+ * @param len The length of the string.
+ */
 void addToInput(size_t promptLen, const char* in, size_t len) {
 
     int i, destPos;
@@ -336,7 +364,16 @@ void addToInput(size_t promptLen, const char* in, size_t len) {
     }
 }
 
+/**
+ * Add the input to the history.
+ *
+ * @param commandString The input to add.
+ */
 void addToHistory(const char* commandString) {
+
+    if (strlen(commandString) == 0) {
+        return;
+    }
 
     strncpy(history->input[history->end], commandString, BUFFER_SIZE - 1);
     history->input[history->end][BUFFER_SIZE - 1] = 0;
@@ -349,6 +386,13 @@ void addToHistory(const char* commandString) {
     }
 }
 
+/**
+ * Parse the command string and find the command, if any, to execute.
+ *
+ * @param commandString The string to parse.
+ *
+ * @return The command to execute, NULL if none was found.
+ */
 const Command* findCommand(char* commandString) {
 
     const Command* res;
@@ -381,11 +425,23 @@ const Command* findCommand(char* commandString) {
     return NULL;
 }
 
+/**
+ * Get the list of commands the shell knows.
+ *
+ * @param len A pointer to the size_t to store the number of commands.
+ *
+ * @return An array of commands
+ */
 const Command* getShellCommands(size_t* len) {
     *len = NUM_COMMANDS;
     return commands;
 }
 
+/**
+ * Auto complete the word under the cursor.
+ *
+ * @param prompt The prompt to print.
+ */
 void autoComplete(const char* prompt) {
 
     int i, candidates = 0, len, last = 0;
@@ -464,7 +520,10 @@ void autoComplete(const char* prompt) {
     }
 }
 
-static void chooseCurrentEntry(void) {
+/**
+ * Replace the input with the current history entry.
+ */
+void chooseCurrentEntry(void) {
     memcpy(cur->buffer, history->input[history->current], BUFFER_SIZE);
     history->current = history->end;
     cur->usingHistory = 0;
