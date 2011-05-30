@@ -113,8 +113,8 @@ void updateCursor(size_t promptLen, int destPos) {
 
     // We always have to be extra careful with the fact
     // that we need to adjust our 0 start pos to 1 start pos
-    int cursorPos = cur->cursor + promptLen + 1;
-    destPos += promptLen + 1;
+    int cursorPos = cur->cursor + promptLen;
+    destPos += promptLen;
 
     if (destPos == cursorPos) {
         return;
@@ -127,8 +127,8 @@ void updateCursor(size_t promptLen, int destPos) {
         printf("\033[%dF", -lineDelta);
     }
 
-    moveCursorInRow(((destPos - 1) % LINE_WIDTH) + 1);
-    cur->cursor = destPos - promptLen - 1;
+    moveCursorInRow((destPos % LINE_WIDTH) + 1);
+    cur->cursor = destPos - promptLen;
 }
 
 /**
