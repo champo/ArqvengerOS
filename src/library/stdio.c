@@ -21,7 +21,9 @@ size_t systemRead(FILE *stream, void *buf, size_t n);
 /**
  * Insert a character into the given stream.
  *
- * It returns the value of the caracter and in case of failiure it returns EOF.
+ * @param c, the character to be written.
+ * @param stream, a pointer to file to write in. 
+ * @return the value of the caracter and in case of failiure it returns EOF.
  */
 int fputc(char c, FILE *stream) {
     return (systemWrite(stream, &c, 1) == 1? c : EOF);
@@ -30,7 +32,9 @@ int fputc(char c, FILE *stream) {
 /**
  * Print a line in the given stream.
  *
- * It returns the number of characters printed and in case of failiure it returns EOF.
+ * @param s, the string to be written.
+ * @param stream, a pointer to the file to write in.
+ * @return the number of characters printed and in case of failiure it returns EOF.
  */
 int fputs(const char *s, FILE *stream) {
 
@@ -48,15 +52,29 @@ int fputs(const char *s, FILE *stream) {
 
 /**
  * Returns the file descriptor of a file
+ *
+ * @param stream, a pointer to the file to be evaluated.
+ * @return the stream file descriptor.
  */
 int getfd(FILE *stream) {
     return stream->fd;
 }
 
 /**
- * Prints with format given the FILE and the va_list initiated.
+ *  Prints with format given the FILE and the va_list initiated.
  *
- *  It returns the number of characters printed or -1 in case of failiure.
+ *  The variables sent will be printed in order specifying the types with a %
+ *  symbol in the format.
+ *  %d or %i indicates an integer is expected.
+ *  %s indicates a pointer to a char is expected.
+ *  %c indicates a character is expected.
+ *  %u indicates an unsigned int is expected.
+ *  %% indicates a % should be printed.
+ *
+ *  @param stream, a pointer to a file indicating where to write.
+ *  @param format, a constant pointer to a char indicating the format of the text to be printed.
+ *  @param arg, the list of variable arguments.
+ *  @return the number of characters printed or -1 in case of failiure.
  */
 int vfprintf(FILE *stream, const char *format, va_list arg) {
 
@@ -131,7 +149,17 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
 /**
  *  Prints with format on stdout.
  *
- *  Returns the same as vfprintf.
+ *  This function receives variable arguments, containing the variables to be printed.
+ *  The variables sent will be printed in order specifying the types with a %
+ *  symbol in the format.
+ *  %d or %i indicates an integer is expected.
+ *  %s indicates a pointer to a char is expected.
+ *  %c indicates a character is expected.
+ *  %u indicates an unsigned int is expected.
+ *  %% indicates a % should be printed.
+ *
+ *  @param format, a constant pointer to a char, containing the format to be printed.
+ *  @return the number of characters printed or -1 in case of failiure.
  */
 int printf(const char *format, ...) {
 
@@ -143,7 +171,18 @@ int printf(const char *format, ...) {
 /**
  * Prints with format given an output.
  *
- * Returns the same as vfprintf.
+ * This function receives variable arguments, containing the variables to be printed.
+ *  The variables sent will be printed in order specifying the types with a %
+ *  symbol in the format.
+ *  %d or %i indicates an integer is expected.
+ *  %s indicates a pointer to a char is expected.
+ *  %c indicates a character is expected.
+ *  %u indicates an unsigned int is expected.
+ *  %% indicates a % should be printed.
+ *
+ * @param stream, a pointer to the file to be written.
+ * @param format, a constant pointer to a char, containing the format to be printed.
+ * @return the number of characters printed or -1 in case of failiure.
  */
 int fprintf(FILE *stream, const char *format, ...) {
 
@@ -153,9 +192,19 @@ int fprintf(FILE *stream, const char *format, ...) {
 }
 
 /**
- * Prints with a format given with the variable list ap initialized.
+ *  Prints with a format given with the variable list ap initialized.
+ *  
+ *  The variables sent will be printed in order specifying the types with a %
+ *  symbol in the format.
+ *  %d or %i indicates an integer is expected.
+ *  %s indicates a pointer to a char is expected.
+ *  %c indicates a character is expected.
+ *  %u indicates an unsigned int is expected.
+ *  %% indicates a % should be printed.
  *
- * Returns the same as vfprintf.
+ *  @param format, a constant pointer to a char, containing the format to be printed.
+ *  @param arg, a list of the variable arguments.
+ *  @return the number of characters printed or -1 in case of failiure.
  */
 int vprintf(const char *format, va_list arg) {
 
@@ -185,8 +234,8 @@ size_t ioctl(FILE *stream, int cmd, void *argp) {
 /**
  * Returns the next character of stream.
  *
- * In case of failiure it returns EOF.
- */
+ * @param stream, a pointer to the FILE to be read.
+ * @return returns the character read or EOF if fails. */
 int fgetc(FILE *stream) {
     char c;
     if (stream->flag) {
@@ -199,7 +248,18 @@ int fgetc(FILE *stream) {
 /**
  * Deals with formatted input conversion given a stream and a list of arguments.
  *
- * It returns the number of converted variables.
+ * The variables sent will be scaned in order specifying the types with a %
+ * symbol in the format.
+ * %d or %i indicates an integer is expected.
+ * %s indicates a pointer to a char is expected.
+ * %c indicates a character is expected.
+ * %u indicates an unsigned int is expected.
+ * %% indicates a % should be taken in account.
+ *
+ * @param stream, a pointer to the file to be read.
+ * @param format, a constant pointer to a char indicating what is about to be read.
+ * @param arg, a list of variable arguments.
+ * @return the number of converted variables.
  */
 int vfscanf(FILE *stream, const char *format, va_list arg) {
 
@@ -333,7 +393,9 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
 /**
  *  Prepares the character c to be read the next time you access stream.
  *
- *  Returns the same character or EOF in case of failiure.
+ *  @param c, the character to be unread.
+ *  @param stream, a pointer to the file to be used.
+ *  @return the same character c or EOF in case of failiure.
  */
 int ungetc(int c, FILE *stream) {
     if (c == EOF || stream->flag) {
@@ -347,7 +409,17 @@ int ungetc(int c, FILE *stream) {
 /**
  * Deals with a formatted input.
  *
- * Returns the same as vfscanf.
+ * This function receives variable arguments, containing the variables to be read.
+ * The variables sent will be scaned in order specifying the types with a %
+ * symbol in the format.
+ * %d or %i indicates an integer is expected.
+ * %s indicates a pointer to a char is expected.
+ * %c indicates a character is expected.
+ * %u indicates an unsigned int is expected.
+ * %% indicates a % should be taken in account.
+ *
+ * @param format, a constant pointer to a char indicating what is about to be read. 
+ * @return the number of converted variables.
  */
 int scanf(const char *format, ...) {
 
@@ -359,7 +431,17 @@ int scanf(const char *format, ...) {
 /**
  *  Deals with a formatted input given the initialized variables list.
  *
- *  Returns the same as vfscanf.
+ *  The variables sent will be scaned in order specifying the types with a %
+ *  symbol in the format.
+ *  %d or %i indicates an integer is expected.
+ *  %s indicates a pointer to a char is expected.
+ *  %c indicates a character is expected.
+ *  %u indicates an unsigned int is expected.
+ *  %% indicates a % should be taken in account.
+ * 
+ *  @param format, a constant pointer to a char indicating what is about to be read.
+ *  @param arg, the list of variable arguments.
+ *  @return the number of converted variables 
  */
 int vscanf(const char *format, va_list arg) {
     return vfscanf(stdin, format, arg);
@@ -368,7 +450,17 @@ int vscanf(const char *format, va_list arg) {
 /**
  * Deals with a formatted input given a stream.
  *
- * Returns the same as vfscanf.
+ * The variables sent will be scaned in order specifying the types with a %
+ * symbol in the format.
+ * %d or %i indicates an integer is expected.
+ * %s indicates a pointer to a char is expected.
+ * %c indicates a character is expected.
+ * %u indicates an unsigned int is expected.
+ * %% indicates a % should be taken in account.
+ *         
+ * This function receives variable arguments, containing the variables to be read.
+ * @param stream, a pointer to the file to read.
+ * @param format, a constant pointer to a char indicating what is about to be read. 
  */
 int fscanf(FILE *stream, const char *format, ...){
     va_list ap;
