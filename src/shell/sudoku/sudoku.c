@@ -118,6 +118,11 @@ static void drawBoard(GameState* state);
 
 static int numPlays = 0;
 
+/**
+ * Sudoku entry point.
+ *
+ * @param argv The command input string.
+ */
 void sudoku(char* argv) {
 
     time_t initialTime = time(NULL);
@@ -193,6 +198,11 @@ void sudoku(char* argv) {
     ioctl(0, TCSETS, (void*) &oldStatus);
 }
 
+/**
+ * Draw the initial state of the board.
+ *
+ * @param state The game state to draw.
+ */
 void drawBoard(GameState* state) {
     int i, j;
 
@@ -254,12 +264,18 @@ void drawBoard(GameState* state) {
     moveCursor(boardTop + 1, boardLeft + 1);
 }
 
+/**
+ * Print the man page for sudoku.
+ */
 void manSudoku(void) {
     setBold(1);
     printf("Usage:\n\tsudoku\n");
     setBold(0);
 }
 
+/**
+ * Display the intro.
+ */
 void intro(void) {
 
     setBold(1);
@@ -274,6 +290,12 @@ void intro(void) {
     while (getchar() != '\n');
 }
 
+/**
+ * Move the cursor to the cell in a given direction.
+ *
+ * @param state The game state.
+ * @param dir The direction to move in.
+ */
 void moveInDir(GameState* state, int dir) {
     //UDRL
     switch (dir) {
@@ -304,6 +326,12 @@ void moveInDir(GameState* state, int dir) {
     moveCursor(boardTop + 2 * state->x + 1, boardLeft + 2 * state->y + 1);
 }
 
+/**
+ * Place a number in the current cell.
+ *
+ * @param state The game state.
+ * @param num The number to place.
+ */
 void placeNumber(GameState* state, char num) {
 
     int x = state->x, y = state->y, correct, old;

@@ -7,7 +7,7 @@
 
 /**
  * Command that makes an echo, meaning it prints everything it receives as a parameter.
- * 
+ *
  * @param argv A string containg everything that came after the command.
  */
 void echo(char* argv) {
@@ -21,7 +21,6 @@ void echo(char* argv) {
 
 /**
  * Print manual page for the echo command.
- * 
  */
 void manEcho(void) {
     setBold(1);
