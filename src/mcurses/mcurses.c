@@ -2,15 +2,15 @@
 #include "library/stdio.h"
 
 void moveCursor(int r, int c) {
-    printf("\033[%d;%dH", r % TOTAL_ROWS, c % LINE_WIDTH);
+    printf("\033[%d;%dH", r, c);
 }
 
 void moveCursorInRow(int c) {
-    printf("\033[%dG", c % LINE_WIDTH);
+    printf("\033[%dG", c);
 }
 
 void moveCursorInColumn(int r) {
-    printf("\033[%dd", r % TOTAL_ROWS);
+    printf("\033[%dd", r);
 }
 
 void clearScreen(int type) {

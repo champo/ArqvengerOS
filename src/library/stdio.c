@@ -38,7 +38,7 @@ int fputc(char c, FILE *stream) {
  */
 int fputs(const char *s, FILE *stream) {
 
-    if(s != NULL){
+    if (s != NULL) {
         int len = strlen(s);
         int total;
         total = systemWrite(stream, s, len);
@@ -46,6 +46,7 @@ int fputs(const char *s, FILE *stream) {
 
         return (total == len + 1? len : EOF);
     }
+
     return EOF;
 }
 
@@ -77,10 +78,10 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
     char *buffstring;
     int sizestring;
 
-    while(format[i] != '\0') {
-        if(format[i] == '%') {
-            if(systemWrite(stream,format + lastprint, i - lastprint)
-                 != i - lastprint ) {
+    while (format[i] != '\0') {
+        if (format[i] == '%') {
+            if (systemWrite(stream, format + lastprint, i - lastprint)
+                 != i - lastprint) {
                 return -1;
             }
 
@@ -311,10 +312,10 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                         }
 
                         ungetc(cur,stream);
-                        buff[j] = '\0'; 
+                        buff[j] = '\0';
                         *(va_arg(arg, int *)) = atoi(buff);
                         converted ++;
-                       
+
                         break;
                     case 'u':
                         cur = fgetc(stream);
@@ -336,7 +337,7 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                         }
 
                         ungetc(cur,stream);
-                        buff[j] = '\0'; 
+                        buff[j] = '\0';
                         *(va_arg(arg, int *)) = atou(buff);
                         converted ++;
 

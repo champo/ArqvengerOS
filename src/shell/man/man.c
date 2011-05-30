@@ -8,6 +8,11 @@
 
 int displayManual(char* name);
 
+/** 
+ * Command that returns the information about the usage and utility of other commands.
+ * 
+ * @param argv A string containg everything that came after the command.
+ */
 void man(char* argv) {
     char* firstSpace = strchr(argv, ' ');
 
@@ -16,6 +21,11 @@ void man(char* argv) {
     }
 }
 
+/** 
+ * Command that returns the information about the usage and utility of other commands.
+ * 
+ * @param name The name of the command whose manual page is being consulted.
+ */
 int displayManual(char* name) {
 
     size_t i, len = strlen(name), nameLen, numCommands;
@@ -58,6 +68,10 @@ int displayManual(char* name) {
     return 0;
 }
 
+/**
+ * Print manual page for the man command.
+ * 
+ */
 void manMan(void) {
     setBold(1);
     printf("Usage:\n\tman");

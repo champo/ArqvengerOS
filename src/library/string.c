@@ -6,7 +6,7 @@
 
 
 /**
- * Returns the lenght of a string withouth counting the final /0
+ * Returns the lenght of a string withouth counting the final \0
  */
 size_t strlen(const char *s) {
 
@@ -24,7 +24,7 @@ size_t strlen(const char *s) {
 char *strcpy(char *s, const char *ct) {
     int i = 0;
 
-    while(ct[i] != '\0'){
+    while (ct[i] != '\0') {
         s[i] = ct[i];
         i++;
     }
@@ -40,7 +40,7 @@ char *strncpy(char *s, const char *ct, size_t n) {
 
     int i;
 
-    for(i = 0; i < n && ct[i] != '\0'; i++) {
+    for (i = 0; i < n && ct[i] != '\0'; i++) {
         s[i] = ct[i];
     }
     s[i] = '\0';
@@ -56,11 +56,11 @@ char *strcat(char *s, const char *ct) {
     int i = 0;
     int j = 0;
 
-    while(s[i] != '\0') {
+    while (s[i] != '\0') {
         i++;
     }
 
-    while(ct[j] != '\0') {
+    while (ct[j] != '\0') {
         s[i] = ct[j];
         i++;
         j++;
@@ -78,11 +78,11 @@ char *strncat(char *s, const char *ct, size_t n) {
     int i = 0;
     int j = 0;
 
-    while(s[i] != '\0') {
+    while (s[i] != '\0') {
         i++;
     }
 
-    while(ct[j] != '\0' && j < n) {
+    while (ct[j] != '\0' && j < n) {
         s[i] = ct[j];
         i++;
         j++;
@@ -99,11 +99,11 @@ char *strchr(const char *cs, char c) {
 
     int i = 0;
 
-    while(cs[i] != c && cs[i] != '\0') {
+    while (cs[i] != c && cs[i] != '\0') {
         i++;
     }
 
-    return(cs[i] == '\0' ? NULL : (cs + i));
+    return cs[i] == '\0' ? NULL : (cs + i);
 }
 
 /**
@@ -114,14 +114,14 @@ char *strrchr(const char *cs, char c) {
     int i = 0;
     int last = -1;
 
-    while(cs[i] != '\0') {
-        if(cs[i] == c) {
+    while (cs[i] != '\0') {
+        if (cs[i] == c) {
             last = i;
         }
         i++;
     }
 
-    return(last == -1 ? NULL : (cs + last));
+    return last == -1 ? NULL : (cs + last);
 }
 
 
@@ -158,7 +158,7 @@ void *memset(void *s, char c, size_t n) {
 
     int i = 0;
 
-    while(i < n){
+    while (i < n){
         *((char *) s + i) = c;
         i++;
     }
@@ -188,7 +188,7 @@ void *memchr(const void *cs, char c, size_t n){
 
     int i = 0;
 
-    while(i < n && *((char *) cs + i) != c) {
+    while (i < n && *((char *) cs + i) != c) {
         i++;
     }
 

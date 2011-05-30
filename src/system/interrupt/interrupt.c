@@ -109,13 +109,19 @@ void _int21Handler(void);
 void _int80Handler(void);
 
 
+
+/**
+ * Initializes the Interrupt Descriptor Table.
+ *
+ * Remaps the PIC, and loads the interrput and exceptions handlers.
+ */
 void setupIDT(void) {
-    // We don't actually have to keep this in memory, so it's safe to have it as a local
+    // We don't actually have to keep this in memory, so it's safe to have it as a local.
     InterruptDescriptorTableRegister idtr;
 
+    // Disabling interrupts to make sure we're in absolute control.
     _cli();
     reMapPIC(PIC1_BASE_OFFSET,PIC2_BASE_OFFSET);
-    //TODO: Manage exceptions
 
     setIdtEntry(idt, 0x80, 0x08, (dword)&_int80Handler, ACS_INT);
     setIdtEntry(idt, 0x20, 0x08, (dword)&_int20Handler, ACS_INT);
@@ -161,13 +167,24 @@ void setupIDT(void) {
 
     setInterruptHandlerTable();
 
-    /* Enable the interrupts we need in the PIC */
+    /* Enable the interrupts we need in the PIC. */
     outB(0x21,0xFC);
     outB(0xA1,0xFF);
 
+    // Enabling the interrupts again.
     _sti();
 }
 
+
+/**
+ * Loads an interrupt in the IDT.
+ *
+ * @param table Adress of the IDT struct.
+ * @param entry The number of the interrupt.
+ * @param segmentSelector The selector of the segment in which the interrupt will be stored.
+ * @param offset The offset to the exact location where the interrupt will be stored.
+ * @param access The byte representing the type of access the segment has.
+ */
 void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dword offset, byte access) {
     InterruptDescriptor* item = &table[entry];
 
@@ -178,6 +195,16 @@ void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dw
     item->cero = 0x00;
 }
 
+/**
+ * Remaps the PIC.
+ *
+ * Initially, in real mode, the first 32 positions of the IDT are occupied by the exceptions
+ * and the PIC's interrupts, IRQs. This function moves the IRQs in the IDT, so they
+ *  don't overlap with the exceptions.
+ *
+ * @param offset1 The offset of the position where the IRQ0 was.
+ * @param offset2 The offset of the position where the IRQ0 will be moved.
+ */
 void reMapPIC(int offset1,int offset2){
     unsigned char mask1,mask2;
 

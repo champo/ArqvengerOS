@@ -3,6 +3,11 @@
 #include "library/stdio.h"
 #include "shell/info.h"
 
+/**
+ * Command that shows the commands supported by the shell, as well as a brief description.
+ * 
+ * @param argv A string containing everything that came after the command.
+ */
 void help(char* argv) {
 
     const Command* commands;
@@ -25,6 +30,10 @@ void help(char* argv) {
     printf("You can use functions keys 1 through 4 to switch between shells.\n");
 }
 
+/**
+ * Print manual page for the help command.
+ * 
+ */
 void manHelp(void) {
     setBold(1);
     printf("Usage:\n\thelp\n");

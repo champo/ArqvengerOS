@@ -1,7 +1,6 @@
 #ifndef _shell_commands_header_
 #define _shell_commands_header_
 
-//#define include(X)  #include "shell/X/X.h"
 
 #include "shell/echo/echo.h"
 #include "shell/man/man.h"
@@ -11,4 +10,6 @@
 #include "shell/getCPUSpeed/getCPUSpeed.h"
 #include "shell/fortune/fortune.h"
 #include "shell/date/date.h"
+
+
 #endif

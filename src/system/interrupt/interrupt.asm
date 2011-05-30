@@ -3,6 +3,9 @@ GLOBAL  _cli,_sti
 
 SECTION .text
 
+; Definition of "wrapper" functions of assembler instructions, to make possible to call
+; them from a C code.
+
 _cli:
     cli
     ret

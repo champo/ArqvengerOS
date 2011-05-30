@@ -587,7 +587,6 @@ void handleControlSequence(char cur) {
             endControlSequence();
             break;
         case 'z':
-            readControlBuffer(1);
             mod1 = status->cursorPosition;
             status->cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
             mod2 = 0;

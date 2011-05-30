@@ -120,9 +120,10 @@ static int numPlays = 0;
 
 void sudoku(char* argv) {
 
-    srand(time(NULL));
+    time_t initialTime = time(NULL);
+    time_t elapsedTime;
+    srand(initialTime);
     char* board = boards[rand() % NUM_BOARDS];
-    board = boards[numPlays++ % NUM_BOARDS];
     int in, i, j;
 
     GameState state;
@@ -144,6 +145,8 @@ void sudoku(char* argv) {
             }
         }
     }
+
+    elapsedTime = time(NULL) - initialTime;
 
     state.x = 0;
     state.y = 0;
@@ -169,8 +172,11 @@ void sudoku(char* argv) {
             if (state.placed == 81 && state.errors == 0) {
 
                 setForegroundColor(COLOR_GREEN);
-                moveCursor(boardTop + 10 * 2, boardLeft);
+                moveCursor(boardTop + 10 * 2 - 1, boardLeft);
                 printf("Congratulations! You have solved it correctly.");
+
+                moveCursor(boardTop + 10 * 2 , boardLeft);
+                printf("Your time was %d minutes and %d seconds.",elapsedTime / 60, elapsedTime % 60);
 
                 moveCursor(boardTop + 10 * 2 + 1, boardLeft);
                 printf("Press enter to exit.");
@@ -220,8 +226,8 @@ void drawBoard(GameState* state) {
             }
             printf("|");
 
-            setBold(1);
             setForegroundColor(COLOR_WHITE);
+            setBold(1);
             if (state->board[i][j] != '0') {
                 printf("%c", state->board[i][j]);
             } else {
