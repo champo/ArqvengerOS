@@ -1,9 +1,7 @@
 #include "shell/date/date.h"
 #include "library/stdio.h"
 #include "library/stdlib.h"
-#include "library/string.h"
 #include "mcurses/mcurses.h"
-#include "system/rtc.h"
 #include "library/time.h"
 
 

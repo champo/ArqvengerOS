@@ -11,16 +11,53 @@ void dateFromDayNumber(int *date, time_t daysSinceEpoch);
 
 static char string[30];
 
+/**
+* Get current time.
+* 
+* Return the current calendar time as a time_t. 
+*
+* The function returns this value, and if the argument is not a null pointer,
+* the value is also set to the object pointed by timer.
+* 
+* @param tp Pointer to time_t where there time can be stored, providede it is not null.
+* 
+* @return The current time.(Number of seconds since Epoch)
+*/
 time_t time(time_t *tp) {
     return systemCall(_SYS_TIME,tp,0,0);
 }
 
 
-// This function, as the one from the C standard library returns a char pointer.
-// This represents a problem if we can't dinamically allocate memory, so we decided to 
-// restrict the function and store the variable as  global. This means that succesive
-// calls to asctime will overwrite it. The user should take this into consideration when 
-// using it.
+/**
+ * Returns a the local time in a human-readable formtat.
+ * 
+ * Interprets the contents of the tm structure pointed by tp as a calendar time and
+ * converts it to a C string containing a human-readable version of the corresponding
+ * date and time.
+ * 
+ * The returned string has the following format:
+ * 
+ * Www Mmm dd hh:mm:ss yyyy 
+ * Where Www is the weekday, Mmm the month in letters, dd the day of the month, 
+ * hh:mm:ss the time, and yyyy the year.
+ * 
+ * The string is followed by a new-line character ('\n') and the terminating 
+ * null-character.
+ * 
+ * This function, as the one from the C standard library returns a char pointer.
+ * This represents a problem if we can't dinamically allocate memory, so we decided to 
+ * restrict the function and store the variable as  global. This means that succesive
+ * calls to asctime will overwrite it. The user should take this into consideration when 
+ * using it.
+ * 
+ * In addition to this, we added the capability of initializing the tm structure
+ * in case it wasn't already, thus saving us the work of implementing other 
+ * functions from this library that are exceed the needs of this project.
+ * 
+ * @param tp Pointer to tm structure, representing the local time.
+ * 
+ * @return A string representing the local time in a human-readable format.
+ */
 char* asctime(struct tm *tp ) {
     struct tm date;
     if ( tp == NULL  ) {
@@ -131,6 +168,12 @@ char* asctime(struct tm *tp ) {
     return string;
 }
 
+/**
+ * 
+ * 
+ * 
+ * 
+ */
 void initTm(struct tm *date) {
     time_t secsSinceEpoch = time(NULL);
     time_t daysSinceEpoch = secsSinceEpoch / (3600 * 24);
@@ -146,17 +189,31 @@ void initTm(struct tm *date) {
     date->sec = ((secsOfDay % 3600) % 60); 
 }
 
-// This is a very know algorith, Sakamoto's algorithm. And was obtained from the Wikipedia.
-// http://en.wikipedia.org/wiki/Calculating_the_day_of_the_week
+/**
+ *
+ * This is a very know algorith, Sakamoto's algorithm. And was obtained from the Wikipedia.
+ * http://en.wikipedia.org/wiki/Calculating_the_day_of_the_week
+ * 
+ * 
+ */
 static int dayOfWeek(int year, int month, int day) {
        static int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
        year -= month < 3;
        return (year + year/4 - year/100 + year/400 + t[month-1] + day) % 7;
 }
 
-
-//  This a known algorithm to calculate the year, month and day of the month given a number day (since Epoch).
-//  http://alcor.concordia.ca/~gpkatch/gdate-algorithm.html
+/**
+ * Initializes an array of 3 integers with the current year, month and day.
+ * 
+ *  This a known algorithm to calculate the year, month and day of the month
+ * given a number day (since Epoch).
+ * 
+ *  http://alcor.concordia.ca/~gpkatch/gdate-algorithm.html
+ * 
+ * @param date	Array of three integers containing year,month and day.
+ * @param daysSinceEpoch Number of seconds since Epoch.
+ * 
+ */
 void dateFromDayNumber(int *date, time_t daysSinceEpoch) {
     unsigned int year,month,day,ddd,mi;
     year = (10000 * daysSinceEpoch + 14780) / 3652425;

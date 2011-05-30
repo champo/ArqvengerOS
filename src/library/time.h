@@ -16,6 +16,7 @@ struct tm {
 };
 
 time_t time(time_t *tp);
+
 char* asctime(struct tm *tp);
 
 #endif
