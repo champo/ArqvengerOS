@@ -5,6 +5,9 @@
 #include "library/time.h"
 #define CANT_FORTUNES 19
 
+/**
+ * Executes the fortune command meaning the user will receive an awesome phrase.
+ */
 void fortune(void) {
     char *phrases[] = { "The Arqvengers manifest: \n\nYet to be done..." , 
                         "This was a triumph. \nI'm making a note here: Huge Success.\nIt's hard to overstate my satisfaction." ,
@@ -31,6 +34,9 @@ void fortune(void) {
     printf("%s\n", phrases[rand() % CANT_FORTUNES]);
 }
 
+/**
+ * Manual page for the fortune command.
+ */
 void manFortune(void) {
     setBold(1);
     printf("Usage:\n\t fortune \n");

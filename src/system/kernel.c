@@ -28,7 +28,6 @@ void kmain(void) {
 
     setupIDT();
     while (1) {
-        
        shell();
     }
 }

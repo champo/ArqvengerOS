@@ -6,7 +6,10 @@
 
 
 /**
- * Returns the lenght of a string withouth counting the final /0
+ * Returns the lenght of a string withouth counting the final \0.
+ *
+ * @param s, the constant string to be evaluated.
+ * @return the length of the string.
  */
 size_t strlen(const char *s) {
 
@@ -19,12 +22,16 @@ size_t strlen(const char *s) {
 }
 
 /**
- * Copies the string ct to string s
+ * Copies the string ct to string s.
+ *
+ * @param s, the destiny string of the copy.
+ * @param ct, a constant string, the origin of the copy.
+ * @return the string s.
  */
 char *strcpy(char *s, const char *ct) {
     int i = 0;
 
-    while(ct[i] != '\0'){
+    while (ct[i] != '\0') {
         s[i] = ct[i];
         i++;
     }
@@ -34,13 +41,18 @@ char *strcpy(char *s, const char *ct) {
 }
 
 /**
- * Copies a maximum of n characters from ct to n
+ * Copies a maximum of n characters from ct to n.
+ *
+ * @param s, the destiny string of the copy.
+ * @param ct, a constant string, the origin of the copy.
+ * @param n, the number of characters to be copied.
+ * @return the string s.
  */
 char *strncpy(char *s, const char *ct, size_t n) {
 
     int i;
 
-    for(i = 0; i < n && ct[i] != '\0'; i++) {
+    for (i = 0; i < n && ct[i] != '\0'; i++) {
         s[i] = ct[i];
     }
     s[i] = '\0';
@@ -49,18 +61,22 @@ char *strncpy(char *s, const char *ct, size_t n) {
 }
 
 /**
- * Concatenates string s with string ct
+ * Concatenates string s with string ct.
+ *
+ * @param s, the string to be operated.
+ * @param ct, a constant string to be concatenated in s.
+ * @return the string s.
  */
 char *strcat(char *s, const char *ct) {
 
     int i = 0;
     int j = 0;
 
-    while(s[i] != '\0') {
+    while (s[i] != '\0') {
         i++;
     }
 
-    while(ct[j] != '\0') {
+    while (ct[j] != '\0') {
         s[i] = ct[j];
         i++;
         j++;
@@ -71,18 +87,23 @@ char *strcat(char *s, const char *ct) {
 }
 
 /**
- * Concatenates a maximum of n characters from string ct to string s
+ * Concatenates a maximum of n characters from string ct to string s.
+ *
+ * @param s, the string to be operated.
+ * @param ct, a constant string to be concatenated in s.
+ * @param n, the quantity of characters of ct to be concatenated.
+ * @return the string s.
  */
 char *strncat(char *s, const char *ct, size_t n) {
 
     int i = 0;
     int j = 0;
 
-    while(s[i] != '\0') {
+    while (s[i] != '\0') {
         i++;
     }
 
-    while(ct[j] != '\0' && j < n) {
+    while (ct[j] != '\0' && j < n) {
         s[i] = ct[j];
         i++;
         j++;
@@ -93,40 +114,52 @@ char *strncat(char *s, const char *ct, size_t n) {
 }
 
 /**
- * Returns a pointer to the first appearance of c in cs
+ * Returns a pointer to the first appearance of c in cs.
+ *
+ * @param cs, the constant string to by analyzed.
+ * @param c, the character c to be looked.
+ * @return a pointer to the first position of c in cs or null.
  */
 char *strchr(const char *cs, char c) {
 
     int i = 0;
 
-    while(cs[i] != c && cs[i] != '\0') {
+    while (cs[i] != c && cs[i] != '\0') {
         i++;
     }
 
-    return(cs[i] == '\0' ? NULL : (cs + i));
+    return cs[i] == '\0' ? NULL : (cs + i);
 }
 
 /**
- * Returns a pointer to the last appearance of c in cs
+ * Returns a pointer to the last appearance of c in cs.
+ *
+ * @param cs, the constant string to be anlyzed.
+ * @param c, the character c to be looked.
+ * @return a pointer to the las positicion of c in cs or null.
  */
 char *strrchr(const char *cs, char c) {
 
     int i = 0;
     int last = -1;
 
-    while(cs[i] != '\0') {
-        if(cs[i] == c) {
+    while (cs[i] != '\0') {
+        if (cs[i] == c) {
             last = i;
         }
         i++;
     }
 
-    return(last == -1 ? NULL : (cs + last));
+    return last == -1 ? NULL : (cs + last);
 }
 
 
 /**
  * Compares strings cs and ct.
+ *
+ * @param cs, a constant string.
+ * @param ct, a constant string to be compared with cs.
+ * @return 0 if the strings are equivalent, -1 if cs < ct and 1 if cs > ct.
  */
 int strcmp(const char *cs, const char *ct) {
 
@@ -135,6 +168,11 @@ int strcmp(const char *cs, const char *ct) {
 
 /**
  * Compares at most n characters of strings cs and ct.
+ *
+ * @param cs, a constant string.
+ * @param ct, a constant string to be compared with cs.
+ * @param n, the number of characters to be compared.
+ * @return 0 if the strings are equivalent, -1 if cs < ct and 1 if cs > ct.
  */
 int strncmp(const char *cs, const char *ct, size_t n) {
 
@@ -152,13 +190,17 @@ int strncmp(const char *cs, const char *ct, size_t n) {
 }
 
 /**
- *  Sets n characters of s with c
+ *  Sets n characters of s with c.
+ *  @param s, a void pointer to be written.
+ *  @param c, the character chosen to fill s.
+ *  @param n, the number of characters to be written.
+ *  @return the void pointer s.
  */
 void *memset(void *s, char c, size_t n) {
 
     int i = 0;
 
-    while(i < n){
+    while (i < n){
         *((char *) s + i) = c;
         i++;
     }
@@ -167,7 +209,12 @@ void *memset(void *s, char c, size_t n) {
 }
 
 /**
- * Copies n characters from ct to s
+ * Copies n characters from ct to s.
+ *
+ * @param s, a void pointer. Destiny of the copy.
+ * @param ct, a constant void pointer. Origin of the copy.
+ * @param n, number of characters to be copied.
+ * @return the void pointer s.
  */
 void *memcpy(void *s, const void *ct, size_t n) {
 
@@ -182,13 +229,18 @@ void *memcpy(void *s, const void *ct, size_t n) {
 }
 
 /**
- * Returns pointer of first occurance of c in cs, checks n characters as most
+ * Returns pointer of first occurance of c in cs, checks n characters as most.
+ *
+ * @param cs, a constant void pointer to be analyzed.
+ * @param c, the character to be looked.
+ * @param n, the number of characters to check.
+ * @return a void pointer pointing to the first appearance of c in cs or null.
  */
 void *memchr(const void *cs, char c, size_t n){
 
     int i = 0;
 
-    while(i < n && *((char *) cs + i) != c) {
+    while (i < n && *((char *) cs + i) != c) {
         i++;
     }
 
@@ -196,7 +248,12 @@ void *memchr(const void *cs, char c, size_t n){
 }
 
 /**
- * Compares the first n characters of cs and ct
+ * Compares the first n characters of cs and ct.
+ *
+ * @param cs, a constant void pointer.
+ * @param ct, a constant void pointer which content will be compared to cs.
+ * @param n, the number of characters to be compared.
+ * @return 0 if cs is equivalent to ct, -1 if cs < ct or 1 if cs > ct.
  */
 int memcmp(const void *cs, const void *ct, size_t n) {
 
@@ -216,6 +273,9 @@ int memcmp(const void *cs, const void *ct, size_t n) {
 
 /**
  * Reverses the string
+ *
+ * @param s, the string to be reversed.
+ * @return the string s.
  */
 char *reverse(char * s) {
 

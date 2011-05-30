@@ -5,6 +5,9 @@
 #define cleanbuffer() while(getchar()!='\n')
 #define MAXLINE 500
 
+/**
+ * Manual page for the calc command.
+ */
 void manCalc(void) {
     setBold(1);
     printf("Usage:\n\t calc\n");
@@ -16,6 +19,10 @@ void manCalc(void) {
             "use quit or exit to finish the program.\n");
 }
 
+/**
+ * Command that executes a simple calculator.
+ * Allows to make equations with the format X op Y.  
+ */
 void calc(void) {
     int num1;
     int num2;

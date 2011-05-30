@@ -5,7 +5,7 @@
 
 /**
  * Command that shows the commands supported by the shell, as well as a brief description.
- * 
+ *
  * @param argv A string containing everything that came after the command.
  */
 void help(char* argv) {
@@ -32,7 +32,6 @@ void help(char* argv) {
 
 /**
  * Print manual page for the help command.
- * 
  */
 void manHelp(void) {
     setBold(1);

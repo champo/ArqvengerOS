@@ -6,6 +6,9 @@ static size_t randSeed;
 
 /**
  * Converts a string to its equivalent int.
+ *
+ * @param s, a constant pointer to a char indicating the number to be analyzed.
+ * @return the number analyzed.
  */
 int atoi(const char *s) {
 
@@ -37,7 +40,9 @@ int atoi(const char *s) {
 /**
  * Converts an int to its equivalent string.
  *
- * Returns the lenght of the string.
+ * @param s, the string where the number will be written.
+ * @param n, the integer to be analyzed.
+ * @return the lenght of the string.
  */
 int itoa(char *s, int n){
 
@@ -87,6 +92,9 @@ void srand(unsigned int seed) {
 
 /**
  * Converts a string to its equivalent unsigned int.
+ *
+ * @param s, a constant string containing the number to be analyzed.
+ * @return the number analyzed.
  */
 unsigned int atou(const char *s) {
 
@@ -110,7 +118,9 @@ unsigned int atou(const char *s) {
 /**
  * Converts an unsigned int to its equivalent string.
  *
- * Returns the lenght of the string.
+ * @param s, the string where the number will be written.
+ * @param n, the number to be analyzed.
+ * @returns the lenght of the string.
  */
 int utoa(char *s, unsigned int n){
 

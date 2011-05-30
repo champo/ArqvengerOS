@@ -8,9 +8,9 @@
 
 int displayManual(char* name);
 
-/** 
+/**
  * Command that returns the information about the usage and utility of other commands.
- * 
+ *
  * @param argv A string containg everything that came after the command.
  */
 void man(char* argv) {
@@ -21,10 +21,12 @@ void man(char* argv) {
     }
 }
 
-/** 
+/**
  * Command that returns the information about the usage and utility of other commands.
- * 
+ *
  * @param name The name of the command whose manual page is being consulted.
+ *
+ * @return 0 if no manual was found, 1 otherwise.
  */
 int displayManual(char* name) {
 
@@ -70,7 +72,6 @@ int displayManual(char* name) {
 
 /**
  * Print manual page for the man command.
- * 
  */
 void manMan(void) {
     setBold(1);
