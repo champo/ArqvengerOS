@@ -2,6 +2,7 @@
 #include "shell/shell.h"
 #include "library/stdio.h"
 #include "drivers/video.h"
+#include "drivers/keyboard.h"
 
 void kmain(void);
 
@@ -9,6 +10,8 @@ void kmain(void);
  * Kernel entry point
  */
 void kmain(void) {
+
+    setupIDT();
 
     FILE files[3];
     for (int i = 0; i < 3; i++) {
@@ -22,11 +25,10 @@ void kmain(void) {
     stderr = &files[2];
 
     initScreen();
+    initKeyboard();
 
     // This dandy line, resets the cursor and clears the screen
     writeScreen("\033[1;1H\033[2J", 10);
-
-    setupIDT();
     while (1) {
        shell();
     }
