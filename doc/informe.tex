@@ -111,6 +111,12 @@
             Algunas de estas teclas, como ser Bloc Mayus, Num Lock y Scroll Lock son manejadas internamente por el driver.
             Otras como las flechas, Inicio, Fin y las teclas de Funcion, se guardan como parte de la entrada previa conversion a escape sequences.
 
+            En particular, las teclas Block Mayus, Num Lock y Scroll Lock, modifican el estado de sus respectivos LEDs cuando son apretadas.
+            Esto se hace enviando un comando al controlador de teclado mediante \textit{out}. 
+            Al tomar tan solo 4 puertos de comunicacion, el controlador de teclado tiene la particularidad de ser necesario introducir tiempos de espera.
+            Esto es necesario para evitar escribir datos a un puerto donde el controlador esta sacando valores para la CPU, o viceversa.
+            Es tambien curioso, que el cambio del estado de los LEDs genera que se dispare una interrupcion de teclado con un valor de ackownledge.
+
             Por limitaciones del sistema, al no tener multi tarea, el buffer de teclado es uno solo, compartido por todas las terminales.
 
         \subsubsection{Salida}
@@ -128,6 +134,11 @@
             Segundo, es un elemento crucial a la hora de implementar multiples terminales.
             Cada terminal tiene su propio estado en el driver de salida, incluyendo su propio buffer, a diferencia del driver de entrada.
             Cuando es pedido, el driver cambia que estado usa, efectivamente cambiando de terminal.
+
+    \subsection{Reboot} 
+        Cuando llego la hora de implementar el reboot, encontramos que esto comunmente se hace mediante el controlador de teclado.
+        Este esta conectado al pin \textit{RESET} del microprocesador, y al recibir un comando especial, lo activa.
+        Esto causa que la computadora haga un soft reboot, y dependiendo del controlador de teclado, si es warm o cold.
 
 \section{Libreria standard}
     Para poder realizar nuestro trabajo practico, era necesario implementar cierta funcionalidad de la libreria standard de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por el standard ANSI.
