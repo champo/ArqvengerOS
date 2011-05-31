@@ -134,7 +134,7 @@ void setLeds(void) {
     }
 
     // The keyboard buffer needs to be empty beforre setting these values
-    // We assume that this is safe, since we have just read the values
+    // We assume that we wont lose any values, since we have just read something.
     while (inB(KEYBOARD_CTRL_PORT) & 0x2);
     outB(KEYBOARD_IO_PORT, LED_CODE);
 
