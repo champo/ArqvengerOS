@@ -2,6 +2,7 @@
 #include "shell/shell.h"
 #include "library/stdio.h"
 #include "drivers/video.h"
+#include "drivers/keyboard.h"
 
 void kmain(void);
 
@@ -22,6 +23,7 @@ void kmain(void) {
     stderr = &files[2];
 
     initScreen();
+//    initKeyboard();
 
     // This dandy line, resets the cursor and clears the screen
     writeScreen("\033[1;1H\033[2J", 10);

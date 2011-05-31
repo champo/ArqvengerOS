@@ -8,11 +8,11 @@
 #define KEYBOARD_IO_PORT 0x60
 #define KEYBOARD_CTRL_PORT 0x64
 
-#define LED_CODE 0xEd
+#define LED_CODE 0xED
 
 #define LAST_CODE_IN_TABLE 0x39
 #define MIN_BREAK_CODE 0x80
-#define ESCAPE_OFFSET 0xFF
+#define ESCAPE_CHAR 0x1B
 
 #define ESCAPED_CODE 0xE0
 #define BACKSPACE_CODE 0x0E
@@ -27,8 +27,6 @@
 #define LEFT_ARROW_CODE 0x4B
 #define DOWN_ARROW_CODE 0x50
 #define RIGHT_ARROW_CODE 0x4D
-
-#define ESCAPE_CHAR 0x1B
 
 #define HOME_CODE 0x47
 #define END_CODE 0x4F
@@ -354,5 +352,9 @@ int ioctlKeyboard(int cmd, void* argp) {
     }
 
     return res;
+}
+
+void initKeyboard(void) {
+    setLeds();
 }
 

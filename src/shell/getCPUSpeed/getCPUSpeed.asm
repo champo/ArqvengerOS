@@ -18,7 +18,7 @@ waitIrq0:
 	mov  [timeStampCounterLow], eax
 	mov  [timeStampCounterHigh], edx
     ; Setting number of ticks to wait
-	add  ebx, 2            
+	add ebx, 2            
 
 waitForElapsedTicks:
     mov eax, 191    ;Calling the ticks syscall 
@@ -34,9 +34,10 @@ waitForElapsedTicks:
    	sbb edx, [timeStampCounterHigh]
 
    	; microSeconds  =  ( numberOfTicks / totalTicksPerSecond) * 1,000,000
-	; so for this: microSeconds = (1/1000) * 1,000,000 = 10000
-	mov ebx,10000 
+	; so for this: microSeconds = (1/18.2) * 1,000,000 = 55556
+	mov ebx, 55556 
 	div ebx
+
 	; eax contains measured speed in MHz
     ret 
 
