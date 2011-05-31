@@ -15,6 +15,35 @@
 
 \begin{document}
 
+
+\renewcommand{\lstlistingname}{C\'odigo Fuente}
+\lstloadlanguages{Octave} 
+\lstdefinelanguage{MyPseudoCode}[]{Octave}{
+	deletekeywords={beta,det},
+	morekeywords={repmat}
+} 
+\lstset{
+	language=MyPseudoCode,
+	stringstyle=\ttfamily,
+	showstringspaces = false,
+	basicstyle=\footnotesize\ttfamily,
+	commentstyle=\color{gray},
+	keywordstyle=\bfseries,
+	numbers=left,
+	numberstyle=\ttfamily\footnotesize,
+	stepnumber=1,                   
+	framexleftmargin=0.20cm,
+	numbersep=0.37cm,              
+	backgroundcolor=\color{white},
+	showspaces=false,
+	showtabs=false,
+	frame=l,
+	tabsize=4,
+	captionpos=b,               
+	breaklines=true,             
+	breakatwhitespace=false,      
+	mathescape=true
+}
 \begin{titlepage}
         \thispagestyle{empty}
         \begin{center}
@@ -44,6 +73,8 @@
 
 \section{Resumen}
 
+
+\newpage
 \section{Diseño del Kernel}
     Las funcionalidades del kernel fueron desarrolladas incrementalmente.
     Inicialmente, optamos por implementar las system calls \textit{read} y \textit{write} de una manera muy sencilla.
@@ -169,7 +200,7 @@
         Este esta conectado al pin \textit{RESET} del microprocesador, y al recibir un comando especial, lo activa.
         Esto causa que la computadora haga un soft reboot, y dependiendo del controlador de teclado, si es warm o cold.
 
-\section{Libreria standard}
+\section{Librería standard}
     Para poder realizar nuestro trabajo practico, era necesario implementar cierta funcionalidad de la libreria standard de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por el standard ANSI.
     Finalemente, una vez realizada esta libreria, su funcionalidad podia ser aplicada en diferentes lugares del trabajo practico.
 
@@ -192,7 +223,7 @@
 
     \subsection{Scanf}    
         A la hora de implementar scanf, primero hubo que tener cuidados similares a los que se tuvieron en printf. Durante la implementacion surgio la necesidad de devolver al flujo el ultimo caracter consumido, lo cual naturalmente termino siendo traducido en nuestra funcion ungetc. ungetc es un ejemplo de como hubo que modificar cierto codigo viejo (en las estructuras de tipo FILE y en la funcion fputc) a partir de funcionalidades necesarias sobre la marcha.
-
+\newpage
 \section{Shell}
     Contamos con una shell por cada terminal.
     Esta utiliza al maximo las capacidades de la terminal, comunicandose siempre mediante las funciones de la libreria standard, como \textit{printf}.
@@ -211,4 +242,76 @@
     Se menciono antes que por la limitacion de ser mono tarea, hay un solo buffer de teclado.
     Esto se nota tambien a nivel shell ya que solo se permite cambiar entre terminales cuando se esta ingresando un comando.
 
+\newpage
+\section{El comando GetCPUSpeed}
+    Para la implementación del comando \textit{getCPUSpeed}, luego de investigar un poco, encontramos dos métodos posibles. Uno de ellos, el que a simple vista resultaba
+    más simple de implementar, tenía la siguiente forma:
+    \paragraph*{}
+    \begin{lstlisting}
+    setearTimer(X milisegundos);
+    WHILE no se cumplio el tiempo:
+	  incrementar contador;
+    endwhile
+    cpuFrecMHZ = (contador * ciclosClockPorIteracion) /  1000;
+    \end{lstlisting}
+    \paragraph*{}
+    Veáse que en ese pseudocódigo aparece ímplicitamente "falla", o por lo menos "dificultad", de este método. Se debe saber, de alguna forma, la cantidad de ciclos
+    de clock que toma una iteración. Esto no es nada trivial. En procesadores más "viejos", como los 286, 386 y 486, cada instrucción tardaba una cantidad fija y conocida
+    de ciclos de clock en ejecutarse. Por lo que solo deberíamos buscar cuánto tarda cada instrucción del ciclo \textit{while} y sumarlas.
+
+    Desafortunadamente, con la llegada de la tecnología \textit{pipeline}, esa cantidad de ciclos de clock para cada instrucción comenzó a ser variable, siendo la 
+    razón más grade que el tiempo de una instrucción comenzó a depender de las instrucciones que la rodeaban.
+
+    Debido a esto, y a pesar de que exiten formas de idear código cuyos casi ciclos de clock no se vean afectados por el \textit{pipeline}\footnote{ Con 
+    instrucciones subsiguientes \textit{xor} que dependan de las instrucciones anteriores,por ejemplo alterando los registros que usan la instrucción siguiente.}, 
+    decidimos que este método era "antiguo", ya que para "nuevos" procesadores existe una instrucción que nos facilita mucho el trabajo: \textit{rdtsc}.
+
+    La instrucción \textit{rdtsc}, lee la cantidad de ciclos de clock desde el inicio del procesador del \textit{Time Stamp Counter}, un contador interno que viene
+    en los procesadores a partir del Pentium. Existen formas de verificar la existencia de este contador interno pero asumimos que nuestro sistema correrá siempre en
+    procesadores que soporten esta instrucción.
+
+    Para realizar la medición de la frecuencia de trabajo de la \textit{CPU}. con la instrucción \textit{rdtsc}, básicmente lo que tenemos que hacer es 
+    \[  \text{frecuencia de trabajo de CPU} = \dfrac{\text{ciclos de clock}}{\text{tiempo}} \]
+    
+    Para hacer esto, nuestro algoritmo hace algo como esto:
+    \paragraph*{}
+    \begin{lstlisting}
+    esperar a que se active el timmer tick;
+    ticksAEsperar = n;
+    i = 0;
+    ciclosClockIni = rdtsc;
+    WHILE i < n:
+    endwhile
+    ciclosClockFin = rdtsc;
+    cpuFrecHZ = (ciclosClockFin - ciclosClockIni) / (ticks esperados * tiempo entre ticks);
+    \end{lstlisting}
+    \paragraph*{}   
+    Este enfoque, resultó ser excesivamente preciso, considerando que nuestro que utilizamos división entera.
+
+    Dado que estas mediciones dependen del estado interno del procesador, y como no sabemos exactamente de qué y cómo dependen optamos por realizar varias mediciones
+    y sacar un promedio para minimizar posibles errores. Por ejemplo, es de esperarse que en procesadores de varios nucleos las mediciones
+    pierdan un poco de precisión, como mínimo.
+
+\newpage     
+\section{Referencias}
+
+\begin{itemize}
+  \item Material provisto por la cátedra
+  \item The C programming language - Kernighan y Ritchie
+  \item http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+  \item http://webpages.charter.net/danrollins/techhelp/0087.HTM
+  \item http://faydoc.tripod.com/cpu/rdtsc.htm
+  \item http://stanislavs.org/helppc/
+  \item http://www.linux.it/~rubini/docs/ksys/ksys.html
+  \item http://wiki.osdev.org
+  \item http://wiki.osdev.org/Detecting\_CPU\_Speed
+  \item	http://wiki.osdev.org/CMOS\#Accessing\_CMOS\_Registers
+  \item http://wiki.osdev.org/Bootable\_CD
+  \item http://wiki.osdev.org/Boot\_sequence\#Easy\_Way\_Out
+  \item http://en.wikipedia.org/wiki/System\_time\#Retrieving\_system\_time
+  \item http://en.wikipedia.org/wiki/Calculating\_the\_day\_of\_the\_week
+  \item http://cplusplus.com/
+
+\end{itemize}
+   
 \end{document}
