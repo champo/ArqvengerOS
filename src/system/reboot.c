@@ -20,7 +20,7 @@
 void reboot(void) {
     char aux;
 
-    // We use the keyboard driver to reset the CPU
+    // We use the keyboard controller to reset the CPU
     disableInterrupts();
 
     // We need to consume everything in the keyboard buffers
@@ -32,7 +32,7 @@ void reboot(void) {
         }
     } while (aux & UDATA_FLAG);
 
-    // This should tell the keyboard driver to signal the CPU for reset
+    // This should tell the keyboard controller to signal the CPU for reset
     outB(INTERFACE_PORT, RESET_CODE);
 
     halt();

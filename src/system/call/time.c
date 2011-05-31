@@ -1,5 +1,5 @@
 #include "system/call.h"
-#include "system/rtc.h"
+#include "drivers/rtc.h"
 
 
 /**
