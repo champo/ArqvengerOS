@@ -13,12 +13,14 @@ waitIrq0:
 	
     cmp  ebx, eax
 	jz   waitIrq0
+
 	; Getting clocks cycles since the processor started
 	rdtsc         
 	mov  [timeStampCounterLow], eax
 	mov  [timeStampCounterHigh], edx
+    
     ; Setting number of ticks to wait
-	add  ebx, 2            
+	add  ebx, 2
 
 waitForElapsedTicks:
     mov eax, 191    ;Calling the ticks syscall 
@@ -34,8 +36,8 @@ waitForElapsedTicks:
    	sbb edx, [timeStampCounterHigh]
 
    	; microSeconds  =  ( numberOfTicks / totalTicksPerSecond) * 1,000,000
-	; so for this: microSeconds = (1/100) * 1,000,000 = 10000
-	mov ebx,10000 
+	; so for this: microSeconds = (1/1000) * 1,000,000 = 1000
+	mov ebx,10
 	div ebx
 	; eax contains measured speed in MHz
     ret 
