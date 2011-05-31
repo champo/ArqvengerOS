@@ -66,25 +66,47 @@
     Por ejemplo, se presto con facilidad a la implementacion de multiples \textit{tty}.
 
     \subsection{Interrupciones}
-        Con respecto al menejo de interrupciones, se utilizaron las funciones provistas por la cátedra para la inicialización de la IDT y la
+        Con respecto al menejo de interrupciones, se utilizaron las funciones provistas por la cátedra para la inicialización de la \textit{IDT} y la
         la carga de de interrupciones.
 
-        \subsubsection{Remapeo del PIC}
-            Cabe destacar que, debido a que en modo real las interrupciones del PIC se solapan con las excepciones, y que así era como el bootloader
-            nos dejaba la IDT, tuvimos remapear el PIC. Esto es, movimos las interrupciones del PIC, las IRQs, que ya venían implementadas 
-            ( timmer tick y la interrupción de teclado) a otras posiciones de la IDT. Por sentido común, y por lo que investigamos, decidimos
+        \subsubsection{Remapeo del \textit{PIC}}
+            Cabe destacar que, debido a que en modo real las interrupciones del \textit{PIC} se solapan con las excepciones, y que así era como el bootloader
+            nos dejaba la \textit{IDT}, tuvimos remapear el \textit{PIC}. Esto es, movimos las interrupciones del \textit{PIC}, las \textit{IRQs}, que ya venían implementadas 
+            (timmer tick y la interrupción de teclado) a otras posiciones de la \textit{IDT}. Por sentido común, y por lo que investigamos, decidimos
             ubicarlas luego de las primeras 32 posiciones que ocupan las excepciones, ocupando así las posiciones 33 a 48. (Tener en cuenta
-            que tanto el PIC principal como el PIC esclavo tienen manejan 8 interrupciones cada uno).
+            que tanto el \textit{PIC} principal como el esclavo manejan 8 interrupciones cada uno).
         
         \subsubsection{Atendiendo interrupciones}
-            Para definir los handlers de las interrupciones y las excepciones, que se guardarían en la IDT, nos dimos cuenta que los códigos sería muy parecidos,
-            sino casi idénticos. Por esta razón, hicimos uso de las macros de asembler para ahorrar tiempo y trabajo, a la vez
+            Al definir los handlers de las interrupciones y las excepciones, que se guardarían en la \textit{IDT}, nos dimos cuenta que los códigos sería muy parecidos,
+            por no decir casi idénticos. Por esta razón, hicimos uso de las macros de assembler para ahorrar tiempo y trabajo, a la vez
             contribuyendo a la claridad del código.
-            \\
-            Para nuestra comodidad y siempre pensando en la claridad y prolijidad del código, todos los handlers, tanto de interrupciones
-            como de expeciones, llaman a una función \textit{interrupt dispatcher}. Dicha función, en base al número de interrupción, se fija
-            en una tabla, en la cual previamente fueron registradas las funciones que atienden las interrupciones y excepciones soportadas
-            por el sistema, y llama a la función que corresponda.
+            
+            Para nuestra comodidad, y siempre pensando en la claridad y prolijidad del código, todos los handlers, tanto de interrupciones
+            como de expeciones, llaman a una función \textit{interrupt dispatcher}. Dicha función, en base al número de interrupción, se encarga de llamar
+	    a la función que corresponda. Esto lo hace fijándose en una tabla, en la cual previamente fueron registradas las funciones que atienden
+	    las interrupciones y excepciones soportadas por el sistema.
+	    
+	    En este punto, debemos hacer una mención a la int $80h$. Esta interrupción en particular, es una de las más importantes, ya que se encarga de manejar las
+	    system calls. Es la encargada de conectar el \textit{kernel space} y el \textit{user space}. Es, por ejemplo, la que posibilita que funciones de la librería
+	    estándar tengan acceso a funciones del kernel, como aquellas que interactúan con los perífericos. 
+	   
+	\subsubsection{Atendiendo excepciones}
+	    En lo que a manejo de excepciones refiere, dado que nuestro sistema es mono tarea y que no implementamos nada que nos permita realizar algún tipo de acción 
+	    reparadora, el nuestro es un manejo bastante simple. Nos limitamos a mostrar un mensaje de error, discriminando el tipo de excepción, y congelar el sistema,
+	    deshabilitando las interrupciones.
+
+    \subsection{System Calls}
+	    Entre las system calls que implementamos se encuentran las que son básicas para el funcionamiento de nuestro sistema operativo, \textit{read} y \textit{write},
+	    aunque también agregamos algunas más para facilitarnos el trabajo o, en algunos casos, para poder hacerlo bien. Estas system calls son \textit{ioctl}, 
+	    \textit{time} y una system call creada especial creadas por nosotros llamada \textit{ticks}. A esta system call le asignamos un número de forma que no 
+	    coincidiera con el número de ninguna otra system call existente.\footnote{El número en cuestión es 191.}
+	
+	\subsubsection{\textit{Kernel space} y \textit{user space}}
+	    Si bien hemos dicho que existe un \textit{kernel space} y un \textit{user space}, y que la int $80h$ es la \textbf{única} conexión entre ellos, esto no es 
+	    enteramente cierto. Dado que no tenemos control sobre los niveles de privilegio, porque no tenemos paginación ni segmentación, no podemos realmente fijar un
+	    límite para ninguno de ellos. Lo máximo que pudimos hacer es fijar como pauta que las funciones que corren en \textit{user space} no puedan tener acceso a
+	    las que están en \textit{kernel space}, a menos que utilicen una system call. Por supuesto, las funciones que corren en \textit{kernel space} no deberían 
+	    llamar nunca a alguna función de \textit{user space}.
 
     \subsection{Terminales}
         \subsubsection{Entrada}
@@ -170,5 +192,4 @@
 
     Se menciono antes que por la limitacion de ser mono tarea, hay un solo buffer de teclado.
     Esto se nota tambien a nivel shell ya que solo se permite cambiar entre terminales cuando se esta ingresando un comando.
-
 \end{document}
