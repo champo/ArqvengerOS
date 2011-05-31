@@ -45,64 +45,48 @@
 \section{Resumen}
 
 \section{Diseño del Kernel}
-    Las funcionalidades del kernel fueron desarrolladas incrementalmente. Inicialmente, optamos por implementar las system calls read y write de una manera muy sencilla.
-    Una vez que teniamos esta version desarrollada, comenzamos a pensar como interactuan estas con las aplicaciones. 
-    Al estar usando read y write como las define Linux, decidimos investigar el I/O de teclado y video en las terminales de sistemas Unix-compatible.
-    Dado que el objetivo no del desarrollo no es diseñar un sistema operativo nuevo, optamos por ser lo mas compatibles con Linux posible.
+    Las funcionalidades del kernel fueron desarrolladas incrementalmente.
+    Inicialmente, optamos por implementar las system calls \textit{read} y \textit{write} de una manera muy sencilla.
+    Una vez que teniamos esta version desarrollada, comenzamos a pensar como interactuan estas con las aplicaciones.
+    Al estar usando \textit{read} y \textit{write} como las define \textit{Linux}, decidimos investigar el I/O de teclado y video en las terminales de sistemas \textit{Unix-compatible}.
+    Dado que el objetivo no del desarrollo no es diseñar un sistema operativo nuevo, optamos por ser lo mas compatibles con \textit{Linux} posible.
 
-    Investigando aprendimos que Linux maneja esta interaccion de una manera que emula las viejas terminales de mainframes. 
-    Esto significa, que hay solo 3 operaciones posibles: read, write e ioctl.
+    Investigando aprendimos que Linux maneja esta interaccion de una manera que emula las viejas terminales de mainframes.
+    Esto significa, que hay solo 3 operaciones posibles: \textit{read}, \textit{write} e \textit{ioctl}.
     ioctl es una system call que permite comunicarse con los drivers detras de un dado archivo de maneras especificas a cada driver.
-    Esta es la llamada que permite manipular el IO para obtener los distintos comportamientos observados en una consola en Linux.
+    Esta es la llamada que permite manipular el IO para obtener los distintos comportamientos observados en una consola en \textit{Linux}.
     Tambien encontramos que las terminales aceptan las llamadas escape sequences, que permiten realizar operaciones especiales sobre la pantalla, como manipular el color y el cursor.
 
-    En fin, esto derivo en la creacion de una emulacion de una tty a nivel kernel.
-    Si bien la emulacion es limitada, es en parte compatible con la mayoria de las shells modernas de Linux.
-    Para esto se crearon los drivers de video y teclado, con los cuales se comunica desde las aplicaciones usando read, write e ioctl.
-    Dado que no existen mas drivers, read y write se comunican directamente con los drivers.
+    En fin, esto derivo en la creacion de una emulacion de una \textit{tty} a nivel kernel.
+    Si bien la emulacion es limitada, es en parte compatible con la mayoria de las shells modernas de \textit{Linux}.
+    Para esto se crearon los drivers de video y teclado, con los cuales se comunica desde las aplicaciones usando \textit{read}, \textit{write} e \textit{ioctl}.
+    Dado que no existen mas drivers, \textit{read} y \textit{write} se comunican directamente con los drivers.
 
     Esta emulacion nos permitio gran flexibilidad y aporto un nivel de funcionalidad muy alto para el desarrollo de aplicaciones.
-    Por ejemplo, se presto con facilidad a la implementacion de multiples tty.
+    Por ejemplo, se presto con facilidad a la implementacion de multiples \textit{tty}.
 
     \subsection{Interrupciones}
-    Con respecto al menejo de interrupciones, se utilizaron las funciones provistas por la cátedra para la inicialización de la IDT y la
-    la carga de de interrupciones.
-    \subsubsection{Remapeo del PIC}
-    Cabe destacar que, debido a que en modo real las interrupciones del PIC se solapan con las excepciones, y que así era como el bootloader
-    nos dejaba la IDT, tuvimos remapear el PIC. Esto es, movimos las interrupciones del PIC, las IRQs, que ya venían implementadas 
-    ( timmer tick y la interrupción de teclado) a otras posiciones de la IDT. Por sentido común, y por lo que investigamos, decidimos
-    ubicarlas luego de las primeras 32 posiciones que ocupan las excepciones, ocupando así las posiciones 33 a 48. (Tener en cuenta
-    que tanto el PIC principal como el PIC esclavo tienen manejan 8 interrupciones cada uno).
-    
-    \subsubsection{Atendiendo interrupciones}
-    Para definir los handlers de las interrupciones y las excepciones, que se guardarían en la IDT, nos dimos cuenta que los códigos sería muy parecidos,
-    sino casi idénticos. Por esta razón, hicimos uso de las macros de asembler para ahorrar tiempo y trabajo, a la vez
-    contribuyendo a la claridad del código.
-    \\
-    Para nuestra comodidad y siempre pensando en la claridad y prolijidad del código, todos los handlers, tanto de interrupciones
-    como de expeciones, llaman a una función \textit{interrupt dispatcher}. Dicha función, en base al número de interrupción, se fija
-    en una tabla, en la cual previamente fueron registradas las funciones que atienden las interrupciones y excepciones soportadas
-    por el sistema, y llama a la función que corresponda.
+
     \subsection{Terminales}
         \subsubsection{Entrada}
-            La entrada se maneja mediante un buffer, que es actualizado cuando el PIC dispara una interrupcion de parte del controlador de teclado.
+            La entrada se maneja mediante un buffer, que es actualizado cuando el \textit{PIC} dispara una interrupcion de parte del controlador de teclado.
             Cuando esta interrupcion se dispara, se interpreta los codigos enviados por el teclado y se agregan al buffer.
             La interpretacion de estos codigos, difiere segun el estado de ciertas teclas, como serlo Alt, Ctrl, Shift y Bloc Mayus.
-            Luego, este buffer puede ser consultado utilizando la llamada read sobre la entrada standard.
+            Luego, este buffer puede ser consultado utilizando la llamada \textit{read} sobre la entrada standard.
 
             Como fue mencionado anteriormente, las terminales soportan varios modos de entrada.
             Por simplicidad, y por que proveen suficiente funcionalidad, se implementaron 4 modos en total.
-            Que modo se utiliza se puede manipular con la llamada ioctl.
+            Que modo se utiliza se puede manipular con la llamada \textit{ioctl}.
 
-            El modo esta determinado por 2 flags: canon y echo.
+            El modo esta determinado por 2 flags: \textit{canon} y \textit{echo}.
             Canon activa y desactiva el modo Canonico de la terminal.
             Mientra que echo activa y desactiva si los caracteres leidos son impresos a pantalla por la terminal.
 
-            El modo canonico determina un gran factor del comportamiento de llamar a read sobre la entrada standard.
-            Si este esta activado, read funciona como buffereado por linea, o sea, lee de a lineas.
-            Esto significa que en una dada llamada, read va a retornar como mucho una linea, y no va a retornar, hasta que tenga por lo menos una linea en su buffer.
-            Si bien las terminales de linux permiten manipular que determina un fin de linea, nosotros tomamos \n como fin de linea.
-            Si el modo canonico no esta activado, read se comporta como su definicion dice, lee n bytes, sin importar si hay lineas o no.
+            El modo canonico determina un gran factor del comportamiento de llamar a \textit{read} sobre la entrada standard.
+            Si este esta activado, \textit{read} funciona como buffereado por linea, o sea, lee de a lineas.
+            Esto significa que en una dada llamada, \textit{read} va a retornar como mucho una linea, y no va a retornar, hasta que tenga por lo menos una linea en su buffer.
+            Si bien las terminales de linux permiten manipular que determina un fin de linea, nosotros tomamos \textit{\\n} como fin de linea.
+            Si el modo canonico no esta activado, \textit{read} se comporta como su definicion dice, lee n bytes, sin importar si hay lineas o no.
 
             Ademas de soportar estos 4 modos, el driver interpreta teclas especiales, como lo son las flechas.
             Algunas de estas teclas, como ser Bloc Mayus, Num Lock y Scroll Lock son manejadas internamente por el driver.
@@ -113,11 +97,11 @@
         \subsubsection{Salida}
             La comunicacion entre el driver de salida de una terminal y la controladora de video se hace mediante el sector de video mapeado a memoria.
             Este permite suficiente flexibilidad para nuestros objetivos, y a su vez es muy simple de utilizar.
-            La unica excepcion es la manipulacion del cursor grafico, que se hace utilizando in y out, ya que no encontramos si la posicion del mismo esta mapeada en alguna parte de memoria.
+            La unica excepcion es la manipulacion del cursor grafico, que se hace utilizando \textit{in} y \textit{out}, ya que no encontramos si la posicion del mismo esta mapeada en alguna parte de memoria.
 
-            El driver permite manipular todos sus aspectos mediante llamadas a write.
+            El driver permite manipular todos sus aspectos mediante llamadas a \textit{write}.
             Este acepta escape sequences que dejan realizar un gran abanico de operaciones sobre la salida.
-            El listado de esta se puede encontrar en el anexo <<Completar aca>>.
+            El listado de esta se puede encontrar en el Anexo 1.
             
             En este nivel se maneja un buffer de salida donde se guarda una copia del estado actual de la pantalla.
             Esto es asi por 2 motivos.
@@ -127,15 +111,15 @@
             Cuando es pedido, el driver cambia que estado usa, efectivamente cambiando de terminal.
 
 \section{Libreria standard}
-    Para poder realizar nuestro trabajo practico, era necesario implementar cierta funcionalidad de la libreria standard de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por Kernighan y Ritchie.
+    Para poder realizar nuestro trabajo practico, era necesario implementar cierta funcionalidad de la libreria standard de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por el standard ANSI.
     Finalemente, una vez realizada esta libreria, su funcionalidad podia ser aplicada en diferentes lugares del trabajo practico.
 
-    Implementar la libreria standard de C de forma completa era innecesario para nuestros objetivos finales, por eso es que a la hora de hacerla, elegimos un subconjunto de la misma. El criterio para esta seleccion fue tomar las funciones que eran totalmente necesarias para nuestra implementacion y ademas, otras que creiamos que cuya funcionalidad podria llegar a ser util en un futuro, en caso de querer extender la funcionalidad de nuestro trabajo.
+    Implementar la libreria standard de C de forma completa era innecesario para nuestros objetivos finales, por eso es que a la hora de hacerla, elegimos un subconjunto de la misma. El criterio para esta seleccion fue tomar las funciones que eran totalmente necesarias para nuestra implementacion y ademas, otras que creiamos que cuya funcionalidad podria llegar a ser util durante el desarrollo.
     Asimismo, el mismo criterio fue tomado para desarrollar la funcionalidad de funciones particulares. Vease como ejemplo la funcion printf, que no permite hacer todo lo que permite hacer la libreria standard original (solo se pueden imprimir integers, strings, chars y unsigned ints).
 
-    Por otra parte, en ciertos momentos nos vimos bajo la necesidad de imlpementar funciones no especificadas en El lenguaje de programacion C. Un muy buen ejemplo era la funcion reverse que da vuelta el contenido de un string. En estos casos, se implementaron las funciones y fueron agregadas en los archivos correspondientes (en este caso en string.c). Estas funciones fueron extensiones de nuestra libreria standard que fueron tomadas a gusto y bajo necesidad.
+    Por otra parte, en ciertos momentos nos vimos bajo la necesidad de imlpementar funciones no especificadas en como parte del standard. Un muy buen ejemplo era la funcion reverse que da vuelta el contenido de un string. En estos casos, se implementaron las funciones y fueron agregadas en los archivos correspondientes (en este caso en string.c). Estas funciones fueron extensiones de nuestra libreria standard que fueron tomadas a gusto y bajo necesidad.
 
-    Nuestra libreria standard incluye: funciones para el control del tipo de datos (isdigit, isspace, islower, isupper, isalpha y isalnum), funciones para entrada y salida de texto (fputc, putc , putchar, puts, fputs, vfprinf, vprintf, fprintf, printf, fgetc, getc, getchar, vfscanf, vscanf, fscanf y scanf), funciones para conversion de numeros a texto y viceversa (itoa, atoi, utoa y atou), generacino de numeros al azar (rand y srand), manejo de cadenas de caracteres(strlen, strcpy, strncpy, strcmp, strncmp, strchr, strrchr, strcat, strncat, reverse), cierto manejo de sectores en memoria(memcpy, memchr, memset, memcmp), acceso simple al reloj para obtener el tiempo, manejo de argumentos variables y la definicion de ciertas constantes necesarias
+    Nuestra libreria standard incluye: funciones para el control del tipo de datos (isdigit, isspace, islower, isupper, isalpha y isalnum), funciones para entrada y salida de texto (fputc, putc , putchar, puts, fputs, vfprinf, vprintf, fprintf, printf, fgetc, getc, getchar, vfscanf, vscanf, fscanf y scanf), funciones para conversion de numeros a texto y viceversa (itoa, atoi, utoa y atou), generacino de numeros al azar (rand y srand), manejo de cadenas de caracteres(strlen, strcpy, strncpy, strcmp, strncmp, strchr, strrchr, strcat, strncat, reverse), cierto manejo de sectores en memoria(memcpy, memchr, memset, memcmp), acceso simple al reloj para obtener el tiempo, manejo de argumentos variables y la definicion de ciertas constantes necesarias.
 
     A continuacion se presentara la especificacion de ciertas funciones que creemos que vale la pena destacar ya sea por su funcionalidad o por problemas que nos encontramos a la hora de implementarlas:
 
@@ -152,16 +136,18 @@
 
 \section{Shell}
     Contamos con una shell por cada terminal.
-    Esta utiliza al maximo las capacidades de la terminal, comunicandose siempre por la libreria standard.
+    Esta utiliza al maximo las capacidades de la terminal, comunicandose siempre mediante las funciones de la libreria standard, como \textit{printf}.
     La shell manipula el modo de la entrada de la terminal para permitirse manipular la entrada con gran precision.
-    Se desactiva tanto el echo como el modo canonico, o sea, lo ingresado llega solo a la shell y sin esperar a que se complete la linea.
+    Se desactiva tanto el \textit{echo} como el \textit{modo canonico}, o sea, lo ingresado llega solo a la shell y sin esperar a que se complete la linea.
     Esto le permite al ususario editar su comando a medida que lo escribe, auto completar y poder moverse por el historial de comandos.
 
-    El comando sudoku demuestra la capacidad de la terminal, haciendo uso de los colores y la posibilidad de mover el cursor a placer.
+    El comando \textit{sudoku} demuestra la capacidad de la terminal, haciendo uso de los colores y la posibilidad de mover el cursor a placer.
     
-    La funcion del comando calc es el de denotar el funcionamiento de scanf, leyendo asi ciertos patrones. Es una calculadora muy rudimentaria y posee ciertos problemas respecto a como exhibe los datos. Sin embargo la consideramos suficiente como para mostrar el funcionamiento de scanf.
+    La funcion del comando \textit{calc} es el de denotar el funcionamiento de \textit{scanf}, leyendo asi ciertos patrones.
+    Es una calculadora muy rudimentaria y posee ciertos problemas respecto a como exhibe los datos.
+    Sin embargo la consideramos suficiente como para mostrar el funcionamiento de \textit{scanf}.
     
-    Por ultimo, el comando fortune, ademas de ser un comando divertido de implementar, vuelve a mostrar otro uso de rand de la libreria standard.
+    Por ultimo, el comando \textit{fortune}, ademas de ser un comando divertido de implementar, vuelve a mostrar otro uso de \textit{rand} de la libreria standard.
 
     Se menciono antes que por la limitacion de ser mono tarea, hay un solo buffer de teclado.
     Esto se nota tambien a nivel shell ya que solo se permite cambiar entre terminales cuando se esta ingresando un comando.
