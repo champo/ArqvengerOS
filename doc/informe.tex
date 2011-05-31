@@ -66,6 +66,25 @@
     Por ejemplo, se presto con facilidad a la implementacion de multiples \textit{tty}.
 
     \subsection{Interrupciones}
+        Con respecto al menejo de interrupciones, se utilizaron las funciones provistas por la cátedra para la inicialización de la IDT y la
+        la carga de de interrupciones.
+
+        \subsubsection{Remapeo del PIC}
+            Cabe destacar que, debido a que en modo real las interrupciones del PIC se solapan con las excepciones, y que así era como el bootloader
+            nos dejaba la IDT, tuvimos remapear el PIC. Esto es, movimos las interrupciones del PIC, las IRQs, que ya venían implementadas 
+            ( timmer tick y la interrupción de teclado) a otras posiciones de la IDT. Por sentido común, y por lo que investigamos, decidimos
+            ubicarlas luego de las primeras 32 posiciones que ocupan las excepciones, ocupando así las posiciones 33 a 48. (Tener en cuenta
+            que tanto el PIC principal como el PIC esclavo tienen manejan 8 interrupciones cada uno).
+        
+        \subsubsection{Atendiendo interrupciones}
+            Para definir los handlers de las interrupciones y las excepciones, que se guardarían en la IDT, nos dimos cuenta que los códigos sería muy parecidos,
+            sino casi idénticos. Por esta razón, hicimos uso de las macros de asembler para ahorrar tiempo y trabajo, a la vez
+            contribuyendo a la claridad del código.
+            \\
+            Para nuestra comodidad y siempre pensando en la claridad y prolijidad del código, todos los handlers, tanto de interrupciones
+            como de expeciones, llaman a una función \textit{interrupt dispatcher}. Dicha función, en base al número de interrupción, se fija
+            en una tabla, en la cual previamente fueron registradas las funciones que atienden las interrupciones y excepciones soportadas
+            por el sistema, y llama a la función que corresponda.
 
     \subsection{Terminales}
         \subsubsection{Entrada}

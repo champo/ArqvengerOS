@@ -34,8 +34,8 @@ waitForElapsedTicks:
    	sbb edx, [timeStampCounterHigh]
 
    	; microSeconds  =  ( numberOfTicks / totalTicksPerSecond) * 1,000,000
-	; so for this: microSeconds = (1/18.2) * 1,000,000 = 55556
-	mov ebx, 55556 
+	; so for this: microSeconds = (1/18.2) * 1,000,000 = 54945
+	mov ebx, 54945
 	div ebx
 
 	; eax contains measured speed in MHz
