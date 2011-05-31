@@ -138,16 +138,25 @@ char* asctime(const struct tm *tp) {
     string[curPos++] = ' ';
 
     itoa(aux,tp->hour);
+    if (tp->hour < 10) {
+        string[curPos++] = '0';
+    }
     strcpy(string + curPos, aux);
     curPos += (tp->hour >= 10)? 2:1;
     string[curPos++] = ':';
 
     itoa(aux,tp->min);
+    if (tp->min < 10) {
+        string[curPos++] = '0';
+    }
     strcpy(string + curPos, aux);
     curPos += (tp->min >= 10)? 2:1;
     string[curPos++] = ':';
 
     itoa(aux,tp->sec);
+    if (tp->sec < 10) {
+        string[curPos++] = '0';
+    }
     strcpy(string + curPos, aux);
     curPos += (tp->sec >= 10)? 2:1;
     string[curPos++] = ' ';
@@ -156,7 +165,7 @@ char* asctime(const struct tm *tp) {
     strcpy(string + curPos, aux);
     curPos += 4;
     string[curPos] = '\0';
-
+    
     return string;
 }
 
@@ -185,11 +194,19 @@ struct tm* localtime(const time_t* timer) {
 }
 
 /**
+ * Returns the number of the day of the week.
+ *
+ * The weeks starts at Sunday which is 0 and finishes in Saturday, 6.
  *
  * This is a very know algorith, Sakamoto's algorithm. And was obtained from the Wikipedia.
+ * 
  * http://en.wikipedia.org/wiki/Calculating_the_day_of_the_week
  *
+ * @param year  The current year.
+ * @param month The current month.
+ * @param day   The current day.
  *
+ * @return A number representing the day of the week.
  */
 static int dayOfWeek(int year, int month, int day) {
        static int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
