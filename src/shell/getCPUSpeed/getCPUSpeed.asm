@@ -13,12 +13,14 @@ waitIrq0:
 	
     cmp  ebx, eax
 	jz   waitIrq0
+
 	; Getting clocks cycles since the processor started
 	rdtsc         
 	mov  [timeStampCounterLow], eax
 	mov  [timeStampCounterHigh], edx
+    
     ; Setting number of ticks to wait
-	add ebx, 2            
+	add  ebx, 2
 
 waitForElapsedTicks:
     mov eax, 191    ;Calling the ticks syscall 
