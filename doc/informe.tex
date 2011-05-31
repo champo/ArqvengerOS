@@ -96,6 +96,13 @@
     Esta emulacion nos permitio gran flexibilidad y aporto un nivel de funcionalidad muy alto para el desarrollo de aplicaciones.
     Por ejemplo, se presto con facilidad a la implementacion de multiples \textit{tty}.
 
+    \subsection{Segmentacion y paginacion}
+        El SO no utiliza ni segmentacion ni paginacion. 
+        Es decir, utilizamos modo flat, sin paginacion.
+        La configuracion de segmentos en modo flat, viene provista por GRUB.
+        El mismo crea 2 segmentos, uno de codigo, y otro de datos.
+        Estos ocupan toda la extension del mapa de memoria.
+
     \subsection{Interrupciones}
         Con respecto al menejo de interrupciones, se utilizaron las funciones provistas por la cátedra para la inicialización de la \textit{IDT} y la
         la carga de de interrupciones.
@@ -179,7 +186,7 @@
 
             El driver permite manipular todos sus aspectos mediante llamadas a \textit{write}.
             Este acepta escape sequences que dejan realizar un gran abanico de operaciones sobre la salida.
-            El listado de esta se puede encontrar en el Anexo 1.
+            El listado de las mismas esta en la documentacion del driver de video.
             
             En este nivel se maneja un buffer de salida donde se guarda una copia del estado actual de la pantalla.
             Esto es asi por 2 motivos.
@@ -307,5 +314,4 @@
 
 \end{itemize}
    
-
 \end{document}
