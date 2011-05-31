@@ -58,7 +58,7 @@
                 \begin{tabular}{lcrc}
                         \textbf{Alvaro Crespo} & & 50758 & \ \ \texttt{acrespo@alu.itba.edu.ar}\\
                         \textbf{Juan Pablo Civile} & & 50453 & \ \ \texttt{jcivile@alu.itba.edu.ar}\\
-                        \textbf{Dario Susnisky} & & 50592 & \ \ \texttt{dsusnisk@alu.itba.edu.ar}\\
+                        \textbf{Darío Susnisky} & & 50592 & \ \ \texttt{dsusnisk@alu.itba.edu.ar}\\
                         \\ 
                 \end{tabular}
         }
@@ -78,39 +78,38 @@
 \section{Diseño del Kernel}
     Las funcionalidades del kernel fueron desarrolladas incrementalmente.
     Inicialmente, optamos por implementar las system calls \textit{read} y \textit{write} de una manera muy sencilla.
-    Una vez que teniamos esta version desarrollada, comenzamos a pensar como interactuan estas con las aplicaciones.
+    Una vez que teníamos esta versión desarrollada, comenzamos a pensar como interactuan estas con las aplicaciones.
     Al estar usando \textit{read} y \textit{write} como las define \textit{Linux}, decidimos investigar el I/O de teclado y video en las terminales de sistemas \textit{Unix-compatible}.
-    Dado que el objetivo no del desarrollo no es diseñar un sistema operativo nuevo, optamos por ser lo mas compatibles con \textit{Linux} posible.
+    Dado que el objetivo del desarrollo no es diseñar un sistema operativo nuevo, optamos por ser lo más compatibles con \textit{Linux} posible.
 
-    Investigando aprendimos que Linux maneja esta interaccion de una manera que emula las viejas terminales de mainframes.
+    Investigando aprendimos que \textit{Linux} maneja esta interacción de una manera que emula las viejas terminales de mainframes.
     Esto significa, que hay solo 3 operaciones posibles: \textit{read}, \textit{write} e \textit{ioctl}.
-    ioctl es una system call que permite comunicarse con los drivers detras de un dado archivo de maneras especificas a cada driver.
+    \textit{ioctl} es una system call que permite comunicarse con los drivers detrás de un dado archivo de maneras específicas a cada driver.
     Esta es la llamada que permite manipular el IO para obtener los distintos comportamientos observados en una consola en \textit{Linux}.
-    Tambien encontramos que las terminales aceptan las llamadas escape sequences, que permiten realizar operaciones especiales sobre la pantalla, como manipular el color y el cursor.
+    También encontramos que las terminales aceptan las llamadas escape sequences, que permiten realizar operaciones especiales sobre la pantalla, como manipular el color y el cursor.
 
-    En fin, esto derivo en la creacion de una emulacion de una \textit{tty} a nivel kernel.
-    Si bien la emulacion es limitada, es en parte compatible con la mayoria de las shells modernas de \textit{Linux}.
+    En fin, esto derivó en la creación de una emulación de una \textit{tty} a nivel kernel.
+    Si bien la emulación es limitada, es en parte compatible con la mayoría de las shells modernas de \textit{Linux}.
     Para esto se crearon los drivers de video y teclado, con los cuales se comunica desde las aplicaciones usando \textit{read}, \textit{write} e \textit{ioctl}.
-    Dado que no existen mas drivers, \textit{read} y \textit{write} se comunican directamente con los drivers.
+    Dado que no existen más drivers, \textit{read} y \textit{write} se comunican directamente con los drivers.
 
-    Esta emulacion nos permitio gran flexibilidad y aporto un nivel de funcionalidad muy alto para el desarrollo de aplicaciones.
-    Por ejemplo, se presto con facilidad a la implementacion de multiples \textit{tty}.
+    Esta emulación nos permitió gran flexibilidad y aportó un nivel de funcionalidad muy alto para el desarrollo de aplicaciones.
+    Por ejemplo, se prestó con facilidad a la implementación de multiples \textit{tty}.
 
-    \subsection{Segmentacion y paginacion}
-        El SO no utiliza ni segmentacion ni paginacion. 
-        Es decir, utilizamos modo flat, sin paginacion.
-        La configuracion de segmentos en modo flat, viene provista por GRUB.
-        El mismo crea 2 segmentos, uno de codigo, y otro de datos.
-        Estos ocupan toda la extension del mapa de memoria.
+    \subsection{Segmentación y paginación}
+        El SO no utiliza ni segmentación ni paginación. 
+        Es decir, utilizamos modo flat, sin paginación.
+        La configuración de segmentos en modo flat, viene provista por GRUB.
+        El mismo crea 2 segmentos, uno de código, y otro de datos.
+        Estos ocupan toda la extensión del mapa de memoria.
 
     \subsection{Interrupciones}
-        Con respecto al menejo de interrupciones, se utilizaron las funciones provistas por la cátedra para la inicialización de la \textit{IDT} y la
+        Con respecto al manejo de interrupciones, se utilizaron las funciones provistas por la cátedra para la inicialización de la \textit{IDT} y
         la carga de de interrupciones.
 
         \subsubsection{Remapeo del \textit{PIC}}
             Cabe destacar que, debido a que en modo real las interrupciones del \textit{PIC} se solapan con las excepciones, y que así era como el bootloader
-            nos dejaba la \textit{IDT}, tuvimos remapear el \textit{PIC}. Esto es, movimos las interrupciones del \textit{PIC}, las \textit{IRQs}, que ya venían implementadas 
-            (timmer tick y la interrupción de teclado) a otras posiciones de la \textit{IDT}. Por sentido común, y por lo que investigamos, decidimos
+            nos dejaba la \textit{IDT}, tuvimos que remapear el \textit{PIC}. Esto es, movimos las interrupciones del \textit{PIC}, las \textit{IRQs}, a otras posiciones de la \textit{IDT}. Por sentido común, y por lo que investigamos, decidimos
             ubicarlas luego de las primeras 32 posiciones que ocupan las excepciones, ocupando así las posiciones 33 a 48. (Tener en cuenta
             que tanto el \textit{PIC} principal como el esclavo manejan 8 interrupciones cada uno).
         
@@ -120,7 +119,7 @@
             contribuyendo a la claridad del código.
             
             Para nuestra comodidad, y siempre pensando en la claridad y prolijidad del código, todos los handlers, tanto de interrupciones
-            como de expeciones, llaman a una función \textit{interrupt dispatcher}. Dicha función, en base al número de interrupción, se encarga de llamar
+            como de excepciones, llaman a una función \textit{interrupt dispatcher}. Dicha función, en base al número de interrupción, se encarga de llamar
 	    a la función que corresponda. Esto lo hace fijándose en una tabla, en la cual previamente fueron registradas las funciones que atienden
 	    las interrupciones y excepciones soportadas por el sistema.
 	    
@@ -148,87 +147,87 @@
 
     \subsection{Terminales}
         \subsubsection{Entrada}
-            La entrada se maneja mediante un buffer, que es actualizado cuando el \textit{PIC} dispara una interrupcion de parte del controlador de teclado.
-            Cuando esta interrupcion se dispara, se interpreta los codigos enviados por el teclado y se agregan al buffer.
-            La interpretacion de estos codigos, difiere segun el estado de ciertas teclas, como serlo Alt, Ctrl, Shift y Bloc Mayus.
-            Luego, este buffer puede ser consultado utilizando la llamada \textit{read} sobre la entrada standard.
+            La entrada se maneja mediante un buffer, que es actualizado cuando el \textit{PIC} dispara una interrupción de parte del controlador de teclado.
+            Cuando esta interrupción se dispara, se interpreta los códigos enviados por el teclado y se agregan al buffer.
+            La interpretación de estos códigos, difiere según el estado de ciertas teclas, como serlo Alt, Ctrl, Shift y Bloc Mayus.
+            Luego, este buffer puede ser consultado utilizando la llamada \textit{read} sobre la entrada estándar.
 
             Como fue mencionado anteriormente, las terminales soportan varios modos de entrada.
             Por simplicidad, y por que proveen suficiente funcionalidad, se implementaron 4 modos en total.
             Que modo se utiliza se puede manipular con la llamada \textit{ioctl}.
 
             El modo esta determinado por 2 flags: \textit{canon} y \textit{echo}.
-            Canon activa y desactiva el modo Canonico de la terminal.
+            Canon activa y desactiva el modo Canónico de la terminal.
             Mientra que echo activa y desactiva si los caracteres leidos son impresos a pantalla por la terminal.
 
-            El modo canonico determina un gran factor del comportamiento de llamar a \textit{read} sobre la entrada standard.
-            Si este esta activado, \textit{read} funciona como buffereado por linea, o sea, lee de a lineas.
-            Esto significa que en una dada llamada, \textit{read} va a retornar como mucho una linea, y no va a retornar, hasta que tenga por lo menos una linea en su buffer.
-            Si bien las terminales de linux permiten manipular que determina un fin de linea, nosotros tomamos \textit{\\n} como fin de linea.
-            Si el modo canonico no esta activado, \textit{read} se comporta como su definicion dice, lee n bytes, sin importar si hay lineas o no.
+            El modo canónico determina un gran factor del comportamiento de llamar a \textit{read} sobre la entrada estándar.
+            Si este esta activado, \textit{read} funciona como buffereado por línea, o sea, lee de a líneas.
+            Esto significa que en una dada llamada, \textit{read} va a retornar como mucho una línea, y no va a retornar, hasta que tenga por lo menos una línea en su buffer.
+            Si bien las terminales de linux permiten manipular que determina un fin de línea, nosotros tomamos \textit{\\n} como fin de línea.
+            Si el modo canónico no esta activado, \textit{read} se comporta como su definición dice, lee n bytes, sin importar si hay líneas o no.
 
-            Ademas de soportar estos 4 modos, el driver interpreta teclas especiales, como lo son las flechas.
+            Además de soportar estos 4 modos, el driver interpreta teclas especiales, como lo son las flechas.
             Algunas de estas teclas, como ser Bloc Mayus, Num Lock y Scroll Lock son manejadas internamente por el driver.
-            Otras como las flechas, Inicio, Fin y las teclas de Funcion, se guardan como parte de la entrada previa conversion a escape sequences.
+            Otras como las flechas, Inicio, Fin y las teclas de Función, se guardan como parte de la entrada previamente siendo convertidas a escape sequences.
 
             En particular, las teclas Block Mayus, Num Lock y Scroll Lock, modifican el estado de sus respectivos LEDs cuando son apretadas.
             Esto se hace enviando un comando al controlador de teclado mediante \textit{out}. 
-            Al tomar tan solo 4 puertos de comunicacion, el controlador de teclado tiene la particularidad de ser necesario introducir tiempos de espera.
+            Al tomar tan solo 4 puertos de comunicación, el controlador de teclado tiene la particularidad de que es necesario introducir tiempos de espera.
             Esto es necesario para evitar escribir datos a un puerto donde el controlador esta sacando valores para la CPU, o viceversa.
-            Es tambien curioso, que el cambio del estado de los LEDs genera que se dispare una interrupcion de teclado con un valor de ackownledge.
+            Es también curioso, que el cambio del estado de los LEDs genera que se dispare una interrupción de teclado con un valor de acknowledge.
 
             Por limitaciones del sistema, al no tener multi tarea, el buffer de teclado es uno solo, compartido por todas las terminales.
 
         \subsubsection{Salida}
-            La comunicacion entre el driver de salida de una terminal y la controladora de video se hace mediante el sector de video mapeado a memoria.
+            La comunicación entre el driver de salida de una terminal y la controladora de video se hace mediante el sector de video mapeado a memoria.
             Este permite suficiente flexibilidad para nuestros objetivos, y a su vez es muy simple de utilizar.
-            La unica excepcion es la manipulacion del cursor grafico, que se hace utilizando \textit{in} y \textit{out}, ya que no encontramos si la posicion del mismo esta mapeada en alguna parte de memoria.
+            La única excepción es la manipulación del cursor gráfico, que se hace utilizando \textit{in} y \textit{out}, ya que no encontramos si la posicion del mismo esta mapeada en alguna parte de memoria.
 
             El driver permite manipular todos sus aspectos mediante llamadas a \textit{write}.
             Este acepta escape sequences que dejan realizar un gran abanico de operaciones sobre la salida.
-            El listado de las mismas esta en la documentacion del driver de video.
+            El listado de las mismas esta en la documentación del driver de video.
             
             En este nivel se maneja un buffer de salida donde se guarda una copia del estado actual de la pantalla.
-            Esto es asi por 2 motivos.
+            Esto es así por 2 motivos.
             Primero, para evitar lecturas a la memoria de video cuando es necesario hacer scroll de pantalla.
-            Segundo, es un elemento crucial a la hora de implementar multiples terminales.
+            Segundo, es un elemento crucial a la hora de implementar múltiples terminales.
             Cada terminal tiene su propio estado en el driver de salida, incluyendo su propio buffer, a diferencia del driver de entrada.
-            Cuando es pedido, el driver cambia que estado usa, efectivamente cambiando de terminal.
+            Cuando es pedido, el driver cambia cual de los estados almacenados usa, efectivamente cambiando de terminal.
 
     \subsection{Reboot} 
-        Cuando llego la hora de implementar el reboot, encontramos que esto comunmente se hace mediante el controlador de teclado.
+        Cuando llego la hora de implementar el reboot, encontramos que esto comúnmente se hace mediante el controlador de teclado.
         Este esta conectado al pin \textit{RESET} del microprocesador, y al recibir un comando especial, lo activa.
         Esto causa que la computadora haga un soft reboot, y dependiendo del controlador de teclado, si es warm o cold.
 
-\section{Librería standard}
-    Para poder realizar nuestro trabajo practico, era necesario implementar cierta funcionalidad de la libreria standard de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por el standard ANSI.
-    Finalemente, una vez realizada esta libreria, su funcionalidad podia ser aplicada en diferentes lugares del trabajo practico.
+\section{Librería estándar}
+    Para poder realizar nuestro sistema operativo, era necesario implementar cierta funcionalidad de la librería estándar de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por el estándar \texti{ANSI}.
+    Finalmente, una vez realizada esta librería, su funcionalidad podía ser aplicada en diferentes lugares del sistema operativo.
 
-    Implementar la libreria standard de C de forma completa era innecesario para nuestros objetivos finales, por eso es que a la hora de hacerla, elegimos un subconjunto de la misma. El criterio para esta seleccion fue tomar las funciones que eran totalmente necesarias para nuestra implementacion y ademas, otras que creiamos que cuya funcionalidad podria llegar a ser util durante el desarrollo.
-    Asimismo, el mismo criterio fue tomado para desarrollar la funcionalidad de funciones particulares. Vease como ejemplo la funcion printf, que no permite hacer todo lo que permite hacer la libreria standard original (solo se pueden imprimir integers, strings, chars y unsigned ints).
+    Implementar la librería estándar de C de forma completa era innecesario para nuestros objetivos finales, por eso es que a la hora de hacerla, elegimos un subconjunto de la misma. El criterio para esta selección fue tomar las funciones que eran totalmente necesarias para nuestra implementación y además, otras que creiamos que cuya funcionalidad podría llegar a ser útil durante el desarrollo.
+    Asimismo, el mismo criterio fue tomado para desarrollar la funcionalidad de funciones particulares. Vease como ejemplo la función \textit{printf}, que no permite hacer todo lo que permite hacer la librería estándar original (solo se pueden imprimir \textit{integers}, \textit{strings}, \textit{chars} y \textit{unsigned ints}).
 
-    Por otra parte, en ciertos momentos nos vimos bajo la necesidad de imlpementar funciones no especificadas en como parte del standard. Un muy buen ejemplo era la funcion reverse que da vuelta el contenido de un string. En estos casos, se implementaron las funciones y fueron agregadas en los archivos correspondientes (en este caso en string.c). Estas funciones fueron extensiones de nuestra libreria standard que fueron tomadas a gusto y bajo necesidad.
+    Por otra parte, en ciertos momentos nos vimos bajo la necesidad de implementar funciones no especificadas como parte del estándar. Un muy buen ejemplo era la función \textit{reverse} que da vuelta el contenido de un \textit{string}. En estos casos, se implementaron las funciones y fueron agregadas en los archivos correspondientes (en este caso en \textit{string.c}). Estas funciones fueron extensiones de nuestra librería estándar que fueron tomadas a gusto y bajo necesidad.
 
-    Nuestra libreria standard incluye: funciones para el control del tipo de datos (isdigit, isspace, islower, isupper, isalpha y isalnum), funciones para entrada y salida de texto (fputc, putc , putchar, puts, fputs, vfprinf, vprintf, fprintf, printf, fgetc, getc, getchar, vfscanf, vscanf, fscanf y scanf), funciones para conversion de numeros a texto y viceversa (itoa, atoi, utoa y atou), generacino de numeros al azar (rand y srand), manejo de cadenas de caracteres(strlen, strcpy, strncpy, strcmp, strncmp, strchr, strrchr, strcat, strncat, reverse), cierto manejo de sectores en memoria(memcpy, memchr, memset, memcmp), acceso simple al reloj para obtener el tiempo, manejo de argumentos variables y la definicion de ciertas constantes necesarias.
+    Nuestra librería estándar incluye: funciones para el control del tipo de datos (\texit{isdigit}, \texit{isspace}, \texit{islower}, \texit{isupper}, \texit{isalpha} y \texit{isalnum}), funciones para entrada y salida de texto (\texit{fputc}, \texit{putc}, \texit{putchar}, \texit{puts}, \texit{fputs}, \texit{vfprinf}, \texit{vprintf}, \texit{fprintf}, \texit{printf}, \texit{fgetc}, \texit{getc}, \texit{getchar}, \texit{vfscanf}, \texit{vscanf}, \texit{fscanf} y \texit{scanf}), funciones para conversión de numeros a texto y viceversa (\texit{itoa}, \texit{atoi}, \texit{utoa} y \texit{atou}), generación de numeros al azar (\texit{rand} y \texit{srand}), manejo de cadenas de caracteres(\texit{strlen}, \texit{strcpy}, \texit{strncpy}, \texit{strcmp}, \texit{strncmp}, \texit{strchr}, \texit{strrchr}, \texit{strcat}, \texit{strncat}, \texit{reverse}), cierto manejo de sectores en memoria(\texit{memcpy}, \texit{memchr}, \texit{memset}, \texit{memcmp}), acceso simple al reloj para obtener el tiempo, manejo de argumentos variables y la definición de ciertas constantes necesarias.
 
-    A continuacion se presentara la especificacion de ciertas funciones que creemos que vale la pena destacar ya sea por su funcionalidad o por problemas que nos encontramos a la hora de implementarlas:
+    A continuación se presentará la especificación de ciertas funciones que creemos que vale la pena destacar ya sea por su funcionalidad o por problemas que nos encontramos a la hora de implementarlas:
 
     \subsection{Putc}
-        Al comenzar, lo escencial era poder imprimir en pantalla. Por esto, una primer version primitiva de putc simplemente se encargaba de esto, llamando de forma directa a una funcion write que imprimia en pantalla. De a poco putc fue evolucionando y paso a hacer llamadas a sistema de forma correcta para imprimir como debia.
-        Luego, comenzamos a tomar en cuenta que las funciones originales de la libreria estandar, a la hora de imprimir, tomaban en cuenta en que archivo o flujo estaban imprimiendo. Al ver esto, tomamos la decision de implementar una rudimentaria version de la estructura de datos FILE con su file descriptor correcto. Asi, tambien fueron definidas como estructuras de tipo FILE, stdin, stdout y stderr acorde al estandar. Dada la funcionalidad de nuestro trabajo, no tiene sentido alguno llamar funciones como fputc con streams que no sean la salida estandar, pero se ha dejado la posiblidad para posibles expansiones de este trabajo.
-        Por ultimo cabe destacar que en versiones finales, funciones como putc terminaron siendo simples macros que llaman a una funcion mas generica como fputc.
+        Al comenzar, lo escencial era poder imprimir en pantalla. Por esto, una primer versión primitiva de \textit{putc} simplemente se encargaba de esto, llamando de forma directa a una función \textit{write} que imprimía en pantalla. De a poco \textit{putc} fue evolucionando y paso a hacer llamadas a sistema de forma correcta para imprimir como debía.
+        Luego, comenzamos a tomar en cuenta que las funciones originales de la librería estándar, a la hora de imprimir, tomaban en cuenta en que archivo o flujo estaban imprimiendo. Al ver esto, tomamos la decisión de implementar una rudimentaria version de la estructura de datos \textit{FILE} con su file descriptor correcto. Así, también fueron definidas como estructuras de tipo \textit{FILE}, \textit{stdin}, \textit{stdout} y \textit{stderr} acorde al estándar. Dada la funcionalidad de nuestro trabajo, no tiene sentido alguno llamar funciones como \textit{fputc} con streams que no sean la salida estándar, pero se ha dejado la posiblidad para posibles expansiones de este trabajo.
+        Por último cabe destacar que en versiones finales, funciones como \textit{putc} terminaron siendo simples macros que llaman a una función mas generica como \textit{fputc}.
 
     \subsection{Printf}
-        Como ya fue mencionado, a la hora de implementar printf, hubo que elegir un subconjunto de los tipos de datos que podia imprimir printf. Implementarla de forma completa hubiese sido innecesario para nuestro trabajo. Printf es un muy buen ejemplo de como al realizar una funcion, es evidente la necesidad de otras funciones de la libreria standard a un no implementadas. Al momento de tener que imprimir un numero entero, era intuitivo la necesidad de una funcion como itoa, para poder imprimir un integer de forma sencilla. Esta secuencia era natural al escribir la libreria standard y obviamente, este era otro muy buen criterio para decidir que funcionalidades implementar.
+        Como ya fue mencionado, a la hora de implementar \textit{printf}, hubo que elegir un subconjunto de los tipos de datos que podía imprimir \textit{printf}. Implementarla de forma completa hubiese sido innecesario para nuestro trabajo. \textit{printf} es un muy buen ejemplo de como al realizar una función, es evidente la necesidad de otras funciones de la librería estándar aún no implementadas. Al momento de tener que imprimir un número entero, era intuitivo la necesidad de una función como \textit{itoa}, para poder imprimir un \textit{integer} de forma sencilla. Esta secuencia era natural al escribir la librería estándar y obviamente, este era otro muy buen criterio para decidir que funcionalidades implementar.
 
     \subsection{Scanf}    
-        A la hora de implementar scanf, primero hubo que tener cuidados similares a los que se tuvieron en printf. Durante la implementacion surgio la necesidad de devolver al flujo el ultimo caracter consumido, lo cual naturalmente termino siendo traducido en nuestra funcion ungetc. ungetc es un ejemplo de como hubo que modificar cierto codigo viejo (en las estructuras de tipo FILE y en la funcion fputc) a partir de funcionalidades necesarias sobre la marcha.
+        A la hora de implementar \textit{scanf}, primero hubo que tener cuidados similares a los que se tuvieron en \textit{printf}. Durante la implementación surgió la necesidad de devolver al flujo el último caracter consumido, lo cual naturalmente terminó siendo traducido en nuestra función \textit{ungetc}. \textit{ungetc} es un ejemplo de como hubo que modificar cierto código viejo (en las estructuras de tipo FILE y en la función \textit{fputc}) a partir de funcionalidades necesarias sobre la marcha.
 \newpage
 \section{Shell}
     Contamos con una shell por cada terminal.
-    Esta utiliza al maximo las capacidades de la terminal, comunicandose siempre mediante las funciones de la libreria standard, como \textit{printf}.
-    La shell manipula el modo de la entrada de la terminal para permitirse manipular la entrada con gran precision.
-    Se desactiva tanto el \textit{echo} como el \textit{modo canonico}, o sea, lo ingresado llega solo a la shell y sin esperar a que se complete la linea.
+    Esta utiliza al máximo las capacidades de la terminal, comunicandose siempre mediante las funciones de la librería estándar, como \textit{printf}.
+    La shell manipula el modo de la entrada de la terminal para permitirse manipular la entrada con gran precisión.
+    Se desactiva tanto el \textit{echo} como el \textit{modo canónico}, o sea, lo ingresado llega solo a la shell y sin esperar a que se complete la línea.
     Esto le permite al ususario editar su comando a medida que lo escribe, auto completar y poder moverse por el historial de comandos.
 
     El comando \textit{sudoku} demuestra la capacidad de la terminal, haciendo uso de los colores y la posibilidad de mover el cursor a placer.
@@ -237,9 +236,9 @@
     Es una calculadora muy rudimentaria y posee ciertos problemas respecto a como exhibe los datos.
     Sin embargo la consideramos suficiente como para mostrar el funcionamiento de \textit{scanf}.
     
-    Por ultimo, el comando \textit{fortune}, ademas de ser un comando divertido de implementar, vuelve a mostrar otro uso de \textit{rand} de la libreria standard.
+    Por ultimo, el comando \textit{fortune}, ademas de ser un comando divertido de implementar, vuelve a mostrar otro uso de \textit{rand} de la librería estándar.
 
-    Se menciono antes que por la limitacion de ser mono tarea, hay un solo buffer de teclado.
+    Se mencionó antes que por la limitación de ser mono tarea, hay un solo buffer de teclado.
     Esto se nota tambien a nivel shell ya que solo se permite cambiar entre terminales cuando se esta ingresando un comando.
 
 \newpage
@@ -260,7 +259,7 @@
     de ciclos de clock en ejecutarse. Por lo que solo deberíamos buscar cuánto tarda cada instrucción del ciclo \textit{while} y sumarlas.
 
     Desafortunadamente, con la llegada de la tecnología \textit{pipeline}, esa cantidad de ciclos de clock para cada instrucción comenzó a ser variable, siendo la 
-    razón más grade que el tiempo de una instrucción comenzó a depender de las instrucciones que la rodeaban.
+    razón más grande que el tiempo de una instrucción comenzó a depender de las instrucciones que la rodeaban.
 
     Debido a esto, y a pesar de que exiten formas de idear código cuyos casi ciclos de clock no se vean afectados por el \textit{pipeline}\footnote{ Con 
     instrucciones subsiguientes \textit{xor} que dependan de las instrucciones anteriores,por ejemplo alterando los registros que usan la instrucción siguiente.}, 
@@ -270,7 +269,7 @@
     en los procesadores a partir del Pentium. Existen formas de verificar la existencia de este contador interno pero asumimos que nuestro sistema correrá siempre en
     procesadores que soporten esta instrucción.
 
-    Para realizar la medición de la frecuencia de trabajo de la \textit{CPU}. con la instrucción \textit{rdtsc}, básicmente lo que tenemos que hacer es 
+    Para realizar la medición de la frecuencia de trabajo de la \textit{CPU} con la instrucción \textit{rdtsc}, básicmente lo que tenemos que hacer es 
     \[  \text{frecuencia de trabajo de CPU} = \dfrac{\text{ciclos de clock}}{\text{tiempo}} \]
     
     Para hacer esto, nuestro algoritmo hace algo como esto:
@@ -286,7 +285,7 @@
     cpuFrecHZ = (ciclosClockFin - ciclosClockIni) / (ticks esperados * tiempo entre ticks);
     \end{lstlisting}
     \paragraph*{}   
-    Este enfoque, resultó ser excesivamente preciso, considerando que nuestro que utilizamos división entera.
+    Este enfoque, resultó ser excesivamente preciso, teniendo en cuenta que nuestro sistema utiliza división entera.
 
     Dado que estas mediciones dependen del estado interno del procesador, y como no sabemos exactamente de qué y cómo dependen optamos por realizar varias mediciones
     y sacar un promedio para minimizar posibles errores. Por ejemplo, es de esperarse que en procesadores de varios nucleos las mediciones
