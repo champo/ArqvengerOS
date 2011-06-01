@@ -85,7 +85,7 @@ static void setLeds(void);
  *
  * This transforms raw input as needed, and echos to screen if needed.
  *
- * @param str a string with at least len chars
+ * @param str A string with at least len chars
  * @param len The number of chars to add from str
  */
 void addInput(const char* str, size_t len) {
@@ -133,8 +133,8 @@ void setLeds(void) {
         leds |= 1;
     }
 
-    // The keyboard buffer needs to be empty beforre setting these values
-    // We assume that we wont lose any values, since we have just read something.
+    // The keyboard buffer needs to be empty before setting these values
+    // We assume that we won't lose any values, since we have just read something.
     while (inB(KEYBOARD_CTRL_PORT) & 0x2);
     outB(KEYBOARD_IO_PORT, LED_CODE);
 

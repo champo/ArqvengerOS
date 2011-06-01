@@ -201,6 +201,11 @@
 
     Implementar la librería estándar de C de forma completa era innecesario para nuestros objetivos finales, por eso es que a la hora de hacerla, elegimos un subconjunto de la misma. El criterio para esta selección fue tomar las funciones que eran totalmente necesarias para nuestra implementación y además, otras que creiamos que cuya funcionalidad podría llegar a ser útil durante el desarrollo.
     Asimismo, el mismo criterio fue tomado para desarrollar la funcionalidad de funciones particulares. Véase como ejemplo la función \textit{printf}, que no permite hacer todo lo que permite hacer la librería estándar original (solo se pueden imprimir \textit{integers}, \textit{strings}, \textit{chars} y \textit{unsigned ints}).
+    
+    Como ejemplo de las funciones que consideramos innecesarias para la implementación de nuestro sistema operativo, podemos nombrar la función \textit{malloc}. 
+    \textit{Malloc} es una muy útil y muy potente herramienta que ofrece la librería estándar de C, pero, siguiendo con nuestro criterio de de implementar funciones que 
+    nos facilitaran el trabajo, decidimos no implementarla a menos que en el transcurso del trabajo lo hallaramos indispensable. Así fue que, dado que no la necesitamos y
+    que una implementación completa es imposible al contar con paginación, terminamos sin implementarla.
 
     Por otra parte, en ciertos momentos nos vimos bajo la necesidad de implementar funciones no especificadas como parte del estándar. Un muy buen ejemplo era la función \textit{reverse} que da vuelta el contenido de un \textit{string}. En estos casos, se implementaron las funciones y fueron agregadas en los archivos correspondientes (en este caso en \textit{string.c}). Estas funciones fueron extensiones de nuestra librería estándar que fueron tomadas a gusto y bajo necesidad.
 
