@@ -69,10 +69,6 @@
 \setcounter{page}{1}
 
 \tableofcontents
-\newpage
-
-\section{Resumen}
-
 
 \newpage
 \section{Diseño del Kernel}
@@ -200,7 +196,7 @@
         Esto causa que la computadora haga un soft reboot, y dependiendo del controlador de teclado, si es warm o cold.
 
 \section{Librería estándar}
-    Para poder realizar nuestro sistema operativo, era necesario implementar cierta funcionalidad de la librería estándar de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por el estándar \texti{ANSI}.
+    Para poder realizar nuestro sistema operativo, era necesario implementar cierta funcionalidad de la librería estándar de C. Al hacerlo, respetamos, siempre que fuese posible, las definiciones y las funcionalidades presentadas por el estándar \textit{ANSI}.
     Finalmente, una vez realizada esta librería, su funcionalidad podía ser aplicada en diferentes lugares del sistema operativo.
 
     Implementar la librería estándar de C de forma completa era innecesario para nuestros objetivos finales, por eso es que a la hora de hacerla, elegimos un subconjunto de la misma. El criterio para esta selección fue tomar las funciones que eran totalmente necesarias para nuestra implementación y además, otras que creiamos que cuya funcionalidad podría llegar a ser útil durante el desarrollo.
@@ -208,7 +204,7 @@
 
     Por otra parte, en ciertos momentos nos vimos bajo la necesidad de implementar funciones no especificadas como parte del estándar. Un muy buen ejemplo era la función \textit{reverse} que da vuelta el contenido de un \textit{string}. En estos casos, se implementaron las funciones y fueron agregadas en los archivos correspondientes (en este caso en \textit{string.c}). Estas funciones fueron extensiones de nuestra librería estándar que fueron tomadas a gusto y bajo necesidad.
 
-    Nuestra librería estándar incluye: funciones para el control del tipo de datos (\texit{isdigit}, \texit{isspace}, \texit{islower}, \texit{isupper}, \texit{isalpha} y \texit{isalnum}), funciones para entrada y salida de texto (\texit{fputc}, \texit{putc}, \texit{putchar}, \texit{puts}, \texit{fputs}, \texit{vfprinf}, \texit{vprintf}, \texit{fprintf}, \texit{printf}, \texit{fgetc}, \texit{getc}, \texit{getchar}, \texit{vfscanf}, \texit{vscanf}, \texit{fscanf} y \texit{scanf}), funciones para conversión de numeros a texto y viceversa (\texit{itoa}, \texit{atoi}, \texit{utoa} y \texit{atou}), generación de numeros al azar (\texit{rand} y \texit{srand}), manejo de cadenas de caracteres(\texit{strlen}, \texit{strcpy}, \texit{strncpy}, \texit{strcmp}, \texit{strncmp}, \texit{strchr}, \texit{strrchr}, \texit{strcat}, \texit{strncat}, \texit{reverse}), cierto manejo de sectores en memoria(\texit{memcpy}, \texit{memchr}, \texit{memset}, \texit{memcmp}), acceso simple al reloj para obtener el tiempo, manejo de argumentos variables y la definición de ciertas constantes necesarias.
+    Nuestra librería estándar incluye: funciones para el control del tipo de datos (\textit{isdigit}, \textit{isspace}, \textit{islower}, \textit{isupper}, \textit{isalpha} y \textit{isalnum}), funciones para entrada y salida de texto (\textit{fputc}, \textit{putc}, \textit{putchar}, \textit{puts}, \textit{fputs}, \textit{vfprinf}, \textit{vprintf}, \textit{fprintf}, \textit{printf}, \textit{fgetc}, \textit{getc}, \textit{getchar}, \textit{vfscanf}, \textit{vscanf}, \textit{fscanf} y \textit{scanf}), funciones para conversión de numeros a texto y viceversa (\textit{itoa}, \textit{atoi}, \textit{utoa} y \textit{atou}), generación de numeros al azar (\textit{rand} y \textit{srand}), manejo de cadenas de caracteres(\textit{strlen}, \textit{strcpy}, \textit{strncpy}, \textit{strcmp}, \textit{strncmp}, \textit{strchr}, \textit{strrchr}, \textit{strcat}, \textit{strncat}, \textit{reverse}), cierto manejo de sectores en memoria(\textit{memcpy}, \textit{memchr}, \textit{memset}, \textit{memcmp}), acceso simple al reloj para obtener el tiempo, manejo de argumentos variables y la definición de ciertas constantes necesarias.
 
     A continuación se presentará la especificación de ciertas funciones que creemos que vale la pena destacar ya sea por su funcionalidad o por problemas que nos encontramos a la hora de implementarlas:
 
