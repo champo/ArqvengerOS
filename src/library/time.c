@@ -228,18 +228,20 @@ static int dayOfWeek(int year, int month, int day) {
  */
 void dateFromDayNumber(int *date, time_t daysSinceEpoch) {
     unsigned int year,month,day,ddd,mi;
-    year = (10000 * daysSinceEpoch + 14780) / 3652425;
+    daysSinceEpoch -= 60;   // adjusting the reference date of the algorith from Mar 1 1970
+                            // to epoch (Jan 1 1970)
+    year = (10000 * daysSinceEpoch + 14780) / 3652425;  //year ~= days / 365.2425
     ddd = daysSinceEpoch - (365 * year + year / 4 - year / 100 + year / 400);
     if (ddd < 0) {
         year = year - 1;
         ddd = daysSinceEpoch - (365 * year + year / 4 - year / 100 + year / 400);
     }
-    mi = (100 * ddd + 52) / 3060;
+    mi = (100 * ddd + 52) / 3060; 
     month = (mi + 2) % 12 + 1;
     year = year + (mi + 2) / 12;
     day = ddd - (mi * 306 + 5) / 10 + 1;
     date[0] = year + 1970;
-    date[1] = month - 2;
-    date[2] = day + 1;
+    date[1] = month;
+    date[2] = day ;
 }
 
