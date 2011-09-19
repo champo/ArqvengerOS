@@ -16,4 +16,6 @@ void* kalloc(size_t size);
 
 void* allocPages(size_t pages);
 
+void freePages(void* page, size_t pages);
+
 #endif
