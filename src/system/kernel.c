@@ -3,13 +3,14 @@
 #include "library/stdio.h"
 #include "drivers/video.h"
 #include "drivers/keyboard.h"
+#include "system/mm.h"
 
-void kmain(void);
+void kmain(struct multiboot_info* info, unsigned int magic);
 
 /**
  * Kernel entry point
  */
-void kmain(void) {
+void kmain(struct multiboot_info* info, unsigned int magic) {
 
     setupIDT();
 
@@ -28,6 +29,7 @@ void kmain(void) {
     writeScreen("\033[1;1H\033[2J", 10);
 
     initKeyboard();
+    initMemoryMap(info);
     while (1) {
        shell();
     }
