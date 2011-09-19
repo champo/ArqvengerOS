@@ -5,6 +5,8 @@
 #include "library/stdlib.h"
 #include "type.h"
 
+#define PAGE_SIZE (4 * 1024u)
+
 void initMemoryMap(struct multiboot_info* info);
 
 void* allocPage(void);

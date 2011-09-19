@@ -12,7 +12,6 @@ struct MemoryMapEntry {
     unsigned int type;
 };
 
-#define PAGE_SIZE (4 * 1024u)
 #define MAPPABLE_PAGES (1024 * 1024u)
 
 #define UNUSABLE_PAGES 1024u
