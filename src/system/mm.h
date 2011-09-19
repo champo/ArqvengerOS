@@ -2,7 +2,18 @@
 #define __SYSTEM_MM__
 
 #include "multiboot.h"
+#include "library/stdlib.h"
+#include "type.h"
 
 void initMemoryMap(struct multiboot_info* info);
+
+void* allocPage(void);
+
+/**
+ * Alloc size bytes padded to PAGE_SIZE
+ */
+void* kalloc(size_t size);
+
+void* allocPages(size_t pages);
 
 #endif

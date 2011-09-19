@@ -1,6 +1,7 @@
 #include "system/mm.h"
 #include "library/stdio.h"
 #include "system/common.h"
+#include "system/panic.h"
 
 struct MemoryMapEntry {
     size_t size;
@@ -14,10 +15,10 @@ struct MemoryMapEntry {
 #define PAGE_SIZE (4 * 1024u)
 #define MAPPABLE_PAGES (1024 * 1024u)
 
-#define SYSTEM_PAGES 1024u
-#define MEMORY_START (1024 * PAGE_SIZE)
+#define UNUSABLE_PAGES 1024u
+#define MEMORY_START (UNUSABLE_PAGES * PAGE_SIZE)
 
-#define USABLE_PAGES (MAPPABLE_PAGES - SYSTEM_PAGES)
+#define USABLE_PAGES (MAPPABLE_PAGES - UNUSABLE_PAGES)
 
 
 #define PAGES_PER_ENTRY ((unsigned int) sizeof(int) * 8)
@@ -37,13 +38,11 @@ static void reservePageMap(struct multiboot_info* info);
 
 void initMemoryMap(struct multiboot_info* info) {
 
-    if (info->flags & 0x1) {
-        printf("Lower mem %d Higher mem %u\n", info->mem_lower, info->mem_upper);
-    }
-
     if (info->flags & (0x1 << 6)) {
         reservePageMap(info);
         initPages(info);
+    } else {
+        panic();
     }
 }
 
@@ -129,17 +128,95 @@ void reservePageMap(struct multiboot_info* info) {
 }
 
 void setPage(int page) {
-    page -= SYSTEM_PAGES;
-    pageMap[page / PAGES_PER_ENTRY] |= 0x1 << (page % PAGES_PER_ENTRY);
+    page -= UNUSABLE_PAGES;
+    size_t entry = page / PAGES_PER_ENTRY;
+    pageMap[entry] |= 0x1 << (page % PAGES_PER_ENTRY);
 }
 
 void unsetPage(int page) {
-    page -= SYSTEM_PAGES;
+    page -= UNUSABLE_PAGES;
     pageMap[page / PAGES_PER_ENTRY] &= -1 ^ (0x1 << (page % PAGES_PER_ENTRY));
 }
 
 int isPageSet(int page) {
-    page -= SYSTEM_PAGES;
+    page -= UNUSABLE_PAGES;
     return pageMap[page / PAGES_PER_ENTRY] & (0x1 << (page % PAGES_PER_ENTRY));
+}
+
+void* allocPage(void) {
+
+    for (size_t i = 0; i < ENTRIES_IN_MAP; i++) {
+
+        if (pageMap[i]) {
+
+            size_t start = i * PAGES_PER_ENTRY + UNUSABLE_PAGES;
+            for (size_t offset = 0; offset < PAGES_PER_ENTRY; offset++) {
+
+                if (isPageSet(offset + start)) {
+                    return (void*)((start + offset) * PAGE_SIZE);
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
+void* kalloc(size_t size) {
+
+    if (size == 0) {
+        return NULL;
+    }
+
+    return allocPages((size / PAGE_SIZE) + 1);
+}
+
+void* allocPages(size_t pages) {
+
+    if (pages == 0) {
+        return NULL;
+    }
+
+    int start;
+    for (size_t i = 0; i < ENTRIES_IN_MAP; i++) {
+        if (pageMap[i]) {
+
+            start = i * PAGES_PER_ENTRY + UNUSABLE_PAGES;
+
+            size_t consecutive = 0;
+            size_t offset;
+            for (offset = 0;; offset++) {
+                if (isPageSet(start + offset)) {
+                    consecutive = 0;
+                } else {
+                    consecutive++;
+                    if (consecutive == pages) {
+                        break;
+                    }
+                }
+
+                if (offset == PAGES_PER_ENTRY - 1) {
+                    if (consecutive != 0 && i + 1 < ENTRIES_IN_MAP && pageMap[i+1]) {
+                        start += offset + 1;
+                        offset = -1;
+                        i++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if (consecutive == pages) {
+                start += offset - pages;
+                break;
+            }
+        }
+    }
+
+    for (size_t i = 0; i < pages; i++) {
+        setPage(start + i);
+    }
+
+    return (void*)(start * PAGE_SIZE);
 }
 
