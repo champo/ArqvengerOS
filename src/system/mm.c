@@ -222,7 +222,7 @@ void* allocPages(size_t pages) {
 
 void freePages(void* page, size_t pages) {
 
-    size_t start = page / PAGE_SIZE;
+    size_t start = ((unsigned int) page) / PAGE_SIZE;
     for (size_t i = 0; i < pages; i++) {
         unsetPage(start + i);
     }
