@@ -11,4 +11,6 @@
 
 int _isIF(void);
 
+int getFlags(void);
+
 #endif
