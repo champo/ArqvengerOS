@@ -4,6 +4,7 @@
 #include "drivers/video.h"
 #include "drivers/keyboard.h"
 #include "system/mm.h"
+#include "system/common.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 
@@ -30,6 +31,11 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
 
     initKeyboard();
     initMemoryMap(info);
+
+    void* stack = allocPages(1024);
+    stack += PAGE_SIZE * 1024;
+    __asm__ volatile ("mov %0, %%esp"::"r"(stack));
+
     while (1) {
        shell();
     }

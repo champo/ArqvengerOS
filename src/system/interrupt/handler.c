@@ -3,14 +3,13 @@
 #include "system/call.h"
 #include "system/io.h"
 #include "system/common.h"
-#include "system/interrupt/handler.h"i
+#include "system/interrupt/handler.h"
 #include "system/call/codes.h"
 
 typedef struct {
-   int gs, fs, es, ds;
-   int edi, esi, ebp, esp, ebx, edx, ecx, eax;
-   int intNum, errCode;
-   int eip, cs, eflags, useresp, ss;
+    int edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    int intNum, errCode;
+    int eip, cs, eflags, useresp, ss;
 } registers;
 
 typedef void (*interruptHandler)(registers* regs);
@@ -26,7 +25,7 @@ static interruptHandler table[256];
 #define     IN_USE_EXCEPTIONS   20
 
 static const char* exceptionTable[] = { "Divide by zero", "Debugger", "NMI", "Breakpoint", "Overflow",
-                                         "Bounds", "Invalid Opcode", "Coprocesor not available", 
+                                         "Bounds", "Invalid Opcode", "Coprocesor not available",
                                          "Double fault", "Coprocessor Segment Overrun",
                                          "Invalid Task State Segment", "Segment not present",
                                          "Stack fault", "General Protection", "Page Fault",
@@ -52,7 +51,7 @@ void int20(registers* regs) {
 
 /**
  * Interrupt 21h. Handles the IRQ1, the interrupt from keyboard.
- * 
+ *
  *  @param regs Pointer to struct containing micro's registers.
  */
 void int21(registers* regs ) {
@@ -80,7 +79,7 @@ void setInterruptHandlerTable(void) {
  * It makes use of the HandlerTable, in which previously all interrupts were
  * registered. In the case of a PIC interrupt, it informs the corresponding
  * PIC when the interrupt has been handled.
- *   
+ *
  *  @param regs Pointer to struct containing micro's registers.
  */
 void interruptDispatcher(registers regs) {

@@ -86,8 +86,6 @@ void initPages(struct multiboot_info* info) {
 
         entry = (struct MemoryMapEntry*) ((char*) entry + entry->size + sizeof(unsigned int));
     }
-
-    printf("Usable memory %u in %d pages\n", totalMem, usablePages);
 }
 
 void reservePageMap(struct multiboot_info* info) {
@@ -120,10 +118,7 @@ void reservePageMap(struct multiboot_info* info) {
         entry = (struct MemoryMapEntry*) ((char*) entry + entry->size + sizeof(unsigned int));
     }
 
-    printf("We don't have a place to put the page map. Dying...\n");
-
-    disableInterrupts();
-    halt();
+    panic();
 }
 
 void setPage(int page) {

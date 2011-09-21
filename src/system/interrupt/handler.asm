@@ -4,29 +4,27 @@ EXTERN  int08, int09, interruptDispatcher
 ; Calls that interrupt.
 %macro CALLER 1
     ; Save the current execution context
-    pusha   
-    push ds    
-    push es
-    push fs
-    push gs
+    pusha
 
     ; Set up the handler execution context
-    mov ax, 0x10    
-    mov ds, ax 
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
+    ;mov ax, 0x10    
+    ;mov ds, ax 
+    ;mov es, ax
+    ;mov fs, ax
+    ;mov gs, ax
 
     call %1
+    
+    ;mov ax, 0x20
+    ;mov ds, ax 
+    ;mov es, ax
+    ;mov fs, ax
+    ;mov gs, ax
 
-    pop gs
-    pop fs
-    pop es
-    pop ds 
     popa
 
     ; Move the sp to where it when the interrupt was triggered
-    add esp, 8  
+    add esp, 8
 
     sti
     iret
@@ -35,71 +33,67 @@ EXTERN  int08, int09, interruptDispatcher
 
 ; Defines a macro that takes as an argument the interrupt number.
 ; Uses the CALLER macro to call the corresponding interrupt.
-; Pushes a 0 as the error code.
-%macro ISR_NOERRCODE 2 
+%macro ISR 2 
 GLOBAL _int%1Handler   
   _int%1Handler:
     cli
 
-    ; Save the error code (errCode).
-    push 0         
     ; Save the interrupt number (intNum).
+    push 0
     push %1h      
     CALLER %2
 %endmacro
 
-; Idem, but pushing a 1 as the error code.
-%macro ISR_ERRCODE 2   
-GLOBAL _int%1Handler
+%macro ERR_ISR 2 
+GLOBAL _int%1Handler   
   _int%1Handler:
     cli
-    
-    ; Save the error code (errCode).
-     push 1
+
     ; Save the interrupt number (intNum).
-    push %1h       
+    push 0
+    push %1h      
     CALLER %2
 %endmacro
 
 ; Definition of the interrupt handlers
 
-ISR_ERRCODE 80, interruptDispatcher
+ISR 80, interruptDispatcher
 
 ; IRQs Handlers
 
-ISR_ERRCODE 20, interruptDispatcher
-ISR_ERRCODE 21, interruptDispatcher
+ISR 20, interruptDispatcher
+ISR 21, interruptDispatcher
 
 ; Definition of exceptions Handlers
-ISR_ERRCODE 00, interruptDispatcher
-ISR_ERRCODE 01, interruptDispatcher
-ISR_ERRCODE 02, interruptDispatcher
-ISR_ERRCODE 03, interruptDispatcher
-ISR_ERRCODE 04, interruptDispatcher
-ISR_ERRCODE 05, interruptDispatcher
-ISR_ERRCODE 06, interruptDispatcher
-ISR_ERRCODE 07, interruptDispatcher
-ISR_ERRCODE 08, interruptDispatcher
-ISR_ERRCODE 09, interruptDispatcher
-ISR_ERRCODE 0A, interruptDispatcher
-ISR_ERRCODE 0B, interruptDispatcher
-ISR_ERRCODE 0C, interruptDispatcher
-ISR_ERRCODE 0D, interruptDispatcher
-ISR_ERRCODE 0E, interruptDispatcher
-ISR_ERRCODE 0F, interruptDispatcher
-ISR_ERRCODE 10, interruptDispatcher
-ISR_ERRCODE 11, interruptDispatcher
-ISR_ERRCODE 12, interruptDispatcher
-ISR_ERRCODE 13, interruptDispatcher
-ISR_ERRCODE 14, interruptDispatcher
-ISR_ERRCODE 15, interruptDispatcher
-ISR_ERRCODE 16, interruptDispatcher
-ISR_ERRCODE 17, interruptDispatcher
-ISR_ERRCODE 18, interruptDispatcher
-ISR_ERRCODE 19, interruptDispatcher
-ISR_ERRCODE 1A, interruptDispatcher
-ISR_ERRCODE 1B, interruptDispatcher
-ISR_ERRCODE 1C, interruptDispatcher
-ISR_ERRCODE 1D, interruptDispatcher
-ISR_ERRCODE 1E, interruptDispatcher
-ISR_ERRCODE 1F, interruptDispatcher
+ERR_ISR 00, interruptDispatcher
+ERR_ISR 01, interruptDispatcher
+ERR_ISR 02, interruptDispatcher
+ERR_ISR 03, interruptDispatcher
+ERR_ISR 04, interruptDispatcher
+ERR_ISR 05, interruptDispatcher
+ERR_ISR 06, interruptDispatcher
+ERR_ISR 07, interruptDispatcher
+ERR_ISR 08, interruptDispatcher
+ERR_ISR 09, interruptDispatcher
+ERR_ISR 0A, interruptDispatcher
+ERR_ISR 0B, interruptDispatcher
+ERR_ISR 0C, interruptDispatcher
+ERR_ISR 0D, interruptDispatcher
+ERR_ISR 0E, interruptDispatcher
+ERR_ISR 0F, interruptDispatcher
+ERR_ISR 10, interruptDispatcher
+ERR_ISR 11, interruptDispatcher
+ERR_ISR 12, interruptDispatcher
+ERR_ISR 13, interruptDispatcher
+ERR_ISR 14, interruptDispatcher
+ERR_ISR 15, interruptDispatcher
+ERR_ISR 16, interruptDispatcher
+ERR_ISR 17, interruptDispatcher
+ERR_ISR 18, interruptDispatcher
+ERR_ISR 19, interruptDispatcher
+ERR_ISR 1A, interruptDispatcher
+ERR_ISR 1B, interruptDispatcher
+ERR_ISR 1C, interruptDispatcher
+ERR_ISR 1D, interruptDispatcher
+ERR_ISR 1E, interruptDispatcher
+ERR_ISR 1F, interruptDispatcher
