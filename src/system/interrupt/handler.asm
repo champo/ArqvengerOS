@@ -4,7 +4,7 @@ EXTERN  int08, int09, interruptDispatcher
 ; Calls that interrupt.
 %macro CALLER 1
     ; Save the current execution context
-    pusha
+    pushad
 
     ; Set up the handler execution context
     mov ax, 0x10    
@@ -21,7 +21,7 @@ EXTERN  int08, int09, interruptDispatcher
     mov fs, ax
     mov gs, ax
 
-    popa
+    popad
 
     ; Move the sp to where it when the interrupt was triggered
     add esp, 8
