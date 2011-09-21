@@ -14,6 +14,8 @@ typedef struct {
 
 typedef void (*interruptHandler)(registers* regs);
 
+static int intNum;
+
 static interruptHandler table[256];
 
 #define     register(X)         table[0x##X] = &int##X
@@ -84,10 +86,14 @@ void setInterruptHandlerTable(void) {
  */
 void interruptDispatcher(registers regs) {
 
+    // So, since the stack might be changed by a context change
+    // We need access to this number some other way
+    // And since the kernel itself is not preemptive, storing it like this is safe.
+    intNum = regs.intNum;
     (*table[regs.intNum])(&regs);
 
-    if (regs.intNum >= PIC_MIN_INTNUM && regs.intNum < PIC_MIN_INTNUM + PIC_IRQS) {
-        if (regs.intNum - PIC_MIN_INTNUM >= 8) {
+    if (intNum >= PIC_MIN_INTNUM && intNum < PIC_MIN_INTNUM + PIC_IRQS) {
+        if (intNum - PIC_MIN_INTNUM >= 8) {
             // Tell the slave PIC we're done
             outB(0xA0, PIC_EOI);
         }
