@@ -5,6 +5,7 @@
 #include "drivers/keyboard.h"
 #include "system/mm.h"
 #include "system/common.h"
+#include "system/gdt.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 
@@ -13,6 +14,7 @@ void kmain(struct multiboot_info* info, unsigned int magic);
  */
 void kmain(struct multiboot_info* info, unsigned int magic) {
 
+    setupGDT();
     setupIDT();
 
     FILE files[3];
@@ -32,6 +34,7 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     initKeyboard();
     initMemoryMap(info);
 
+    // This is temporary
     void* stack = allocPages(1024);
     stack += PAGE_SIZE * 1024;
     __asm__ volatile ("mov %0, %%esp"::"r"(stack));

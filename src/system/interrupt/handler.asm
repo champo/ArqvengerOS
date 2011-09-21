@@ -7,19 +7,19 @@ EXTERN  int08, int09, interruptDispatcher
     pusha
 
     ; Set up the handler execution context
-    ;mov ax, 0x10    
-    ;mov ds, ax 
-    ;mov es, ax
-    ;mov fs, ax
-    ;mov gs, ax
+    mov ax, 0x10    
+    mov ds, ax 
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
 
     call %1
     
-    ;mov ax, 0x20
-    ;mov ds, ax 
-    ;mov es, ax
-    ;mov fs, ax
-    ;mov gs, ax
+    mov ax, 0x20
+    mov ds, ax 
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
 
     popa
 
