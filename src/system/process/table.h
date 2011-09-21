@@ -7,7 +7,7 @@ struct ProcessMemory {
     void* esp;
     void* stackStart;
     int pagesInStack;
-}
+};
 
 struct Process {
     int pid;
