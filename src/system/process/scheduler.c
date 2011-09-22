@@ -7,8 +7,6 @@ static int current = -1;
 
 static int turns;
 
-static int c = 0;
-
 static void choose_next(void);
 
 void scheduler_add(struct Process* process) {

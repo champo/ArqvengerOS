@@ -133,6 +133,9 @@ void int80(registers* regs) {
         case _SYS_TICKS:
             regs->eax = _getTicksSinceStart();
             break;
+        case _SYS_YIELD:
+            // This just makes sure we call the scheduler again, for now
+            break;
     }
 }
 

@@ -6,4 +6,5 @@
 #define     _SYS_TIME       13
 #define     _SYS_IOCTL      54
 #define     _SYS_TICKS      191
+#define _SYS_YIELD 1
 #endif
