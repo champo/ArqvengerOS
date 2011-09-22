@@ -2,6 +2,7 @@
 #include "system/mm.h"
 #include "system/panic.h"
 #include "system/common.h"
+#include "system/process/scheduler.h"
 
 static int pid = 0;
 
@@ -15,9 +16,8 @@ inline static void push(int** esp, int val) {
     **esp = val;
 }
 
-static void _exit(void) {
-    //TODO: Kill the bastard
-    writeScreen("E", 1);
+static void _exit(struct Process* process) {
+    scheduler_remove(process);
     while (1);
 }
 
@@ -32,6 +32,8 @@ void createProcess(struct Process* process, void* entrypoint) {
     }
 
     process->mm.esp = (char*)process->mm.stackStart + PAGE_SIZE * process->mm.pagesInStack;
+    push((int**) &process->mm.esp, (int) process);
+    push((int**) &process->mm.esp, (int) _exit);
     push((int**) &process->mm.esp, (int) _exit);
     push((int**) &process->mm.esp, 0x200);
     push((int**) &process->mm.esp, 0x08);
