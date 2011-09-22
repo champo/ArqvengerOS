@@ -4,6 +4,7 @@
 #include "system/call/ioctl/keyboard.h"
 #include "system/io.h"
 #include "system/common.h"
+#include "system/process/scheduler.h"
 
 #define KEYBOARD_IO_PORT 0x60
 #define KEYBOARD_CTRL_PORT 0x64
@@ -271,25 +272,13 @@ size_t readKeyboard(void* buffer, size_t count) {
 
         // Make sure until we read a whole line, and then only take what we need.
         for (i = 0; i < bufferEnd && inputBuffer[i] != '\n'; i++);
-        if (i == bufferEnd) {
 
-            // Oh noes! No full line was ever read!
-            // Lets wait until we have one
-            int interruptDisabled = !_isIF();
-
-            enableInterrupts();
-            while (bufferEnd == 0 || inputBuffer[bufferEnd - 1] != '\n') {
-                halt();
-            }
-
-            if (interruptDisabled) {
-                disableInterrupts();
-            }
-
-            i = bufferEnd;
-        } else {
-            i++;
+        while (i == bufferEnd) {
+            scheduler_do();
+            for (i = 0; i < bufferEnd && inputBuffer[i] != '\n'; i++);
         }
+
+        i++;
 
         if (c > i) {
             // If we were asked for more than the len of this line, we ignore that
@@ -297,16 +286,8 @@ size_t readKeyboard(void* buffer, size_t count) {
         }
     } else {
 
-        // Wait until the buffer is done
-        int interruptDisabled = !_isIF();
-
-        enableInterrupts();
         while (bufferEnd < c) {
-            halt();
-        }
-
-        if (interruptDisabled) {
-            disableInterrupts();
+            scheduler_do();
         }
     }
 

@@ -107,7 +107,7 @@ void reservePageMap(struct multiboot_info* info) {
                         pageMap = (int*) (end - mapSize);
                     }
                     for (size_t i = 0; i < ENTRIES_IN_MAP; i++) {
-                        pageMap[i] = 0xFFFFFFFF;
+                        pageMap[i] = 0;
                     }
 
                     return;
@@ -123,18 +123,17 @@ void reservePageMap(struct multiboot_info* info) {
 
 void setPage(int page) {
     page -= UNUSABLE_PAGES;
-    size_t entry = page / PAGES_PER_ENTRY;
-    pageMap[entry] |= 0x1 << (page % PAGES_PER_ENTRY);
+    pageMap[page / PAGES_PER_ENTRY] &= -1 ^ (0x1 << (page % PAGES_PER_ENTRY));
 }
 
 void unsetPage(int page) {
     page -= UNUSABLE_PAGES;
-    pageMap[page / PAGES_PER_ENTRY] &= -1 ^ (0x1 << (page % PAGES_PER_ENTRY));
+    pageMap[page / PAGES_PER_ENTRY] |= 0x1 << (page % PAGES_PER_ENTRY);
 }
 
 int isPageSet(int page) {
     page -= UNUSABLE_PAGES;
-    return pageMap[page / PAGES_PER_ENTRY] & (0x1 << (page % PAGES_PER_ENTRY));
+    return !(pageMap[page / PAGES_PER_ENTRY] & (0x1 << (page % PAGES_PER_ENTRY)));
 }
 
 void* allocPage(void) {

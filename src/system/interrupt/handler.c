@@ -92,6 +92,12 @@ void interruptDispatcher(registers regs) {
     intNum = regs.intNum;
     (*table[regs.intNum])(&regs);
 
+    scheduler_do();
+    signalPIC();
+}
+
+void signalPIC(void) {
+
     if (intNum >= PIC_MIN_INTNUM && intNum < PIC_MIN_INTNUM + PIC_IRQS) {
         if (intNum - PIC_MIN_INTNUM >= 8) {
             // Tell the slave PIC we're done

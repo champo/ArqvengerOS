@@ -3,4 +3,6 @@
 
 void setInterruptHandlerTable(void);
 
+void signalPIC(void);
+
 #endif

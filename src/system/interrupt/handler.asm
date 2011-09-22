@@ -1,4 +1,5 @@
-EXTERN  int08, int09, interruptDispatcher
+EXTERN  int08, int09, interruptDispatcher, writeScreen
+GLOBAL _interruptEnd, _l
 
 ; Defines a macro that takes as an argument the interrupt number.
 ; Calls that interrupt.
@@ -12,14 +13,16 @@ EXTERN  int08, int09, interruptDispatcher
     mov es, ax
     mov fs, ax
     mov gs, ax
+    mov ss, ax
 
     call %1
     
-    mov ax, 0x20
+    mov ax, 0x10
     mov ds, ax 
     mov es, ax
     mov fs, ax
     mov gs, ax
+    mov ss, ax
 
     popad
 
@@ -29,6 +32,18 @@ EXTERN  int08, int09, interruptDispatcher
     sti
     iret
 %endmacro
+
+_interruptEnd:
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    iret
+_l:
+    jmp _l
 
 
 ; Defines a macro that takes as an argument the interrupt number.

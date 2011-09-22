@@ -6,8 +6,13 @@
 #include "system/mm.h"
 #include "system/common.h"
 #include "system/gdt.h"
+#include "system/process/scheduler.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
+
+static void idle(void) {
+    while (1);
+}
 
 /**
  * Kernel entry point
@@ -34,13 +39,16 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     initKeyboard();
     initMemoryMap(info);
 
-    // This is temporary
-    void* stack = allocPages(1024);
-    stack += PAGE_SIZE * 1024;
-    __asm__ volatile ("mov %0, %%esp"::"r"(stack));
+    disableInterrupts();
+    struct Process* p = kalloc(sizeof(struct Process));
+    createProcess(p, shell);
+    scheduler_add(p);
+    struct Process* p1 = kalloc(sizeof(struct Process));
+    createProcess(p1, idle);
+    scheduler_add(p1);
+    enableInterrupts();
 
-    while (1) {
-       shell();
-    }
+    while (1) {}
 }
+
 
