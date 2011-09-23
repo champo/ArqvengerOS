@@ -3,7 +3,9 @@
 
 #define PTABLE_SIZE 64
 
-struct Process *processTable[PTABLE_SIZE] = {0};
+static struct Process *processTable[PTABLE_SIZE] = {0};
+
+static struct Process* freeStructures = NULL;
 
 static void process_table_remove(struct Process* process);
 
@@ -11,15 +13,26 @@ static struct Process* waitable_child(struct Process* process);
 
 struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Process* parent) {
 
-    struct Process* p = kalloc(sizeof(struct Process));
-
-    for (size_t i = 0; i < PTABLE_SIZE; i++) {
+    size_t i;
+    for (i = 0; i < PTABLE_SIZE; i++) {
         if (processTable[i] == NULL) {
-            processTable[i] = p;
             break;
         }
     }
 
+    if (i == PTABLE_SIZE) {
+        return NULL;
+    }
+
+    struct Process* p;
+    if (freeStructures == NULL) {
+        p = kalloc(sizeof(struct Process));
+    } else {
+        p = freeStructures;
+        freeStructures = p->next;
+    }
+
+    processTable[i] = p;
     createProcess(p, entryPoint, parent, args);
     scheduler_add(p);
 
@@ -34,6 +47,10 @@ void process_table_remove(struct Process* process) {
             break;
         }
     }
+
+    destroyProcess(process);
+    process->next = freeStructures;
+    freeStructures = process;
 }
 
 void process_table_exit(struct Process* process) {
@@ -65,8 +82,6 @@ void process_table_exit(struct Process* process) {
         }
     } else {
         process_table_remove(process);
-        destroyProcess(process);
-        //TODO: kfree?
     }
 }
 
@@ -92,7 +107,6 @@ pid_t process_table_wait(struct Process* process) {
 
         pid_t pid = c->pid;
         process_table_remove(c);
-        destroyProcess(c);
 
         return pid;
     }
@@ -139,7 +153,6 @@ void process_table_kill(struct Process* process) {
 
         process_table_kill(c);
         process_table_remove(c);
-        destroyProcess(c);
 
         c = next;
     }
