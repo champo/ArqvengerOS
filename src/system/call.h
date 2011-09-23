@@ -11,4 +11,14 @@ int _ioctl(int fd, int cmd, void* argp);
 
 time_t _time(time_t *tp);
 
+pid_t _getpid(void);
+
+pid_t _getppid(void);
+
+pid_t _run(void(*EntryPoint)(char*), char* args);
+
+void _exit(void);
+
+void _wait(void);
+
 #endif

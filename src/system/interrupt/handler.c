@@ -136,6 +136,21 @@ void int80(registers* regs) {
         case _SYS_YIELD:
             // This just makes sure we call the scheduler again, for now
             break;
+        case _SYS_EXIT:
+            _exit();
+            break;
+        case _SYS_GETPID:
+            regs->eax = _getpid();
+            break;
+        case _SYS_GETPPID:
+            regs->eax = _getppid();
+            break;
+        case _SYS_RUN:
+            regs->eax = _run((void(*)(char*)) regs->ebx, (char*) regs->ecx);
+            break;
+        case _SYS_WAIT:
+            _wait();
+            break;
     }
 }
 

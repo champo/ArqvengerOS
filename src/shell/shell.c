@@ -3,6 +3,7 @@
 #include "system/call/ioctl/keyboard.h"
 #include "library/stdio.h"
 #include "library/string.h"
+#include "library/sys.h"
 #include "library/stdlib.h"
 #include "library/ctype.h"
 #include "shell/commands.h"
@@ -71,7 +72,7 @@ static Shell* cur;
 /**
  * Shell entry poing.
  */
-void shell(void) {
+void shell(char* unused) {
 
     const Command* cmd;
     int i;

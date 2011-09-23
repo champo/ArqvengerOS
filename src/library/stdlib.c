@@ -5,8 +5,6 @@
 
 static size_t randSeed;
 
-extern size_t systemCall(int eax, int ebx, int ecx, int edx);
-
 /**
  * Converts a string to its equivalent int.
  *
@@ -144,9 +142,5 @@ int utoa(char *s, unsigned int n){
     reverse(s);
 
     return i;
-}
-
-void yield(void) {
-    systemCall(_SYS_YIELD, 0, 0, 0);
 }
 

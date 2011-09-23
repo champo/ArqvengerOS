@@ -6,11 +6,11 @@
 #include "system/mm.h"
 #include "system/common.h"
 #include "system/gdt.h"
-#include "system/process/scheduler.h"
+#include "system/process/table.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 
-static void idle(void) {
+static void idle(char* unused) {
     while (1) {
         yield();
     }
@@ -42,12 +42,8 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     initMemoryMap(info);
 
     disableInterrupts();
-    struct Process* p = kalloc(sizeof(struct Process));
-    createProcess(p, shell);
-    scheduler_add(p);
-    struct Process* p1 = kalloc(sizeof(struct Process));
-    createProcess(p1, idle);
-    scheduler_add(p1);
+    struct Process* idleProcess = process_table_new(idle, NULL, NULL);
+    struct Process* shellProcess = process_table_new(shell, NULL, idleProcess);
     enableInterrupts();
 
     while (1) {}

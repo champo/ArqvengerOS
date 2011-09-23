@@ -51,3 +51,11 @@ void scheduler_remove(struct Process* process) {
     }
 }
 
+struct Process* scheduler_current(void) {
+    if (current == -1) {
+        return NULL;
+    }
+
+    return list[current];
+}
+

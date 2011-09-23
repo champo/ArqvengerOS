@@ -14,8 +14,6 @@ int rand(void);
 
 void srand(unsigned int seed);
 
-void yield(void);
-
 #define RAND_MAX 268435456
 #define NULL (void *)0
 

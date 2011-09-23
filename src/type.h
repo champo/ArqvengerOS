@@ -9,4 +9,6 @@ typedef int dword;
 
 typedef unsigned int time_t;
 
+typedef int pid_t;
+
 #endif
