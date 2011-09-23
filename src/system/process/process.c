@@ -40,6 +40,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         process->args[i] = 0;
     }
 
+    process->schedule.priority = 0;
     process->schedule.status = StatusReady;
     process->schedule.inWait = 0;
     process->schedule.done = 0;

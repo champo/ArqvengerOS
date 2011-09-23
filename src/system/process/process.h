@@ -19,11 +19,11 @@ enum ProcessStatus {
 
 struct ProcessSchedule {
     enum ProcessStatus status;
+    unsigned int priority:2;
     unsigned int inWait:1;
     unsigned int done:1;
 };
 
-typedef struct Process;
 struct Process {
     int pid;
 
