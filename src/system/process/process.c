@@ -21,13 +21,22 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->pid = ++pid;
     process->parent = parent;
     process->entryPoint = entryPoint;
-    process->children = 0;
+    process->firstChild = NULL;
 
+    process->prev = NULL;
     if (parent == NULL) {
         process->ppid = 0;
+
+        process->next = NULL;
     } else {
         process->ppid = parent->pid;
-        parent->children++;
+
+        process->next = parent->firstChild;
+        if (parent->firstChild) {
+            parent->firstChild->prev = process;
+        }
+
+        parent->firstChild = process;
     }
 
     if (args == NULL) {

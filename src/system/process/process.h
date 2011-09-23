@@ -31,7 +31,11 @@ struct Process {
     struct Process* parent;
     EntryPoint entryPoint;
     char args[512];
-    int children;
+
+    struct Process* firstChild;
+
+    struct Process* prev;
+    struct Process* next;
 
     struct ProcessSchedule schedule;
     struct ProcessMemory mm;

@@ -38,16 +38,21 @@ void process_table_remove(struct Process* process) {
 
 void process_table_exit(struct Process* process) {
 
-    if (process->children) {
+    if (process->firstChild) {
 
-        for (size_t i = 0; i < PTABLE_SIZE; i++) {
+        struct Process* c = process->firstChild;
+        struct Process* idle = processTable[0];
 
-            if (processTable[i] != NULL && processTable[i]->ppid == process->pid) {
-                // We asign it to the idle process
-                processTable[i]->parent = processTable[0];
-                processTable[i]->ppid = 1;
-            }
-        }
+        do {
+            // We asign it to the idle process
+            c->parent = idle;
+            c->ppid = idle->pid;
+        } while (c->next && (c = c->next));
+
+        c->next = idle->firstChild;
+        idle->firstChild->prev = c;
+
+        idle->firstChild = process->firstChild;
     }
 
     scheduler_remove(process);
@@ -67,7 +72,7 @@ void process_table_exit(struct Process* process) {
 
 pid_t process_table_wait(struct Process* process) {
 
-    if (process->children != 0) {
+    if (process->firstChild != NULL) {
 
         struct Process* c;
         while ((c = waitable_child(process)) == NULL) {
@@ -79,11 +84,15 @@ pid_t process_table_wait(struct Process* process) {
         }
 
         process->schedule.inWait = 0;
+        if (c->prev == NULL) {
+            process->firstChild = c->next;
+        } else {
+            c->prev->next = c->next;
+        }
 
         pid_t pid = c->pid;
         process_table_remove(c);
         destroyProcess(c);
-        process->children--;
 
         return pid;
     }
@@ -93,15 +102,14 @@ pid_t process_table_wait(struct Process* process) {
 
 struct Process* waitable_child(struct Process* process) {
 
-    struct Process* c;
-    for (size_t i = 0; i < PTABLE_SIZE; i++) {
+    struct Process* c = process->firstChild;
+    while (c != NULL) {
 
-        c = processTable[i];
-        if (c != NULL && c->ppid == process->pid) {
-            if (c->schedule.done) {
-                return c;
-            }
+        if (c->schedule.done) {
+            return c;
         }
+
+        c = c->next;
     }
 
     return NULL;
@@ -123,20 +131,17 @@ struct Process* process_table_get(pid_t pid) {
 
 void process_table_kill(struct Process* process) {
 
-    if (process->children) {
+    struct Process* c = process->firstChild;
+    struct Process* next;
+    while (c != NULL) {
 
-        struct Process* c;
-        for (size_t i = 0; i < PTABLE_SIZE; i++) {
+        next = c->next;
 
-            c = processTable[i];
-            if (c != NULL && c->ppid == process->pid) {
-                process_table_kill(c);
-                process_table_remove(c);
-                destroyProcess(c);
+        process_table_kill(c);
+        process_table_remove(c);
+        destroyProcess(c);
 
-                process->children--;
-            }
-        }
+        c = next;
     }
 
     process_table_exit(process);
