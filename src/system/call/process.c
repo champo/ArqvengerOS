@@ -16,11 +16,10 @@ pid_t _run(EntryPoint entryPoint, char* args) {
 }
 
 void _exit(void) {
-    struct Process* p = scheduler_current();
-    process_table_exit(p);
+    process_table_exit(scheduler_current());
 }
 
 void _wait(void) {
-    //TODO: Do wait
+    process_table_wait(scheduler_current());
 }
 

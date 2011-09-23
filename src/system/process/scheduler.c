@@ -32,6 +32,11 @@ void scheduler_do(void) {
 }
 
 void choose_next(void) {
+
+    if (list[current]->schedule.status == StatusRunning) {
+        list[current]->schedule.status = StatusReady;
+    }
+
     turns = 0;
     do {
         current = (current + 1) % 20;
@@ -39,7 +44,9 @@ void choose_next(void) {
             current = -1;
             return;
         }
-    } while (list[current] == NULL);
+    } while (list[current] == NULL || list[current]->schedule.status == StatusBlocked);
+
+    list[current]->schedule.status = StatusRunning;
 }
 
 void scheduler_remove(struct Process* process) {

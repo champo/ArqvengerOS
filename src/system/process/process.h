@@ -11,7 +11,14 @@ struct ProcessMemory {
     int pagesInStack;
 };
 
+enum ProcessStatus {
+    StatusRunning,
+    StatusReady,
+    StatusBlocked
+};
+
 struct ProcessSchedule {
+    enum ProcessStatus status;
     unsigned int inWait:1;
     unsigned int done:1;
 };

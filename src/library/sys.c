@@ -16,7 +16,7 @@ void exit(void) {
 }
 
 pid_t run(void(*entryPoint)(char*), char* args) {
-    return systemCall((int) entryPoint, (int) args, 0, 0);
+    return systemCall(_SYS_RUN, (int) entryPoint, (int) args, 0);
 }
 
 pid_t getpid(void) {

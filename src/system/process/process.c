@@ -34,12 +34,13 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         *process->args = 0;
     } else {
         int i;
-        for (i = 0; *(args + i); i++) {
+        for (i = 0; *(args + i) && i < 255; i++) {
             process->args[i] = args[i];
         }
         process->args[i] = 0;
     }
 
+    process->schedule.status = StatusReady;
     process->schedule.inWait = 0;
     process->schedule.done = 0;
 

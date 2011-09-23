@@ -99,7 +99,8 @@ void shell(char* unused) {
         if (cmd != NULL) {
 
             ioctl(0, TCSETS, (void*) &cur->inputStatus);
-            cmd->func(cur->buffer);
+            run(cmd->func, cur->buffer);
+            wait();
             ioctl(0, TCGETS, (void*) &cur->inputStatus);
 
             ioctl(0, TCSETS, (void*) &shellStatus);

@@ -7,4 +7,6 @@ struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Proc
 
 void process_table_exit(struct Process* process);
 
+int process_table_wait(struct Process* process);
+
 #endif
