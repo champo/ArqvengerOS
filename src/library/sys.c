@@ -27,3 +27,7 @@ pid_t getppid(void) {
     return systemCall(_SYS_GETPPID, 0, 0, 0);
 }
 
+void kill(pid_t pid) {
+    systemCall(_SYS_KILL, pid, 0, 0);
+}
+

@@ -107,3 +107,38 @@ struct Process* waitable_child(struct Process* process) {
     return NULL;
 }
 
+struct Process* process_table_get(pid_t pid) {
+
+    struct Process* c;
+    for (size_t i = 0; i < PTABLE_SIZE; i++) {
+
+        c = processTable[i];
+        if (c != NULL && c->pid == pid) {
+            return c;
+        }
+    }
+
+    return NULL;
+}
+
+void process_table_kill(struct Process* process) {
+
+    if (process->children) {
+
+        struct Process* c;
+        for (size_t i = 0; i < PTABLE_SIZE; i++) {
+
+            c = processTable[i];
+            if (c != NULL && c->ppid == process->pid) {
+                process_table_kill(c);
+                process_table_remove(c);
+                destroyProcess(c);
+
+                process->children--;
+            }
+        }
+    }
+
+    process_table_exit(process);
+}
+

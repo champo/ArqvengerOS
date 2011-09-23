@@ -151,6 +151,9 @@ void int80(registers* regs) {
         case _SYS_WAIT:
             regs->eax = _wait();
             break;
+        case _SYS_KILL:
+            _kill((pid_t) regs->ebx);
+            break;
     }
 }
 

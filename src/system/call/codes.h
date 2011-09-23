@@ -13,6 +13,7 @@
 #define _SYS_GETPID 172
 #define _SYS_GETPPID 173
 #define _SYS_WAIT 1072
+#define _SYS_KILL 129
 
 #define _SYS_RUN 1
 

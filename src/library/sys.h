@@ -15,4 +15,6 @@ pid_t getpid(void);
 
 pid_t getppid(void);
 
+void kill(pid_t pid);
+
 #endif

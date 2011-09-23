@@ -23,3 +23,10 @@ pid_t _wait(void) {
     return process_table_wait(scheduler_current());
 }
 
+void _kill(pid_t pid) {
+    struct Process* d = process_table_get(pid);
+    if (d != NULL) {
+        process_table_kill(d);
+    }
+}
+

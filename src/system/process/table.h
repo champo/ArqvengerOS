@@ -9,4 +9,8 @@ void process_table_exit(struct Process* process);
 
 pid_t process_table_wait(struct Process* process);
 
+struct Process* process_table_get(pid_t pid);
+
+void process_table_kill(struct Process* process);
+
 #endif
