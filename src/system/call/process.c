@@ -19,7 +19,7 @@ void _exit(void) {
     process_table_exit(scheduler_current());
 }
 
-void _wait(void) {
-    process_table_wait(scheduler_current());
+pid_t _wait(void) {
+    return process_table_wait(scheduler_current());
 }
 

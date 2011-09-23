@@ -5,7 +5,7 @@
 
 void yield(void);
 
-void wait(void);
+pid_t wait(void);
 
 void exit(void);
 

@@ -65,7 +65,7 @@ void process_table_exit(struct Process* process) {
     }
 }
 
-int process_table_wait(struct Process* process) {
+pid_t process_table_wait(struct Process* process) {
 
     if (process->children != 0) {
 
@@ -80,12 +80,15 @@ int process_table_wait(struct Process* process) {
 
         process->schedule.inWait = 0;
 
-        if (c != NULL) {
-            process_table_remove(c);
-            destroyProcess(c);
-            process->children--;
-        }
+        pid_t pid = c->pid;
+        process_table_remove(c);
+        destroyProcess(c);
+        process->children--;
+
+        return pid;
     }
+
+    return -1;
 }
 
 struct Process* waitable_child(struct Process* process) {

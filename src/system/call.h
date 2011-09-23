@@ -19,6 +19,6 @@ pid_t _run(void(*EntryPoint)(char*), char* args);
 
 void _exit(void);
 
-void _wait(void);
+pid_t _wait(void);
 
 #endif

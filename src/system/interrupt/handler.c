@@ -149,7 +149,7 @@ void int80(registers* regs) {
             regs->eax = _run((void(*)(char*)) regs->ebx, (char*) regs->ecx);
             break;
         case _SYS_WAIT:
-            _wait();
+            regs->eax = _wait();
             break;
     }
 }

@@ -7,8 +7,8 @@ void yield(void) {
     systemCall(_SYS_YIELD, 0, 0, 0);
 }
 
-void wait(void) {
-    systemCall(_SYS_WAIT, 0, 0, 0);
+pid_t wait(void) {
+    return systemCall(_SYS_WAIT, 0, 0, 0);
 }
 
 void exit(void) {
