@@ -7,6 +7,7 @@
 #include "system/common.h"
 #include "system/gdt.h"
 #include "system/process/table.h"
+#include "drivers/ata.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 
@@ -40,6 +41,7 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
 
     initKeyboard();
     initMemoryMap(info);
+    ata_init(info);
 
     disableInterrupts();
     struct Process* idleProcess = process_table_new(idle, NULL, NULL);
