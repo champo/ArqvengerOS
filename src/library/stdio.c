@@ -7,22 +7,21 @@
 #include "type.h"
 #include "system/call/codes.h"
 #include "library/ctype.h"
+#include "library/call.h"
 
 FILE *stdout;
 FILE *stdin;
 FILE *stderr;
 
-extern size_t systemCall(int eax, int ebx, int ecx, int edx);
+static size_t systemWrite(FILE *stream, const char *cs, size_t n);
 
-size_t systemWrite(FILE *stream, const char *cs, size_t n);
-
-size_t systemRead(FILE *stream, void *buf, size_t n);
+static size_t systemRead(FILE *stream, void *buf, size_t n);
 
 /**
  * Insert a character into the given stream.
  *
  * @param c, the character to be written.
- * @param stream, a pointer to file to write in. 
+ * @param stream, a pointer to file to write in.
  * @return the value of the caracter and in case of failiure it returns EOF.
  */
 int fputc(char c, FILE *stream) {
@@ -193,7 +192,7 @@ int fprintf(FILE *stream, const char *format, ...) {
 
 /**
  *  Prints with a format given with the variable list ap initialized.
- *  
+ *
  *  The variables sent will be printed in order specifying the types with a %
  *  symbol in the format.
  *  %d or %i indicates an integer is expected.
@@ -215,20 +214,20 @@ int vprintf(const char *format, va_list arg) {
  * Calls the system so it can write on the correct file
  */
 size_t systemWrite(FILE *stream, const char *cs, size_t n){
-    return systemCall(_SYS_WRITE, getfd(stream), (int) cs, n);
+    return system_call(_SYS_WRITE, getfd(stream), (int) cs, n);
 }
 
 /**
  * Calls the system so it can read on the correct file
  */
 size_t systemRead(FILE *stream, void *buf, size_t n) {
-    return systemCall(_SYS_READ, getfd(stream), (int)buf, n);
+    return system_call(_SYS_READ, getfd(stream), (int)buf, n);
 }
 /**
  *  Calls the system to do driver dependent operations
  */
 size_t ioctl(FILE *stream, int cmd, void *argp) {
-    return systemCall(_SYS_IOCTL, getfd(stream), cmd, (int)argp);
+    return system_call(_SYS_IOCTL, getfd(stream), cmd, (int)argp);
 }
 
 /**
@@ -418,7 +417,7 @@ int ungetc(int c, FILE *stream) {
  * %u indicates an unsigned int is expected.
  * %% indicates a % should be taken in account.
  *
- * @param format, a constant pointer to a char indicating what is about to be read. 
+ * @param format, a constant pointer to a char indicating what is about to be read.
  * @return the number of converted variables.
  */
 int scanf(const char *format, ...) {
@@ -438,10 +437,10 @@ int scanf(const char *format, ...) {
  *  %c indicates a character is expected.
  *  %u indicates an unsigned int is expected.
  *  %% indicates a % should be taken in account.
- * 
+ *
  *  @param format, a constant pointer to a char indicating what is about to be read.
  *  @param arg, the list of variable arguments.
- *  @return the number of converted variables 
+ *  @return the number of converted variables
  */
 int vscanf(const char *format, va_list arg) {
     return vfscanf(stdin, format, arg);
@@ -457,10 +456,10 @@ int vscanf(const char *format, va_list arg) {
  * %c indicates a character is expected.
  * %u indicates an unsigned int is expected.
  * %% indicates a % should be taken in account.
- *         
+ *
  * This function receives variable arguments, containing the variables to be read.
  * @param stream, a pointer to the file to read.
- * @param format, a constant pointer to a char indicating what is about to be read. 
+ * @param format, a constant pointer to a char indicating what is about to be read.
  */
 int fscanf(FILE *stream, const char *format, ...){
     va_list ap;

@@ -2,8 +2,8 @@
 #include "system/call/codes.h"
 #include "library/string.h"
 #include "library/stdlib.h"
+#include "library/call.h"
 
-extern size_t systemCall(int eax, int ebx, int ecx, int edx);
 
 static int dayOfWeek(int year, int month, int day);
 static void initTm(struct tm *date);
@@ -25,7 +25,7 @@ static char string[30];
 * @return The current time.(Number of seconds since Epoch)
 */
 time_t time(time_t *tp) {
-    return systemCall(_SYS_TIME,tp,0,0);
+    return system_call(_SYS_TIME,tp,0,0);
 }
 
 
@@ -165,7 +165,7 @@ char* asctime(const struct tm *tp) {
     strcpy(string + curPos, aux);
     curPos += 4;
     string[curPos] = '\0';
-    
+
     return string;
 }
 
@@ -199,7 +199,7 @@ struct tm* localtime(const time_t* timer) {
  * The weeks starts at Sunday which is 0 and finishes in Saturday, 6.
  *
  * This is a very know algorith, Sakamoto's algorithm. And was obtained from the Wikipedia.
- * 
+ *
  * http://en.wikipedia.org/wiki/Calculating_the_day_of_the_week
  *
  * @param year  The current year.
@@ -236,7 +236,7 @@ void dateFromDayNumber(int *date, time_t daysSinceEpoch) {
         year = year - 1;
         ddd = daysSinceEpoch - (365 * year + year / 4 - year / 100 + year / 400);
     }
-    mi = (100 * ddd + 52) / 3060; 
+    mi = (100 * ddd + 52) / 3060;
     month = (mi + 2) % 12 + 1;
     year = year + (mi + 2) / 12;
     day = ddd - (mi * 306 + 5) / 10 + 1;
