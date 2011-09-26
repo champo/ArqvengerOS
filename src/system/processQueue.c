@@ -1,17 +1,8 @@
-#include "system/scheduler/processQueue.h"
+#include "system/processQueue.h"
+#include "type.h"
 
 #define QUEUE_SIZE      256
 
-struct QueueNode{
-    struct QueueNode* next;    
-    struct Process* process;
-    int acumPriority;
-};
- 
-struct ProcessQueue {
-    struct QueueNode* first;
-    struct QueueNode* last;
-};
  
 
 struct Process* process_queue_pop(struct ProcessQueue* queue) {
