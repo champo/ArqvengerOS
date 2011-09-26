@@ -17,7 +17,6 @@ void killCmd(char* args) {
 
     pid_t pid = atoi(firstSpace);
     if (pid == 0) {
-        return;
         error();
     }
 
