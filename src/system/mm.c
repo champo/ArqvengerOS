@@ -170,7 +170,7 @@ void* allocPages(size_t pages) {
         return NULL;
     }
 
-    int start;
+    size_t start;
     for (size_t i = 0; i < ENTRIES_IN_MAP; i++) {
         if (pageMap[i]) {
 
@@ -188,10 +188,8 @@ void* allocPages(size_t pages) {
                     }
                 }
 
-                if (offset == PAGES_PER_ENTRY - 1) {
+                if (((offset + 1) % PAGES_PER_ENTRY) == 0) {
                     if (consecutive != 0 && i + 1 < ENTRIES_IN_MAP && pageMap[i+1]) {
-                        start += offset + 1;
-                        offset = -1;
                         i++;
                     } else {
                         break;
@@ -200,10 +198,16 @@ void* allocPages(size_t pages) {
             }
 
             if (consecutive == pages) {
-                start += offset - pages;
+                start += offset - pages + 1;
                 break;
             }
         }
+
+        start = 0;
+    }
+
+    if (start == 0) {
+        return NULL;
     }
 
     for (size_t i = 0; i < pages; i++) {
