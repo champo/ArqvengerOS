@@ -4,7 +4,7 @@
 #include "system/call/ioctl/keyboard.h"
 #include "system/io.h"
 #include "system/common.h"
-#include "system/process/scheduler.h"
+#include "system/scheduler/scheduler.h"
 
 #define KEYBOARD_IO_PORT 0x60
 #define KEYBOARD_CTRL_PORT 0x64

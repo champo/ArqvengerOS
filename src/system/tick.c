@@ -1,7 +1,6 @@
 #include "system/tick.h"
 #include "system/call.h"
 #include "type.h"
-#include "system/process/scheduler.h"
 
 static size_t ticksSinceStart = 0;
 

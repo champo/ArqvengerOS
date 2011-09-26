@@ -2,7 +2,7 @@
 #include "system/mm.h"
 #include "system/panic.h"
 #include "system/common.h"
-#include "system/process/scheduler.h"
+#include "system/scheduler/scheduler.h"
 #include "library/sys.h"
 
 static int pid = 0;

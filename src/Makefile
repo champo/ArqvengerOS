@@ -1,10 +1,17 @@
+ifndef SCHEDULER
+SCHEDULER=scheduler
+endif
+
 SRCDIR=../src
 OBJDIR=../bin
 TARGET=$(OBJDIR)/kernel.bin
 FOLDERS=. $(CHILD_FOLDERS)
 CHILD_FOLDERS=$(shell find . -type d -mindepth 1)
-OBJS=$(addprefix $(OBJDIR)/,$(foreach dir,$(FOLDERS),$(patsubst %.c, %.o, $(wildcard $(dir)/*.c)) $(patsubst %.asm, %-asm.o, $(wildcard $(dir)/*.asm))))
+ALL_OBJS=$(addprefix $(OBJDIR)/,$(foreach dir,$(FOLDERS),$(patsubst %.c, %.o, $(wildcard $(dir)/*.c)) $(patsubst %.asm, %-asm.o, $(wildcard $(dir)/*.asm))))
 INCLUDES=$(addprefix $(SRCDIR)/,$(foreach dir,$(FOLDERS), $(wildcard $(dir)/*.h)))
+
+OBJS=$(filter-out $(OBJDIR)/./system/scheduler/%.o, $(ALL_OBJS)) $(OBJDIR)/./system/scheduler/$(SCHEDULER).o
+
 
 include common.mk
 CFLAGS=-fno-builtin -I$(SRCDIR) -pedantic -std=c99 -fstrict-aliasing -Wall -Wextra -Wshadow -Wcast-qual \

@@ -1,6 +1,6 @@
 #include "system/call.h"
 #include "system/process/table.h"
-#include "system/process/scheduler.h"
+#include "system/scheduler/scheduler.h"
 
 pid_t _getpid(void) {
     return scheduler_current()->pid;
