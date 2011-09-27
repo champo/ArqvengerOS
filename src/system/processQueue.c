@@ -30,26 +30,6 @@ struct QueueNode* alloc_node(void) {
     return node;
 }
 
-struct Process* process_queue_pop(struct ProcessQueue* queue) {
-
-    if (queue->first == NULL) {
-        return NULL;
-    }
-
-    struct Process* process;
-    process = queue->first->process;
-
-    struct QueueNode* aux = queue->first;
-    if (queue->first == queue->last) {
-        queue->first = queue->last = NULL;
-    } else {
-        queue->first = queue->first->next;
-    }
-
-    free_node(aux);
-    return process;
-}
-
 void process_queue_push(struct ProcessQueue* queue, struct Process* process) {
 
     struct QueueNode* node = alloc_node();
@@ -65,11 +45,6 @@ void process_queue_push(struct ProcessQueue* queue, struct Process* process) {
 
     node->next = NULL;
 }
-
-struct Process* process_queue_peek(struct ProcessQueue* queue) {
-    return queue->first->process;
-}
-
 
 void process_queue_remove(struct ProcessQueue* queue, struct Process* process) {
 
@@ -92,8 +67,6 @@ void process_queue_remove(struct ProcessQueue* queue, struct Process* process) {
             }
 
             free_node(node);
-
-            node = queue->first;
             return;
         }
 

@@ -74,14 +74,14 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
 
 void exitProcess(struct Process* process) {
     process->schedule.done = 1;
-    if (process->mm.stackStart) {
-        freePages(process->mm.stackStart, process->mm.pagesInStack);
-        process->mm.stackStart = NULL;
-    }
 }
 
 void destroyProcess(struct Process* process) {
     process->pid = 0;
+    if (process->mm.stackStart) {
+        freePages(process->mm.stackStart, process->mm.pagesInStack);
+        process->mm.stackStart = NULL;
+    }
     exitProcess(process);
 }
 
