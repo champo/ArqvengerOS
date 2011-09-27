@@ -3,7 +3,7 @@
 
 #define QUEUE_SIZE      256
 
-struct QueueNode* freeNodes = NULL;
+static struct QueueNode* freeNodes = NULL;
 
 static void free_node(struct QueueNode* node);
 
@@ -60,6 +60,10 @@ void process_queue_remove(struct ProcessQueue* queue, struct Process* process) {
 
         if (node->process->pid == process->pid) {
 
+            if (queue->last == node) {
+                queue->last = prev;
+            }
+
             if (prev != NULL) {
                 prev->next = node->next;
             } else {
@@ -74,5 +78,4 @@ void process_queue_remove(struct ProcessQueue* queue, struct Process* process) {
         node = node->next;
     }
 }
-
 

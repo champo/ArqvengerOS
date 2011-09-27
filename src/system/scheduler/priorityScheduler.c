@@ -66,6 +66,9 @@ void updateAcumPriorities(void) {
 
 
 void scheduler_remove(struct Process* process) {
+    if (current != NULL && process->pid == current->process->pid) {
+        current = NULL;
+    }
     process_queue_remove(&queue, process);
 }
 
