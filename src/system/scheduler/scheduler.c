@@ -19,7 +19,6 @@ void scheduler_add(struct Process* process) {
 }
 
 void scheduler_do(void) {
-    
 
     if (current != -1) {
         __asm__ __volatile ("mov %%ebp, %0":"=r"(list[current]->mm.esp)::);
@@ -33,7 +32,7 @@ void scheduler_do(void) {
 }
 
 void choose_next(void) {
-    
+
     if (list[current]->schedule.status == StatusRunning) {
         list[current]->schedule.status = StatusReady;
     }

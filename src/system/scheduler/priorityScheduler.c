@@ -18,7 +18,7 @@ void scheduler_add(struct Process* process) {
 }
 
 void scheduler_do(void) {
-    
+
     if (current != NULL) {
         __asm__ __volatile ("mov %%ebp, %0":"=r"(current->process->mm.esp)::);
     }
@@ -31,7 +31,7 @@ void scheduler_do(void) {
 }
 
 void choose_next(void) {
-    
+
     if (current != NULL && current->process->schedule.status == StatusRunning) {
         current->process->schedule.status = StatusReady;
     }
@@ -40,25 +40,28 @@ void choose_next(void) {
     if (topPriority != NULL) {
         current = topPriority;
         topPriority->acumPriority = 1;
-       
-        current->process->schedule.status = StatusRunning;    
+
+        current->process->schedule.status = StatusRunning;
     }
 }
 
 void updateAcumPriorities(void) {
-    topPriority = queue.first; 
+
     struct QueueNode* node = queue.first;
+    topPriority = queue.first;
+
     while (node != NULL) {
-        if (node->process->schedule.status != StatusBlocked) { 
+
+        if (node->process->schedule.status != StatusBlocked) {
+
             node->acumPriority += (node->process->schedule.priority + 1);
             if (node->acumPriority > topPriority->acumPriority) {
                 topPriority = node;
             }
         }
-        node = node->next;
 
+        node = node->next;
     }
-        writeScreen("   ",3);
 }
 
 
@@ -67,11 +70,11 @@ void scheduler_remove(struct Process* process) {
 }
 
 
-struct Process* scheduler_current(void) {    
+struct Process* scheduler_current(void) {
     if (current == NULL) {
         return NULL;
     }
 
     return current->process;
-
 }
+
