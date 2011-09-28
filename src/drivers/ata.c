@@ -122,6 +122,7 @@ int ata_write(unsigned long long sector, int count, const void* buffer) {
 }
 
 void set_ports(unsigned long long sector, int count, unsigned char command) {
+    outB(DRIVE_PORT, 0xE0 | ((sector >> 24) & 0x0F));
     outB(SECTOR_COUNT_PORT, (unsigned char) count);
     outB(LBA_LOW_PORT, (unsigned char) sector);
     outB(LBA_MID_PORT, (unsigned char) (sector >> 8));
