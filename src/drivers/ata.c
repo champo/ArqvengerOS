@@ -36,7 +36,16 @@ struct DriveInfo {
 
 #define MASTER 0xA0
 
+#define READ_COMMAND 0x20
+#define WRITE_COMMAND 0x30
+#define CACHE_FLUSH 0xE7
+
+#define SIZE_WORD 256
+
 unsigned long long sectors = 0L;
+
+static void set_ports(unsigned long long sector, int count, unsigned char command);
+static int poll();
 
 void ata_init(struct multiboot_info* info) {
 
@@ -55,8 +64,86 @@ void ata_init(struct multiboot_info* info) {
 }
 
 int ata_read(unsigned long long sector, int count, void* buffer) {
+    int i,j;
+    unsigned int edi;
+
+    edi = (unsigned int) &buffer; 
+
+    if ( sector > sectors ) {
+        return -1;
+    }
+    
+    set_ports(sector, count, READ_COMMAND);    
+    for ( i = 0; i < count; i++) {
+        if ( poll() == -1 ) {
+            return -1;
+        }
+
+        __asm__("mov %ax, %ds");
+        __asm__("rep insw"::"c"(SIZE_WORD), "d"(DATA_PORT), "D"(edi));
+        edi += (SIZE_WORD * 2);
+
+        //400ns delay
+        for ( j = 0; j< 4; j++) {
+            inB(STATUS_PORT);
+        }
+    }
+    
+    return 0;
+
 }
 
 int ata_write(unsigned long long sector, int count, const void* buffer) {
+    int i;
+    unsigned int edi;
+
+    edi = (unsigned int) &buffer;
+
+    if ( sector > sectors ) {
+        return -1;
+    }
+    
+    set_ports(sector, count, WRITE_COMMAND); 
+    
+    for ( i = 0; i < count; i++) {
+        poll();
+        
+        __asm__("mov %ax, %ds");
+        __asm__("rep outsw"::"c"(SIZE_WORD), "d"(DATA_PORT), "S"(edi));
+        edi += (SIZE_WORD * 2);
+        //TODO Delay? Replace rep outsw with several outsw?
+
+    }
+    
+    outB(COMMAND_PORT, CACHE_FLUSH);
+    poll();
+
+    return 0;
 }
 
+void set_ports(unsigned long long sector, int count, unsigned char command) {
+    outB(SECTOR_COUNT_PORT, (unsigned char) count);
+    outB(LBA_LOW_PORT, (unsigned char) sector);
+    outB(LBA_MID_PORT, (unsigned char) (sector >> 8));
+    outB(LBA_HIGH_PORT, (unsigned char) (sector >> 16));
+    outB(COMMAND_PORT, command);
+}
+
+int poll() {
+    unsigned char status;
+    inB(CONTROL_REGISTER, status);
+
+    while (!BSY(status)) {
+        if (ERR(status) || DF(status)) {
+            return -1;
+        }
+        inB(CONTROL_REGISTER, status);
+    }
+    while (!DRQ(status)){
+        if (ERR(status) || DF(status)){
+            return -1;
+        }
+        inB(CONTROL_REGISTER, status);
+    }   
+    return 0;
+}
