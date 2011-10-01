@@ -1,5 +1,9 @@
 #include "drivers/ata.h"
 #include "type.h"
+#include "library/stdio.h"
+#include "library/stdlib.h"
+#include "library/string.h"
+#include "system/mm.h"
 
 struct DriveInfo {
     size_t len;
@@ -46,9 +50,11 @@ unsigned long long sectors = 0L;
 
 static void set_ports(unsigned long long sector, int count, unsigned char command);
 static int poll();
+static int checkBSY();
 
 void ata_init(struct multiboot_info* info) {
 
+    
     if ((info->flags & (0x1 << 7)) && info->drives_length) {
 
         struct DriveInfo* drive = (struct DriveInfo*) info->drives_addr;
@@ -65,22 +71,21 @@ void ata_init(struct multiboot_info* info) {
 
 int ata_read(unsigned long long sector, int count, void* buffer) {
     int i,j;
-    unsigned int edi;
 
-    edi = (unsigned int) &buffer; 
+    unsigned int edi = (unsigned int) buffer;    
 
-    if ( sector > sectors ) {
+    if ( sector + count > sectors ) {
         return -1;
     }
     
-    set_ports(sector, count, READ_COMMAND);    
     for ( i = 0; i < count; i++) {
+        set_ports(sector + i, 1, READ_COMMAND);
+        
         if ( poll() == -1 ) {
             return -1;
         }
 
-        __asm__("mov %ax, %ds");
-        __asm__("rep insw"::"c"(SIZE_WORD), "d"(DATA_PORT), "D"(edi));
+        __asm__("rep insw"::"c"(SIZE_WORD), "d"(DATA_PORT), "D"((unsigned int) edi));
         edi += (SIZE_WORD * 2);
 
         //400ns delay
@@ -95,29 +100,23 @@ int ata_read(unsigned long long sector, int count, void* buffer) {
 
 int ata_write(unsigned long long sector, int count, const void* buffer) {
     int i;
-    unsigned int edi;
 
-    edi = (unsigned int) &buffer;
+    unsigned int edi = (unsigned int) buffer;
 
-    if ( sector > sectors ) {
+    if ( sector + count > sectors ) {
         return -1;
     }
     
-    set_ports(sector, count, WRITE_COMMAND); 
-    
     for ( i = 0; i < count; i++) {
+        set_ports(sector + i, 1, WRITE_COMMAND);
         poll();
-        
-        __asm__("mov %ax, %ds");
-        __asm__("rep outsw"::"c"(SIZE_WORD), "d"(DATA_PORT), "S"(edi));
+        __asm__("rep outsw"::"c"(SIZE_WORD), "d"(DATA_PORT), "S"((unsigned int) edi));
         edi += (SIZE_WORD * 2);
-        //TODO Delay? Replace rep outsw with several outsw?
-
     }
-    
-    outB(COMMAND_PORT, CACHE_FLUSH);
-    poll();
 
+    outB(COMMAND_PORT, CACHE_FLUSH);
+    checkBSY();
+    
     return 0;
 }
 
@@ -132,19 +131,33 @@ void set_ports(unsigned long long sector, int count, unsigned char command) {
 
 int poll() {
     unsigned char status;
-    inB(CONTROL_REGISTER, status);
 
-    while (!BSY(status)) {
+    if (checkBSY() != 0) {
+        return -1;
+    }
+    
+    status = inB(STATUS_PORT);
+
+    while (!DRQ(status)) {
         if (ERR(status) || DF(status)) {
             return -1;
         }
-        inB(CONTROL_REGISTER, status);
-    }
-    while (!DRQ(status)){
-        if (ERR(status) || DF(status)){
+        status = inB(STATUS_PORT);
+    }   
+
+    return 0;
+}
+
+int checkBSY() {
+    
+    unsigned char status = inB(STATUS_PORT);
+    
+    while (BSY(status)) {
+        if (ERR(status) || DF(status)) {
             return -1;
         }
-        inB(CONTROL_REGISTER, status);
-    }   
+        status = inB(STATUS_PORT);
+    }
+
     return 0;
 }

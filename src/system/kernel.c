@@ -1,6 +1,7 @@
 #include "system/interrupt.h"
 #include "shell/shell.h"
 #include "library/stdio.h"
+#include "library/string.h"
 #include "drivers/video.h"
 #include "drivers/keyboard.h"
 #include "system/mm.h"
@@ -42,7 +43,7 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     initKeyboard();
     initMemoryMap(info);
     ata_init(info);
-
+    
     disableInterrupts();
     struct Process* idleProcess = process_table_new(idle, NULL, NULL);
     struct Process* shellProcess = process_table_new(shell, NULL, idleProcess);
