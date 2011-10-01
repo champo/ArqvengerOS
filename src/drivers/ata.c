@@ -49,8 +49,8 @@ struct DriveInfo {
 unsigned long long sectors = 0L;
 
 static void set_ports(unsigned long long sector, int count, unsigned char command);
-static int poll();
-static int checkBSY();
+static int poll(void);
+static int checkBSY(void);
 
 void ata_init(struct multiboot_info* info) {
 
@@ -129,7 +129,7 @@ void set_ports(unsigned long long sector, int count, unsigned char command) {
     outB(COMMAND_PORT, command);
 }
 
-int poll() {
+int poll(void) {
     unsigned char status;
 
     if (checkBSY() != 0) {
@@ -148,7 +148,7 @@ int poll() {
     return 0;
 }
 
-int checkBSY() {
+int checkBSY(void) {
     
     unsigned char status = inB(STATUS_PORT);
     
