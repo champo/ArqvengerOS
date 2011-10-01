@@ -11,7 +11,7 @@
  * @param argv A string containg everything that came after the command.
  */
 void echo(char* argv) {
-
+    
     char* cmdEnd = strchr(argv, ' ');
     if (cmdEnd != NULL) {
         cmdEnd++;
