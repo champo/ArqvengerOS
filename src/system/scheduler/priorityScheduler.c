@@ -1,62 +1,39 @@
-#include "system/scheduler/scheduler.h"
+#include "system/scheduler/choose_next.h"
+#include "system/scheduler.h"
 #include "system/processQueue.h"
 #include "type.h"
 
-
-static struct ProcessQueue queue = {.first = NULL, .last = NULL};
-
-static struct QueueNode* current = NULL;
-
-static struct QueueNode* topPriority = NULL;
-
-static void choose_next(void);
+static struct QueueNode* top_priority = NULL;
 
 static void updateAcumPriorities(void);
 
-void scheduler_add(struct Process* process) {
-    process_queue_push(&queue, process);
-}
-
-void scheduler_do(void) {
-
-    if (current != NULL) {
-        __asm__ __volatile ("mov %%ebp, %0":"=r"(current->process->mm.esp)::);
-    }
-
-    choose_next();
-
-    if (current != NULL) {
-        __asm__ __volatile__ ("mov %0, %%ebp"::"r"(current->process->mm.esp));
-    }
-}
-
 void choose_next(void) {
 
-    if (current != NULL && current->process->schedule.status == StatusRunning) {
-        current->process->schedule.status = StatusReady;
+    if (scheduler_curr != NULL && scheduler_curr->schedule.status == StatusRunning) {
+        scheduler_curr->schedule.status = StatusReady;
     }
 
     updateAcumPriorities();
-    if (topPriority != NULL) {
-        current = topPriority;
-        topPriority->acumPriority = 1;
+    if (top_priority != NULL) {
+        scheduler_curr = top_priority->process;
+        top_priority->acumPriority = 1;
 
-        current->process->schedule.status = StatusRunning;
+        scheduler_curr->schedule.status = StatusRunning;
     }
 }
 
 void updateAcumPriorities(void) {
 
-    struct QueueNode* node = queue.first;
-    topPriority = queue.first;
+    struct QueueNode* node = scheduler_queue.first;
+    top_priority = scheduler_queue.first;
 
     while (node != NULL) {
 
         if (node->process->schedule.status != StatusBlocked) {
 
             node->acumPriority += (node->process->schedule.priority + 1);
-            if (node->acumPriority > topPriority->acumPriority) {
-                topPriority = node;
+            if (node->acumPriority > top_priority->acumPriority) {
+                top_priority = node;
             }
         }
 
@@ -64,20 +41,4 @@ void updateAcumPriorities(void) {
     }
 }
 
-
-void scheduler_remove(struct Process* process) {
-    if (current != NULL && process->pid == current->process->pid) {
-        current = NULL;
-    }
-    process_queue_remove(&queue, process);
-}
-
-
-struct Process* scheduler_current(void) {
-    if (current == NULL) {
-        return NULL;
-    }
-
-    return current->process;
-}
 

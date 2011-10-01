@@ -1,5 +1,5 @@
 #include "system/process/table.h"
-#include "system/scheduler/scheduler.h"
+#include "system/scheduler.h"
 
 #define PTABLE_SIZE 64
 

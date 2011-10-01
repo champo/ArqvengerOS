@@ -10,5 +10,6 @@
 #include "shell/fortune/fortune.h"
 #include "shell/date/date.h"
 #include "shell/kill/kill.h"
+#include "shell/top/top.h"
 
 #endif

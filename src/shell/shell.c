@@ -14,7 +14,7 @@
 
 #define NUM_SHELLS 4
 
-#define NUM_COMMANDS 9
+#define NUM_COMMANDS 10
 
 static const Command* nextCommand(const char* prompt);
 
@@ -43,7 +43,8 @@ const Command commands[] = {
     { &getCPUSpeed, "getCPUSpeed", "Get the CPU speed", &manGetCPUSpeed},
     { &fortune, "fortune", "Receive awesome knowledge.", &manFortune},
     { &date, "date", "Display current date.", &manDate},
-    { &killCmd, "kill", "Kill a running process.", &manKill}
+    { &killCmd, "kill", "Kill a running process.", &manKill},
+    { &top, "top", "Display information about running processes.", &manTop}
 };
 
 typedef struct {

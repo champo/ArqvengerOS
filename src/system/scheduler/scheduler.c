@@ -1,68 +1,27 @@
-#include "system/scheduler/scheduler.h"
+#include "system/scheduler/choose_next.h"
+#include "system/scheduler.h"
+#include "system/processQueue.h"
 #include "type.h"
 
-static struct Process* list[20] = {0};
-
-static int current = -1;
-
-static int turns;
-
-static void choose_next(void);
-
-void scheduler_add(struct Process* process) {
-    for (size_t i = 0; i < 20; i++) {
-        if (list[i] == NULL) {
-            list[i] = process;
-            break;
-        }
-    }
-}
-
-void scheduler_do(void) {
-
-    if (current != -1) {
-        __asm__ __volatile ("mov %%ebp, %0":"=r"(list[current]->mm.esp)::);
-    }
-
-    choose_next();
-
-    if (current != -1) {
-        __asm__ __volatile__ ("mov %0, %%ebp"::"r"(list[current]->mm.esp));
-    }
-}
 
 void choose_next(void) {
 
-    if (list[current]->schedule.status == StatusRunning) {
-        list[current]->schedule.status = StatusReady;
+    if (scheduler_curr != NULL && scheduler_curr->schedule.status == StatusRunning) {
+        scheduler_curr->schedule.status = StatusReady;
     }
+    struct Process* process;
 
-    turns = 0;
     do {
-        current = (current + 1) % 20;
-        if (++turns == 21) {
-            current = -1;
+        process = process_queue_pop(&scheduler_queue);        
+        if (process == NULL) {
+            scheduler_curr = NULL;
             return;
         }
-    } while (list[current] == NULL || list[current]->schedule.status == StatusBlocked);
+        process_queue_push(&scheduler_queue, process);
+    } while (process->schedule.status == StatusBlocked);
 
-    list[current]->schedule.status = StatusRunning;
-}
+    scheduler_curr = process;
 
-void scheduler_remove(struct Process* process) {
-    for (size_t i = 0; i < 20; i++) {
-        if (list[i] == process) {
-            list[i] = NULL;
-            return;
-        }
-    }
-}
-
-struct Process* scheduler_current(void) {
-    if (current == -1) {
-        return NULL;
-    }
-
-    return list[current];
+    scheduler_curr->schedule.status = StatusRunning;
 }
 

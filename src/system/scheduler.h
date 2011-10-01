@@ -1,7 +1,12 @@
-#ifndef __SYSTEM_PROCESS_SCHEDULER__
-#define __SYSTEM_PROCESS_SCHEDULER__
+#ifndef __SYSTEM_SCHEDULER__
+#define __SYSTEM_SCHEDULER__
 
+#include "system/processQueue.h"
 #include "system/process/process.h"
+
+extern struct ProcessQueue scheduler_queue;
+
+extern struct Process* scheduler_curr;
 
 void scheduler_add(struct Process* process);
 
@@ -12,3 +17,4 @@ void scheduler_remove(struct Process* process);
 struct Process* scheduler_current(void);
 
 #endif
+

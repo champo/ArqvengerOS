@@ -154,6 +154,9 @@ void int80(registers* regs) {
         case _SYS_KILL:
             _kill((pid_t) regs->ebx);
             break;
+        case _SYS_PINFO:
+            regs->eax = _pinfo(regs->ebx, (size_t)regs->ecx);
+            break;
     }
 }
 
