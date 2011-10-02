@@ -3,7 +3,6 @@
 #include "library/stdio.h"
 #include "library/string.h"
 #include "drivers/tty/tty.h"
-#include "drivers/keyboard.h"
 #include "system/mm.h"
 #include "system/common.h"
 #include "system/gdt.h"

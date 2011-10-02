@@ -3,12 +3,10 @@
 
 #include "type.h"
 
-void readScanCode(void);
+void keyboard_read(void);
 
-size_t readKeyboard(void* buffer, size_t count);
+void keyboard_leds(int caps, int num, int scroll);
 
-int ioctlKeyboard(int cmd, void* argp);
-
-void initKeyboard(void);
+unsigned char keyboard_get_code(void);
 
 #endif

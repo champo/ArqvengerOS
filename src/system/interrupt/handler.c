@@ -1,4 +1,5 @@
 #include "drivers/keyboard.h"
+#include "drivers/tty/tty.h"
 #include "system/tick.h"
 #include "system/call.h"
 #include "system/io.h"
@@ -57,7 +58,8 @@ void int20(registers* regs) {
  *  @param regs Pointer to struct containing micro's registers.
  */
 void int21(registers* regs ) {
-    readScanCode();
+    keyboard_read();
+    process_scancode();
 }
 
 /**
