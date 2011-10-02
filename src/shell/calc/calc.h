@@ -1,7 +1,7 @@
 #ifndef _shell_calc_header_
 #define _shell_calc_header_
 
-void calc(void);
+void calc(char* unused);
 
 void manCalc(void);
 

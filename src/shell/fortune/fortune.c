@@ -8,11 +8,11 @@
 /**
  * Executes the fortune command meaning the user will receive an awesome phrase.
  */
-void fortune(void) {
-    char *phrases[] = { "The Arqvengers manifest: \n\nYet to be done..." , 
+void fortune(char* unused) {
+    char *phrases[] = { "The Arqvengers manifest: \n\nYet to be done..." ,
                         "This was a triumph. \nI'm making a note here: Huge Success.\nIt's hard to overstate my satisfaction." ,
-                        "How to survive a giant assigment in college: \n\nJust put Queen's Under pressure in an infinite loop." ,                  
-                        "Never get a roommate called Tebex. They never clean." , 
+                        "How to survive a giant assigment in college: \n\nJust put Queen's Under pressure in an infinite loop." ,
+                        "Never get a roommate called Tebex. They never clean." ,
                         "ALVANATOR NEEDS FOOD." ,
                         "Never get a roommate called Alvanator. They just never get any showers." ,
                         "Sale Thor?" ,
