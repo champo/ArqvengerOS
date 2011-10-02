@@ -1,6 +1,6 @@
 #include "drivers/keyboard.h"
 #include "system/reboot.h"
-#include "drivers/video.h"
+#include "drivers/tty/tty.h"
 #include "system/call/ioctl/keyboard.h"
 #include "system/io.h"
 #include "system/common.h"
