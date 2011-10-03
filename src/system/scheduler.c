@@ -59,12 +59,13 @@ void update_cycles() {
     int low,high;
     union longlong a;
     unsigned long long newCycles;
+    
     __asm__ __volatile__ ("rdtsc; mov %%eax, %0; mov %%edx, %1": "=a"(low), "=d"(high)); 
-    low = 3;
-    high = 4;
+    
     a.tsc.low = low;
     a.tsc.high = high;
     newCycles = a.val;
+    
     scheduler_curr->cycles += (newCycles - cycles);
     cycles = newCycles;
 }
