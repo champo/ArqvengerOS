@@ -30,3 +30,6 @@ void kill(pid_t pid) {
     system_call(_SYS_KILL, pid, 0, 0);
 }
 
+int pinfo(struct ProcessInfo* data, size_t size) {
+    return system_call(_SYS_PINFO, data, 20,0);
+}
