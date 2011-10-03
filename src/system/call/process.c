@@ -11,7 +11,7 @@ pid_t _getppid(void) {
 }
 
 pid_t _run(EntryPoint entryPoint, char* args) {
-    struct Process* p = process_table_new(entryPoint, args, scheduler_current());
+    struct Process* p = process_table_new(entryPoint, args, scheduler_current(), 0, p->terminal, 1);
     return p->pid;
 }
 

@@ -11,7 +11,7 @@ static void process_table_remove(struct Process* process);
 
 static struct Process* waitable_child(struct Process* process);
 
-struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Process* parent) {
+struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Process* parent, int kernel, int terminal, int active) {
 
     size_t i;
     for (i = 0; i < PTABLE_SIZE; i++) {
@@ -33,7 +33,7 @@ struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Proc
     }
 
     processTable[i] = p;
-    createProcess(p, entryPoint, parent, args);
+    createProcess(p, entryPoint, parent, args, terminal, active);
     scheduler_add(p);
 
     return p;

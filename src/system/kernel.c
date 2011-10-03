@@ -36,16 +36,12 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     stdout = &files[1];
     stderr = &files[2];
 
-    initScreen();
-    writeScreen("\033[1;1H\033[2J", 10);
-
-    initKeyboard();
     initMemoryMap(info);
     ata_init(info);
 
     disableInterrupts();
-    struct Process* idleProcess = process_table_new(idle, NULL, NULL);
-    struct Process* shellProcess = process_table_new(shell, NULL, idleProcess);
+    struct Process* idleProcess = process_table_new(idle, NULL, NULL, 1, NO_TERMINAL, 0);
+    struct Process* shellProcess = process_table_new(tty_run, NULL, idleProcess, 1, NO_TERMINAL, 0);
     enableInterrupts();
 
     while (1) {}

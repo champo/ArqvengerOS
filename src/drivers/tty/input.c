@@ -301,7 +301,7 @@ int ioctlKeyboard(int cmd, void* argp) {
     return res;
 }
 
-void initKeyboard(void) {
+void tty_keyboard_init(void) {
     set_leds();
 }
 

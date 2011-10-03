@@ -3,6 +3,8 @@
 
 #include "system/mm.h"
 
+#define NO_TERMINAL -1
+
 typedef void (*EntryPoint)(char*);
 
 struct ProcessMemory {
@@ -29,8 +31,12 @@ struct Process {
 
     int ppid;
     struct Process* parent;
+
     EntryPoint entryPoint;
     char args[512];
+
+    int terminal;
+    int active;
 
     struct Process* firstChild;
 
@@ -41,7 +47,7 @@ struct Process {
     struct ProcessMemory mm;
 };
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args);
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal, int active);
 
 void destroyProcess(struct Process* process);
 

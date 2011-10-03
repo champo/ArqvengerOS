@@ -21,7 +21,7 @@
 #define COLOR_BRIGHT_MAGENTA 0xD
 #define COLOR_BRIGHT_WHITE 0xF
 
-#define NUM_SCREENS 4
+#define NUM_TERMINALS 4
 
 static void handleControlSequence(char cur);
 
@@ -59,16 +59,15 @@ struct ScreenStatus {
     char videoBuffer[2 * LINE_WIDTH * (TOTAL_ROWS + 1)];
 };
 
-static struct ScreenStatus screens[NUM_SCREENS];
+static struct ScreenStatus screens[NUM_TERMINALS];
 static struct ScreenStatus* status;
 
 /**
  * Initialize the screen and all needed status for tty emulation.
  */
-void initScreen(void) {
+void tty_screen_init(void) {
 
-    int i;
-    for (i = NUM_SCREENS - 1; i >= 0; i--) {
+    for (int i = NUM_TERMINALS - 1; i >= 0; i--) {
         status = &screens[i];
 
         status->cursorPosition = 0;
@@ -89,7 +88,7 @@ void initScreen(void) {
  * @param screen the number of the screen to set.
  */
 void changeScreen(int screen) {
-    status = &screens[screen % NUM_SCREENS];
+    status = &screens[screen % NUM_TERMINALS];
 
     video_flip_buffer(status->videoBuffer);
     video_update_cursor(status->cursorPosition);
