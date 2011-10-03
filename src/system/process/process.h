@@ -23,6 +23,7 @@ struct ProcessSchedule {
     enum ProcessStatus status;
     unsigned int priority:2;
     unsigned int inWait:1;
+    unsigned int ioWait:1;
     unsigned int done:1;
 };
 

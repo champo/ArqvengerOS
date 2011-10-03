@@ -55,6 +55,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->schedule.priority = 0;
     process->schedule.status = StatusReady;
     process->schedule.inWait = 0;
+    process->schedule.ioWait = 0;
     process->schedule.done = 0;
 
     process->mm.pagesInStack = 256;

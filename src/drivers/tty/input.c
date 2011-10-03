@@ -1,4 +1,5 @@
 #include "drivers/tty/tty.h"
+#include "drivers/tty/status.h"
 #include "drivers/keyboard.h"
 #include "system/reboot.h"
 #include "system/call/ioctl/keyboard.h"
@@ -49,6 +50,7 @@ static char shiftCodeTable[] = {
         0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, 0,
         'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, 0, 0, ' '
 };
+
 static char altCodeTable[] = {
         0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
         '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -64,8 +66,6 @@ static struct ModifierStatus {
     int scroll;
     int num;
 } kbStatus = {0, 0, 0, 0, 0, 0};
-
-static termios status = { 1, 1 };
 
 static int escaped = 0, bufferEnd = 0;
 
@@ -86,7 +86,7 @@ void addInput(const char* str, size_t len) {
     size_t i;
     for (i = 0; i < len && bufferEnd < BUFFER_SIZE; i++) {
 
-        if (status.canon && str[i] == '\b') {
+        if (tty_current()->termios.canon && str[i] == '\b') {
             if (bufferEnd > 0) {
                 bufferEnd--;
             }
@@ -95,16 +95,16 @@ void addInput(const char* str, size_t len) {
         }
     }
 
-    if (status.echo) {
+    if (tty_current()->termios.echo) {
 
         if (str[0] == ESCAPE_CHAR) {
             // A escape char is not printable, so we transform into something that is.
-            tty_write(0, "^[", 2);
+            tty_write("^[", 2);
             if (i > 1) {
-                tty_write(0, str + 1, i - 1);
+                tty_write(str + 1, i - 1);
             }
         } else {
-            tty_write(0, str, i);
+            tty_write(str, i);
         }
     }
 }
@@ -203,7 +203,7 @@ void process_scancode(void) {
                 break;
             default:
                 if (F1_CODE <= makeCode && makeCode <= F4_CODE) {
-                    tty_change(makeCode - F1_CODE + 'A');
+                    tty_change(makeCode - F1_CODE);
                 }
                 break;
         }
@@ -229,10 +229,15 @@ void process_scancode(void) {
  */
 size_t readKeyboard(void* buffer, size_t count) {
 
+    struct Process* caller = scheduler_current();
+    if (caller->terminal == NO_TERMINAL) {
+        return 0;
+    }
+
     char* buf = (char*) buffer;
     int i, c = (int) count;
 
-    if (status.canon) {
+    if (tty_current()->termios.canon) {
 
         // Make sure until we read a whole line, and then only take what we need.
         for (i = 0; i < bufferEnd && inputBuffer[i] != '\n'; i++);
@@ -285,11 +290,11 @@ int ioctlKeyboard(int cmd, void* argp) {
     switch (cmd) {
         case TCGETS:
             param = (termios*) argp;
-            *param = status;
+            *param = tty_current()->termios;
             break;
         case TCSETS:
             param = (termios*) argp;
-            status = *param;
+            tty_current()->termios = *param;
             break;
         default:
             res = -1;

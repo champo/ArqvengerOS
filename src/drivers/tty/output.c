@@ -1,12 +1,12 @@
 #include "type.h"
 #include "drivers/video.h"
 #include "drivers/tty/tty.h"
+#include "drivers/tty/status.h"
 #include "drivers/videoControl.h"
 
 /* Video attribute. White letters on black background. */
 #define WHITE_TXT 0x07
 
-#define CONTROL_BUFFER_LEN 40
 #define readControlBuffer(def) parseControlBuffer(&mod1, &mod2, def)
 #define endControlSequence() status->escaped = status->csi = status->controlBufferPos = 0
 
@@ -20,8 +20,6 @@
 #define COLOR_BRIGHT_RED 0xC
 #define COLOR_BRIGHT_MAGENTA 0xD
 #define COLOR_BRIGHT_WHITE 0xF
-
-#define NUM_TERMINALS 4
 
 static void handleControlSequence(char cur);
 
@@ -47,17 +45,12 @@ static void setBlink(int blink);
 
 static void changeColor(int mod1);
 
-struct ScreenStatus {
-    int cursorPosition;
-    int escaped;
-    int csi;
-    char attribute;
-    char controlBuffer[CONTROL_BUFFER_LEN];
-    size_t controlBufferPos;
-    char videoBuffer[2 * LINE_WIDTH * (TOTAL_ROWS + 1)];
-};
+static void change_character(int pos, char value, char attribute);
 
-static struct ScreenStatus screens[NUM_TERMINALS];
+static void flip_buffer(const char* buffer);
+
+static void update_cursor(void);
+
 static struct ScreenStatus* status;
 
 /**
@@ -66,7 +59,7 @@ static struct ScreenStatus* status;
 void tty_screen_init(void) {
 
     for (int i = NUM_TERMINALS - 1; i >= 0; i--) {
-        status = &screens[i];
+        status = &tty_terminal(i)->screen;
 
         status->cursorPosition = 0;
         status->escaped = 0;
@@ -80,13 +73,34 @@ void tty_screen_init(void) {
     }
 }
 
+void change_character(int pos, char value, char attribute) {
+
+    if (tty_current()->active) {
+        video_set_char(pos, value, attribute);
+    }
+}
+
+void flip_buffer(const char* buffer) {
+
+    if (tty_current()->active) {
+        video_flip_buffer(buffer);
+    }
+}
+
+void update_cursor(void) {
+
+    if (tty_current()->active) {
+        video_update_cursor(status->cursorPosition);
+    }
+}
+
 /**
  * Change the active screen. This refreshes the screen.
  *
  * @param screen the number of the screen to set.
  */
-void tty_screen_change(int screen) {
-    status = &screens[screen % NUM_TERMINALS];
+void tty_screen_change(void) {
+    status = &tty_active()->screen;
 
     video_flip_buffer(status->videoBuffer);
     video_update_cursor(status->cursorPosition);
@@ -151,7 +165,7 @@ void setCharacter(char c) {
     status->videoBuffer[2*status->cursorPosition] = c;
     status->videoBuffer[2*status->cursorPosition + 1] = status->attribute;
 
-    video_set_char(status->cursorPosition, c, status->attribute);
+    change_character(status->cursorPosition, c, status->attribute);
 
     status->cursorPosition++;
 }
@@ -181,8 +195,8 @@ void scrollLine(int delta) {
         status->videoBuffer[2 * i + 1] = status->attribute;
     }
 
-    // Re-flect the changes to screen
-    video_flip_buffer(status->videoBuffer);
+    // Re-flect the changes to screen, if we're active
+    flip_buffer(status->videoBuffer);
 }
 
 /**
@@ -258,7 +272,7 @@ void clearScreen(int type) {
 void setBlank(int start, int end) {
 
     while (start < end) {
-        video_set_char(start, ' ', status->attribute);
+        change_character(start, ' ', status->attribute);
 
         status->videoBuffer[2*start] = ' ';
         status->videoBuffer[2*start + 1] = status->attribute;
@@ -319,9 +333,9 @@ void parseControlBuffer(int* a, int* b, int def) {
  *
  * @return The number of bytes written to screen.
  */
-size_t tty_write(int terminal, const void* buf, size_t length) {
+size_t tty_write(const void* buf, size_t length) {
 
-    status = &screens[terminal];
+    status = &tty_current()->screen;
 
     const char* str = (const char*) buf;
 
@@ -401,7 +415,7 @@ size_t tty_write(int terminal, const void* buf, size_t length) {
         }
     }
 
-    video_update_cursor(status->cursorPosition);
+    update_cursor();
 
     return length;
 }

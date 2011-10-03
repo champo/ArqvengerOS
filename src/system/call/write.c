@@ -3,5 +3,5 @@
 #include "system/scheduler.h"
 
 size_t _write(int fd, const void* buf, size_t length) {
-    return tty_write(scheduler_current()->terminal, buf, length);
+    return tty_write(buf, length);
 }
