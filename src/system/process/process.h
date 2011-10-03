@@ -2,6 +2,7 @@
 #define __SYSTEM_PROCESS_PROCESS__
 
 #include "system/mm.h"
+#include "type.h"
 
 typedef void (*EntryPoint)(char*);
 
@@ -39,6 +40,9 @@ struct Process {
 
     struct ProcessSchedule schedule;
     struct ProcessMemory mm;
+
+    unsigned long long cycles; 
+    time_t timeStart;
 };
 
 void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args);

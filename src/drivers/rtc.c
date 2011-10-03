@@ -1,6 +1,7 @@
 #include "drivers/rtc.h"
 #include "system/io.h"
 #include "library/stdio.h"
+#include "library/stdlib.h"
 
 #define RTCADDRESS          0x70
 #define RTCDATA             0x71
@@ -26,7 +27,7 @@ typedef struct {
 
 
 static int readSeconds(void);
-static int readRinutes(void);
+static int readMinutes(void);
 static int readHours(void);
 static int readDay(void);
 static int readMonth(void);
@@ -40,7 +41,7 @@ static void readRTCRegisters(RTCRegisters *regs);
  * It serves as a link between kernel and user space, enabling a user to interact
  * with the information offered by the RTC.
  *
- * @param tp Pointer to a unsigned int where, if it is not NULL the result
+ * @param tp Pointer to an unsigned int where, if it is not NULL the result
  * 	     will be stored.
  *
  * @return The amount of second since Epoch.
@@ -73,7 +74,11 @@ time_t getTime(time_t *tp) {
         }
     }
     daysSinceEpoch += regs.day;
-    return (daysSinceEpoch * SECONDSINDAY) + (regs.hours * 3600) + (regs.minutes * 60) + regs.seconds ;
+    time_t retval = (daysSinceEpoch * SECONDSINDAY) + (regs.hours * 3600) + (regs.minutes * 60) + regs.seconds;
+    if ( tp != NULL) {
+        *tp = retval;
+    }
+    return retval;
 }
 
 /**

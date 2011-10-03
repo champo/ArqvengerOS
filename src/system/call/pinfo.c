@@ -1,7 +1,8 @@
-#include "system/process/pinfo.h"
 #include "system/process/table.h"
 #include "system/mm.h"
 #include "system/call.h"
+#include "system/scheduler.h"  
+#include "library/div64.h"
 
 int _pinfo(struct ProcessInfo* data, size_t size) {
 
@@ -14,7 +15,9 @@ int _pinfo(struct ProcessInfo* data, size_t size) {
             data[pcount].ppid = process->ppid;
             data[pcount].priority = process->schedule.priority;
             data[pcount].state = !process->schedule.done;
-            //data[pcount].cputime = process->cputime;
+            
+            data[pcount].cputime = uint64_div64 ( process->cycles*100, scheduler_get_cycles()); 
+            data[pcount].timeStart = process->timeStart;
             pcount++;
         }
     }

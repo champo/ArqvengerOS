@@ -14,7 +14,7 @@
  * @param tp Pointer to a unsigned int where, if it is not NULL the result
  * 	     will be stored.
  *
- * @return The amount of second since Epoch.
+ * @return The amount of seconds since Epoch.
  */
 time_t _time(time_t *tp) {
     return getTime(tp);

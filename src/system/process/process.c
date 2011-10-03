@@ -3,6 +3,7 @@
 #include "system/panic.h"
 #include "system/common.h"
 #include "system/scheduler.h"
+#include "system/call.h"
 #include "library/sys.h"
 
 static int pid = 0;
@@ -22,6 +23,9 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->parent = parent;
     process->entryPoint = entryPoint;
     process->firstChild = NULL;
+
+    process->cycles = 0;
+    process->timeStart = _time(NULL);
 
     process->prev = NULL;
     if (parent == NULL) {

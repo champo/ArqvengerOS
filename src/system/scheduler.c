@@ -7,6 +7,15 @@ struct ProcessQueue scheduler_queue = {.first = NULL, .last = NULL};
 
 struct Process* scheduler_curr = NULL;
 
+static union longlong { 
+    struct timeStampCounte { int low; int high; } tsc; 
+    unsigned long long val; 
+};
+
+static unsigned long long cycles = 0;
+
+static void update_cycles();
+
 void scheduler_add(struct Process* process) {
     process_queue_push(&scheduler_queue, process);
 }
@@ -15,6 +24,7 @@ void scheduler_do(void) {
 
     if (scheduler_curr != NULL) {
         __asm__ __volatile ("mov %%ebp, %0":"=r"(scheduler_curr->mm.esp)::);
+        update_cycles(); 
     }
 
     choose_next();
@@ -39,5 +49,25 @@ struct Process* scheduler_current(void) {
 
     return scheduler_curr;
 }
+
+unsigned long long scheduler_get_cycles(void) {
+    return cycles;
+}
+
+
+void update_cycles() {
+    int low,high;
+    union longlong a;
+    unsigned long long newCycles;
+    __asm__ __volatile__ ("rdtsc; mov %%eax, %0; mov %%edx, %1": "=a"(low), "=d"(high)); 
+    low = 3;
+    high = 4;
+    a.tsc.low = low;
+    a.tsc.high = high;
+    newCycles = a.val;
+    scheduler_curr->cycles += (newCycles - cycles);
+    cycles = newCycles;
+}
+
 
 
