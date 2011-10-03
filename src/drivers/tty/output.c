@@ -45,8 +45,6 @@ static void setBackground(int color);
 
 static void setBlink(int blink);
 
-static void changeScreen(int screen);
-
 static void changeColor(int mod1);
 
 struct ScreenStatus {
@@ -87,7 +85,7 @@ void tty_screen_init(void) {
  *
  * @param screen the number of the screen to set.
  */
-void changeScreen(int screen) {
+void tty_screen_change(int screen) {
     status = &screens[screen % NUM_TERMINALS];
 
     video_flip_buffer(status->videoBuffer);
@@ -321,7 +319,9 @@ void parseControlBuffer(int* a, int* b, int def) {
  *
  * @return The number of bytes written to screen.
  */
-size_t writeScreen(const void* buf, size_t length) {
+size_t tty_write(int terminal, const void* buf, size_t length) {
+
+    status = &screens[terminal];
 
     const char* str = (const char*) buf;
 
@@ -415,7 +415,6 @@ size_t writeScreen(const void* buf, size_t length) {
  *
  * The control sequences handled are (n and m are used to indicate optional
  *  numeric arguments, all positions start at 1, not 0):
- * - "\e[nZ" Change the current tty to tty n, defaults to 0.
  * - "\e[nA" Move the cursor up n times. Defaults to 1.
  * - "\e[nB" Move the cursor down n times. Defaults to 1.
  * - "\e[nC" Move the cursor right n times. Defaults to 1.
@@ -437,12 +436,6 @@ void handleControlSequence(char cur) {
 
     int mod1, mod2;
     switch (cur) {
-        case 'Z':
-            // Change the current tty (Not an xterm sequence)
-            readControlBuffer(0);
-            changeScreen(mod1);
-            endControlSequence();
-            break;
         case 'A':
             // Cursor up!
             readControlBuffer(1);

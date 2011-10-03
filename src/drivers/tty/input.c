@@ -99,12 +99,12 @@ void addInput(const char* str, size_t len) {
 
         if (str[0] == ESCAPE_CHAR) {
             // A escape char is not printable, so we transform into something that is.
-            writeScreen("^[", 2);
+            tty_write(0, "^[", 2);
             if (i > 1) {
-                writeScreen(str + 1, i - 1);
+                tty_write(0, str + 1, i - 1);
             }
         } else {
-            writeScreen(str, i);
+            tty_write(0, str, i);
         }
     }
 }
@@ -203,9 +203,7 @@ void process_scancode(void) {
                 break;
             default:
                 if (F1_CODE <= makeCode && makeCode <= F4_CODE) {
-                    char mod = makeCode - F1_CODE + 'A';
-                    addInput("\033[[", 3);
-                    addInput(&mod, 1);
+                    tty_change(makeCode - F1_CODE + 'A');
                 }
                 break;
         }
