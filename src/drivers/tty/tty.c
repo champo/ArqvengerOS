@@ -21,6 +21,8 @@ void tty_run(char* unused) {
     // Spawn the shells (this is a kernel process, so we can do this)
     // TODO: Setup file descriptors
     for (int i = 0; i < NUM_TERMINALS; i++) {
+        terminals[i].termios.canon = 1;
+        terminals[i].termios.echo = 1;
         process_table_new(shell, NULL, scheduler_current(), 0, i, 1);
     }
 
