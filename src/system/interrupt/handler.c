@@ -5,6 +5,7 @@
 #include "system/common.h"
 #include "system/interrupt/handler.h"
 #include "system/call/codes.h"
+#include "system/scheduler.h"
 
 typedef struct {
     int edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -57,7 +58,7 @@ void int20(registers* regs) {
  *  @param regs Pointer to struct containing micro's registers.
  */
 void int21(registers* regs ) {
-    readScanCode();
+    keyboard_read();
 }
 
 /**
@@ -146,7 +147,7 @@ void int80(registers* regs) {
             regs->eax = _getppid();
             break;
         case _SYS_RUN:
-            regs->eax = _run((void(*)(char*)) regs->ebx, (char*) regs->ecx);
+            regs->eax = _run((void(*)(char*)) regs->ebx, (char*) regs->ecx, regs->edx);
             break;
         case _SYS_WAIT:
             regs->eax = _wait();

@@ -21,23 +21,23 @@ void manCalc(void) {
 
 /**
  * Command that executes a simple calculator.
- * Allows to make equations with the format X op Y.  
+ * Allows to make equations with the format X op Y.
  */
-void calc(void) {
+void calc(char* unused) {
     int num1;
     int num2;
     int ans = 0;
     char c;
     int flag = 1;
     char string[MAXLINE];
-    
+
     printf("(Calc) > ");
     while (flag) {
         if (scanf("%d%c%d", &num1, &c, &num2) == 3) {
             switch (c) {
                 case '+':
                     ans = num1 + num2;
-                    printf("%d", ans); 
+                    printf("%d", ans);
                     break;
                 case '-':
                     ans = num1 - num2;
@@ -68,7 +68,7 @@ void calc(void) {
                     printf("Inside the calc program you can do simple math calculations "
                     "between integer numbers with the format \"X symb Y\", X and Y "
                     "representing numbers and symb being a +. -, * or /. Also, you can "
-                    "use quit or exit to finish the program.");  
+                    "use quit or exit to finish the program.");
                 } else {
                     printf("Wrong expression, Use help command for instructions.");
                 }
@@ -76,7 +76,7 @@ void calc(void) {
         }
         cleanbuffer();
         if (flag) {
-            printf("\n(Calc) > "); 
+            printf("\n(Calc) > ");
         }
     }
 }

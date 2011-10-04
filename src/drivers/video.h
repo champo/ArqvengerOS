@@ -1,10 +1,10 @@
 #ifndef _drivers_video_header
 #define _drivers_video_header
 
-#include "type.h"
+void video_flip_buffer(const char* buffer);
 
-size_t writeScreen(const void* buf, size_t length);
+void video_update_cursor(int pos);
 
-void initScreen(void);
+void video_set_char(int pos, char value, char attribute);
 
 #endif

@@ -17,11 +17,13 @@ inline static void push(int** esp, int val) {
     **esp = val;
 }
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args) {
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal) {
 
     process->pid = ++pid;
+    process->terminal = terminal;
+    process->active = 0;
+
     process->parent = parent;
-    process->entryPoint = entryPoint;
     process->firstChild = NULL;
 
     process->cycles = 0;
@@ -30,7 +32,6 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->prev = NULL;
     if (parent == NULL) {
         process->ppid = 0;
-
         process->next = NULL;
     } else {
         process->ppid = parent->pid;
@@ -43,6 +44,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         parent->firstChild = process;
     }
 
+    process->entryPoint = entryPoint;
     if (args == NULL) {
         *process->args = 0;
     } else {
@@ -56,6 +58,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->schedule.priority = 0;
     process->schedule.status = StatusReady;
     process->schedule.inWait = 0;
+    process->schedule.ioWait = 0;
     process->schedule.done = 0;
 
     process->mm.pagesInStack = 256;

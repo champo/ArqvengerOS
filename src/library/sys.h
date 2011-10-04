@@ -9,7 +9,7 @@ pid_t wait(void);
 
 void exit(void);
 
-pid_t run(void(*entryPoint)(char*), char* args);
+pid_t run(void(*entryPoint)(char*), char* args, int fg);
 
 pid_t getpid(void);
 

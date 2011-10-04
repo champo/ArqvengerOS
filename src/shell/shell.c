@@ -12,27 +12,45 @@
 #define BUFFER_SIZE 500
 #define HISTORY_SIZE 50
 
-#define NUM_SHELLS 4
-
 #define NUM_COMMANDS 10
 
-static const Command* nextCommand(const char* prompt);
+struct History {
+    char input[HISTORY_SIZE][BUFFER_SIZE];
+    int start;
+    int end;
+    int current;
+    char before[BUFFER_SIZE];
+};
+
+struct Shell {
+    struct History history;
+    char buffer[BUFFER_SIZE];
+    int inputEnd;
+    int cursor;
+    int usingHistory;
+    int ttyNumber;
+    termios inputStatus;
+};
+
+static const Command* nextCommand(struct Shell* self, const char* prompt);
 
 static const Command* findCommand(char* commandString);
 
-static void addToHistory(const char* commandString);
+static void addToHistory(struct History* history, const char* commandString);
 
-static void updateCursor(size_t promptLen, int delta);
+static void updateCursor(struct Shell* self, size_t promptLen, int delta);
 
-static int replaceInput(size_t promptLen, char* buffer);
+static int replaceInput(struct Shell* self, size_t promptLen, char* buffer);
 
-static void printPrompt(const char* prompt);
+static void printPrompt(struct Shell* self, const char* prompt);
 
-static void autoComplete(const char* prompt);
+static void autoComplete(struct Shell* self, const char* prompt);
 
-static void addToInput(size_t promptLen, const char* in, size_t len);
+static void addToInput(struct Shell* self, size_t promptLen, const char* in, size_t len);
 
-static void chooseCurrentEntry(void);
+static void chooseCurrentEntry(struct Shell* self);
+
+static void run_command(struct Shell* self, Command* cmd);
 
 const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho },
@@ -47,29 +65,7 @@ const Command commands[] = {
     { &top, "top", "Display information about running processes.", &manTop}
 };
 
-typedef struct {
-    char input[HISTORY_SIZE][BUFFER_SIZE];
-    int start;
-    int end;
-    int current;
-    char before[BUFFER_SIZE];
-} History;
-
-typedef struct {
-    History history;
-    char buffer[BUFFER_SIZE];
-    int inputEnd;
-    int cursor;
-    int usingHistory;
-    int started;
-    termios inputStatus;
-} Shell;
-
-static const termios shellStatus = { 0, 0 };
-static Shell shells[NUM_SHELLS];
-static int currentShellNumber;
-static History* history;
-static Shell* cur;
+static termios shellStatus = { 0, 0 };
 
 /**
  * Shell entry poing.
@@ -77,36 +73,50 @@ static Shell* cur;
 void shell(char* unused) {
 
     const Command* cmd;
-    int i;
-    for (i = NUM_SHELLS - 1; i >= 0; i--) {
-        cur = &shells[i];
-        history = &cur->history;
-        cur->history.start = 0;
-        cur->history.end = 0;
-        cur->history.current = 0;
-        cur->started = 0;
-    }
+    struct Shell me;
+    struct Shell* self = &me;
+    self->history.start = 0;
+    self->history.end = 0;
+    self->history.current = 0;
 
-    currentShellNumber = 0;
-    cur->started = 1;
+    //TODO: Get this from somewhere
+    self->ttyNumber = 0;
 
     // We always need to set the status needed by the shell, and then reset
     // it to the default, to make sure the input behaviour is as expected.
-    ioctl(0, TCGETS, (void*) &cur->inputStatus);
+    ioctl(0, TCGETS, (void*) &self->inputStatus);
     ioctl(0, TCSETS, (void*) &shellStatus);
 
     while (1) {
 
-        cmd = nextCommand("guest");
+        cmd = nextCommand(self, "guest");
         if (cmd != NULL) {
 
-            ioctl(0, TCSETS, (void*) &cur->inputStatus);
-            run(cmd->func, cur->buffer);
-            wait();
-            ioctl(0, TCGETS, (void*) &cur->inputStatus);
+            ioctl(0, TCSETS, (void*) &self->inputStatus);
+            run_command(self, cmd);
+            ioctl(0, TCGETS, (void*) &self->inputStatus);
 
             ioctl(0, TCSETS, (void*) &shellStatus);
         }
+    }
+}
+
+void run_command(struct Shell* self, Command* cmd) {
+    int fg = 1;
+
+    int end = self->inputEnd - 1;
+    do {
+
+        if (self->buffer[end] == '&') {
+            fg = 0;
+            break;
+        }
+
+    } while (end > 0 && self->buffer[end--] == ' ');
+
+    pid_t child = run(cmd->func, self->buffer, fg);
+    if (fg) {
+        while (child != wait());
     }
 }
 
@@ -115,9 +125,9 @@ void shell(char* unused) {
  *
  * @param prompt The prompt to print.
  */
-void printPrompt(const char* prompt) {
+void printPrompt(struct Shell* self, const char* prompt) {
     setForegroundColor(COLOR_GREEN);
-    printf("%s@tty%d >", prompt, currentShellNumber);
+    printf("%s@tty%d >", prompt, self->ttyNumber);
     setForegroundColor(COLOR_WHITE);
 }
 
@@ -127,11 +137,11 @@ void printPrompt(const char* prompt) {
  * @param promptLen The len of the prompt.
  * @param destPos The position to set the cursor to.
  */
-void updateCursor(size_t promptLen, int destPos) {
+void updateCursor(struct Shell* self, size_t promptLen, int destPos) {
 
     // We always have to be extra careful with the fact
     // that we need to adjust our 0 start pos to 1 start pos
-    int cursorPos = cur->cursor + promptLen;
+    int cursorPos = self->cursor + promptLen;
     destPos += promptLen;
 
     if (destPos == cursorPos) {
@@ -146,7 +156,7 @@ void updateCursor(size_t promptLen, int destPos) {
     }
 
     moveCursorInRow((destPos % LINE_WIDTH) + 1);
-    cur->cursor = destPos - promptLen;
+    self->cursor = destPos - promptLen;
 }
 
 /**
@@ -157,12 +167,12 @@ void updateCursor(size_t promptLen, int destPos) {
  *
  * @return the size of the buffer printed.
  */
-int replaceInput(size_t promptLen, char* buffer) {
+int replaceInput(struct Shell* self, size_t promptLen, char* buffer) {
 
-    updateCursor(promptLen, -1);
+    updateCursor(self, promptLen, -1);
     clearLine(ERASE_RIGHT);
     clearScreen(CLEAR_BELOW);
-    updateCursor(promptLen, 0);
+    updateCursor(self, promptLen, 0);
 
     printf("%s", buffer);
 
@@ -176,20 +186,22 @@ int replaceInput(size_t promptLen, char* buffer) {
  *
  * @return The command to execute, if one was found, NULL otherwise.
  */
-const Command* nextCommand(const char* prompt) {
+const Command* nextCommand(struct Shell* self, const char* prompt) {
 
     size_t promptLen = strlen(prompt) + 7;
     int i;
     char in;
 
     // We reset the input status.
-    cur->cursor = 0;
-    cur->inputEnd = 0;
-    cur->usingHistory = 0;
+    self->cursor = 0;
+    self->inputEnd = 0;
+    self->usingHistory = 0;
 
-    printPrompt(prompt);
+    struct History* history = &self->history;
+
+    printPrompt(self, prompt);
     // We set the whole string to null for safety.
-    memset(cur->buffer, 0, BUFFER_SIZE);
+    memset(self->buffer, 0, BUFFER_SIZE);
     while ((in = getchar()) != '\n') {
 
         // Check for control sequences, these are things like arrow keys and such.
@@ -205,131 +217,121 @@ const Command* nextCommand(const char* prompt) {
                                 history->current = HISTORY_SIZE - 1;
                             }
 
-                            cur->inputEnd = replaceInput(
-                                promptLen, history->input[history->current]
+                            self->inputEnd = replaceInput(
+                                self, promptLen, history->input[history->current]
                             );
-                            cur->cursor = cur->inputEnd;
+                            self->cursor = self->inputEnd;
 
-                            cur->usingHistory = 1;
+                            self->usingHistory = 1;
                         }
                         break;
                     case 'B':
                         // Down
-                        if (cur->usingHistory) {
+                        if (self->usingHistory) {
 
                             if (history->current == history->end) {
-                                cur->usingHistory = 0;
-                                cur->inputEnd = replaceInput(promptLen, cur->buffer);
+                                self->usingHistory = 0;
+                                self->inputEnd = replaceInput(self, promptLen, self->buffer);
                             } else {
                                 history->current = (history->current + 1) % HISTORY_SIZE;
-                                cur->inputEnd = replaceInput(
-                                    promptLen, history->input[history->current]
+                                self->inputEnd = replaceInput(
+                                    self, promptLen, history->input[history->current]
                                 );
                             }
-                            cur->cursor = cur->inputEnd;
+                            self->cursor = self->inputEnd;
                         }
                         break;
                     case 'C':
                         // Right
-                        if (cur->cursor == cur->inputEnd) {
+                        if (self->cursor == self->inputEnd) {
                             break;
                         }
 
-                        updateCursor(promptLen, cur->cursor + 1);
+                        updateCursor(self, promptLen, self->cursor + 1);
                         break;
                     case 'D':
                         // Left
-                        if (cur->cursor == 0) {
+                        if (self->cursor == 0) {
                             break;
                         }
 
-                        updateCursor(promptLen, cur->cursor - 1);
+                        updateCursor(self, promptLen, self->cursor - 1);
                         break;
                     case 'H':
                         // Home
-                        updateCursor(promptLen, 0);
+                        updateCursor(self, promptLen, 0);
                         break;
                     case 'F':
                         // End
-                        updateCursor(promptLen, cur->inputEnd);
+                        updateCursor(self, promptLen, self->inputEnd);
                         break;
                     case CSI:
                         //This is a function key
                         in = getchar();
-                        currentShellNumber = (in - 'A') % NUM_SHELLS;
-                        // This tells the tty driver to change shell
-                        printf("\033[%dZ", currentShellNumber);
-
-                        cur = &shells[currentShellNumber];
-                        history = &cur->history;
-
-                        if (cur->started == 0) {
-                            cur->started = 1;
-                            return NULL;
-                        }
+                        // We don't support this anymore (not from here at least)
                         break;
                 }
             }
         } else if (in == '\t') {
 
-            if (cur->usingHistory) {
-                chooseCurrentEntry();
+            if (self->usingHistory) {
+                chooseCurrentEntry(self);
             }
 
-            autoComplete(prompt);
+            autoComplete(self, prompt);
 
         } else if (in == '\b') {
 
-            if (cur->usingHistory) {
-                chooseCurrentEntry();
+            if (self->usingHistory) {
+                chooseCurrentEntry(self);
             }
 
-            if (cur->cursor > 0) {
-                int destPos = cur->cursor - 1;
-                cur->inputEnd--;
+            if (self->cursor > 0) {
+                int destPos = self->cursor - 1;
+                self->inputEnd--;
 
                 // Move back once to step on the previous text
-                updateCursor(promptLen, cur->cursor - 1);
+                updateCursor(self, promptLen, self->cursor - 1);
 
-                for (i = cur->cursor; i < cur->inputEnd; i++) {
-                    cur->buffer[i] = cur->buffer[i + 1];
+                for (i = self->cursor; i < self->inputEnd; i++) {
+                    self->buffer[i] = self->buffer[i + 1];
                 }
 
                 // Set a space in the end to make sure we erase previous text
-                cur->buffer[cur->inputEnd] = ' ';
+                self->buffer[self->inputEnd] = ' ';
 
                 // Print out
-                printf("%s", cur->buffer + cur->cursor);
+                printf("%s", self->buffer + self->cursor);
 
                 // The input actually ends one after (the space we inserted)
-                cur->cursor = cur->inputEnd + 1;
-                updateCursor(promptLen, destPos);
+                self->cursor = self->inputEnd + 1;
+                updateCursor(self, promptLen, destPos);
 
                 // Make sure the buffer is always null terminated
-                cur->buffer[cur->inputEnd] = 0;
+                self->buffer[self->inputEnd] = 0;
             }
 
         } else if (!isspace(in) || in == ' ') {
 
-            if (cur->usingHistory) {
-                chooseCurrentEntry();
+            if (self->usingHistory) {
+                chooseCurrentEntry(self);
             }
 
-            addToInput(promptLen, &in, 1);
+            addToInput(self, promptLen, &in, 1);
        }
     }
 
-    if (cur->usingHistory) {
+    if (self->usingHistory) {
         // This means enter was pressed while browsing the history
         // So let's take the current history entry as the input
-        memcpy(cur->buffer, history->input[history->current], BUFFER_SIZE);
+        memcpy(self->buffer, history->input[history->current], BUFFER_SIZE);
     }
 
-    updateCursor(promptLen, cur->inputEnd);
+    updateCursor(self, promptLen, self->inputEnd);
     putchar('\n');
-    addToHistory(cur->buffer);
+    addToHistory(history, self->buffer);
 
-    return findCommand(cur->buffer);
+    return findCommand(self->buffer);
 }
 
 /**
@@ -339,32 +341,32 @@ const Command* nextCommand(const char* prompt) {
  * @param in The string to add. Doesn't need to be NULL terminated.
  * @param len The length of the string.
  */
-void addToInput(size_t promptLen, const char* in, size_t len) {
+void addToInput(struct Shell* self, size_t promptLen, const char* in, size_t len) {
 
     int i, destPos;
     // We only write when we have enough space
-    if (cur->inputEnd + len < BUFFER_SIZE - 1) {
+    if (self->inputEnd + len < BUFFER_SIZE - 1) {
 
         // Move the characters after the cursor to make room for the new text
-        for (i = cur->inputEnd - 1; i >= cur->cursor; i--) {
-            cur->buffer[i + len] = cur->buffer[i];
+        for (i = self->inputEnd - 1; i >= self->cursor; i--) {
+            self->buffer[i + len] = self->buffer[i];
         }
 
         // Copy the new input to the buffer
         for (i = 0; i < len; i++) {
-            cur->buffer[cur->cursor + i] = in[i];
+            self->buffer[self->cursor + i] = in[i];
         }
 
         // Print the buffer starting from cursor and update the cursor to reflect this
-        printf("%s", cur->buffer + cur->cursor);
+        printf("%s", self->buffer + self->cursor);
 
-        destPos = cur->cursor + len;
+        destPos = self->cursor + len;
 
-        cur->inputEnd += len;
-        cur->cursor = cur->inputEnd;
+        self->inputEnd += len;
+        self->cursor = self->inputEnd;
 
         // Now move the cursor to where it ought to be
-        updateCursor(promptLen, destPos);
+        updateCursor(self, promptLen, destPos);
     }
 }
 
@@ -373,7 +375,7 @@ void addToInput(size_t promptLen, const char* in, size_t len) {
  *
  * @param commandString The input to add.
  */
-void addToHistory(const char* commandString) {
+void addToHistory(struct History* history, const char* commandString) {
 
     if (strlen(commandString) == 0) {
         return;
@@ -446,25 +448,25 @@ const Command* getShellCommands(size_t* len) {
  *
  * @param prompt The prompt to print.
  */
-void autoComplete(const char* prompt) {
+void autoComplete(struct Shell* self, const char* prompt) {
 
     int i, candidates = 0, len, last = 0;
     size_t promptLen, addedLen;
     char* fragment;
 
     // Let's find the start of the word before the cursor
-    for (i = cur->cursor - 1; i >= 0 && cur->buffer[i] != ' '; i--);
+    for (i = self->cursor - 1; i >= 0 && self->buffer[i] != ' '; i--);
     if (i == -1) {
         // We're at the first word
         i = 0;
-    } else if (i != cur->inputEnd) {
+    } else if (i != self->inputEnd) {
         // This isn't the first word, so the for loop will end at the space
         // We need to skip that space, and take what's after
         i++;
     }
 
-    len = cur->cursor - i;
-    fragment = cur->buffer + i;
+    len = self->cursor - i;
+    fragment = self->buffer + i;
 
     if (len == 0) {
         // Every command is fair game
@@ -492,11 +494,11 @@ void autoComplete(const char* prompt) {
 
         // If the addedLen is 0 then the word is already complete! There's nothng to add
         if (addedLen != 0) {
-            addToInput(promptLen, commands[last].name + len, addedLen);
+            addToInput(self, promptLen, commands[last].name + len, addedLen);
         }
     } else {
 
-        int cursorPos = cur->cursor;
+        int cursorPos = self->cursor;
 
         // Show a list of possibles, using one line per 2 commands
         candidates = 0;
@@ -516,20 +518,20 @@ void autoComplete(const char* prompt) {
         putchar('\n');
 
         // We need to reprint the prompt and reposition the cursor afterwards
-        printPrompt(prompt);
-        printf("%s", cur->buffer);
+        printPrompt(self, prompt);
+        printf("%s", self->buffer);
 
-        cur->cursor = cur->inputEnd;
-        updateCursor(promptLen, cursorPos);
+        self->cursor = self->inputEnd;
+        updateCursor(self, promptLen, cursorPos);
     }
 }
 
 /**
  * Replace the input with the current history entry.
  */
-void chooseCurrentEntry(void) {
-    memcpy(cur->buffer, history->input[history->current], BUFFER_SIZE);
-    history->current = history->end;
-    cur->usingHistory = 0;
+void chooseCurrentEntry(struct Shell* self) {
+    memcpy(self->buffer, self->history.input[self->history.current], BUFFER_SIZE);
+    self->history.current = self->history.end;
+    self->usingHistory = 0;
 }
 

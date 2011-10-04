@@ -105,7 +105,6 @@ static const char *boards[] = {
 
 const size_t boardLeft = 30, boardTop = 4;
 
-static termios oldStatus;
 static termios gameStatus = { 0, 0 };
 
 static void intro(void);
@@ -116,14 +115,14 @@ static void placeNumber(GameState* state, char num);
 
 static void drawBoard(GameState* state);
 
-static int numPlays = 0;
-
 /**
  * Sudoku entry point.
  *
  * @param argv The command input string.
  */
 void sudoku(char* argv) {
+
+    termios oldStatus;
 
     time_t initialTime = time(NULL);
     time_t elapsedTime;

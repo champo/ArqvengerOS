@@ -15,7 +15,7 @@ pid_t _getpid(void);
 
 pid_t _getppid(void);
 
-pid_t _run(void(*EntryPoint)(char*), char* args);
+pid_t _run(void(*EntryPoint)(char*), char* args, int active);
 
 void _exit(void);
 

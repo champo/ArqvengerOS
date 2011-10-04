@@ -2,13 +2,14 @@
 #define _drivers_keyboard_header
 
 #include "type.h"
+#include "system/process/process.h"
 
-void readScanCode(void);
+void keyboard_read(void);
 
-size_t readKeyboard(void* buffer, size_t count);
+void keyboard_leds(int caps, int num, int scroll);
 
-int ioctlKeyboard(int cmd, void* argp);
+unsigned char keyboard_get_code(void);
 
-void initKeyboard(void);
+void keyboard_consumer(struct Process* p);
 
 #endif
