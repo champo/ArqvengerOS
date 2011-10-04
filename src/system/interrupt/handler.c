@@ -148,7 +148,7 @@ void int80(registers* regs) {
             regs->eax = _getppid();
             break;
         case _SYS_RUN:
-            regs->eax = _run((void(*)(char*)) regs->ebx, (char*) regs->ecx);
+            regs->eax = _run((void(*)(char*)) regs->ebx, (char*) regs->ecx, regs->edx);
             break;
         case _SYS_WAIT:
             regs->eax = _wait();

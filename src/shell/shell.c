@@ -50,6 +50,8 @@ static void addToInput(struct Shell* self, size_t promptLen, const char* in, siz
 
 static void chooseCurrentEntry(struct Shell* self);
 
+static void run_command(struct Shell* self, Command* cmd);
+
 const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho },
     { &man, "man", "Display information about command execution.", &manMan },
@@ -91,12 +93,30 @@ void shell(char* unused) {
         if (cmd != NULL) {
 
             ioctl(0, TCSETS, (void*) &self->inputStatus);
-            run(cmd->func, self->buffer);
-            wait();
+            run_command(self, cmd);
             ioctl(0, TCGETS, (void*) &self->inputStatus);
 
             ioctl(0, TCSETS, (void*) &shellStatus);
         }
+    }
+}
+
+void run_command(struct Shell* self, Command* cmd) {
+    int fg = 1;
+
+    int end = self->inputEnd - 1;
+    do {
+
+        if (self->buffer[end] == '&') {
+            fg = 0;
+            break;
+        }
+
+    } while (end > 0 && self->buffer[end--] == ' ');
+
+    pid_t child = run(cmd->func, self->buffer, fg);
+    if (fg) {
+        while (child != wait());
     }
 }
 

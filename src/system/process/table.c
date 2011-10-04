@@ -37,7 +37,7 @@ struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Proc
     createProcess(p, entryPoint, parent, args, terminal);
 
     p->active = active;
-    if (parent) {
+    if (parent && active) {
         parent->active = 0;
     }
 
@@ -84,8 +84,12 @@ void process_table_exit(struct Process* process) {
 
     if (process->parent) {
 
-        if (process->active && process->parent) {
+        if (process->active) {
             process->parent->active = 1;
+            if (process->parent->schedule.ioWait) {
+                process->parent->schedule.ioWait = 0;
+                process->parent->schedule.status = StatusReady;
+            }
         }
 
         exitProcess(process);

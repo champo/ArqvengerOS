@@ -14,8 +14,8 @@ void exit(void) {
     system_call(_SYS_EXIT, 0, 0, 0);
 }
 
-pid_t run(void(*entryPoint)(char*), char* args) {
-    return system_call(_SYS_RUN, (int) entryPoint, (int) args, 0);
+pid_t run(void(*entryPoint)(char*), char* args, int fg) {
+    return system_call(_SYS_RUN, (int) entryPoint, (int) args, fg);
 }
 
 pid_t getpid(void) {
