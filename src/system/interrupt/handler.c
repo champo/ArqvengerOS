@@ -1,11 +1,11 @@
 #include "drivers/keyboard.h"
-#include "drivers/tty/tty.h"
 #include "system/tick.h"
 #include "system/call.h"
 #include "system/io.h"
 #include "system/common.h"
 #include "system/interrupt/handler.h"
 #include "system/call/codes.h"
+#include "system/scheduler.h"
 
 typedef struct {
     int edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -59,7 +59,6 @@ void int20(registers* regs) {
  */
 void int21(registers* regs ) {
     keyboard_read();
-    process_scancode();
 }
 
 /**

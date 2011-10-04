@@ -13,11 +13,19 @@
 
 #define BUFFER_SIZE 4000
 
+#define WAIT_LEN 20
+
 static unsigned char buffer[BUFFER_SIZE];
 
 static int bufferPos = 0;
 
 static int bufferStart = 0;
+
+static struct Process* consumer;
+
+void keyboard_consumer(struct Process* p) {
+    consumer = p;
+}
 
 /**
  * Set the keyboard leds using the global state.
@@ -57,16 +65,32 @@ void keyboard_read(void) {
     if (bufferPos == BUFFER_SIZE) {
         bufferPos = 0;
     }
+
+    if (consumer->schedule.ioWait) {
+        consumer->schedule.status = StatusReady;
+    }
 }
 
 unsigned char keyboard_get_code(void) {
 
     unsigned char ret = 0;
-    if (bufferPos != bufferStart) {
-        ret = buffer[bufferStart++];
-        if (bufferStart == BUFFER_SIZE) {
-            bufferStart = 0;
-        }
+
+    if (scheduler_current() != consumer) {
+        return ret;
+    }
+
+    while (bufferPos == bufferStart) {
+        consumer->schedule.ioWait = 1;
+        consumer->schedule.status = StatusBlocked;
+
+        scheduler_do();
+    }
+
+    consumer->schedule.ioWait = 0;
+
+    ret = buffer[bufferStart++];
+    if (bufferStart == BUFFER_SIZE) {
+        bufferStart = 0;
     }
 
     return ret;

@@ -27,7 +27,7 @@ void tty_run(char* unused) {
     }
 
     while (1) {
-        yield();
+        process_scancode();
     }
 }
 

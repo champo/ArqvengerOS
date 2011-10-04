@@ -272,6 +272,9 @@ size_t readKeyboard(void* buffer, size_t count) {
         }
     }
 
+    // If we're here, only we can be holding the ioWait flag, so we release it
+    caller->schedule.ioWait = 0;
+
     // Copy the input to the buffer
     for (i = 0; i < c; i++) {
         buf[i] = inputBuffer[i];
@@ -317,6 +320,7 @@ int ioctlKeyboard(int cmd, void* argp) {
 }
 
 void tty_keyboard_init(void) {
+    keyboard_consumer(scheduler_current());
     set_leds();
 }
 
@@ -348,7 +352,6 @@ void wake_up(void) {
         struct Process* p = active->wait[i];
         if (p != NULL && p->active) {
             active->wait[i] = NULL;
-            p->schedule.ioWait = 0;
             p->schedule.status = StatusReady;
 
             return;

@@ -87,7 +87,6 @@ void process_table_exit(struct Process* process) {
         if (process->active) {
             process->parent->active = 1;
             if (process->parent->schedule.ioWait) {
-                process->parent->schedule.ioWait = 0;
                 process->parent->schedule.status = StatusReady;
             }
         }
