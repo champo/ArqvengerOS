@@ -6,6 +6,8 @@
 
 #define CONTROL_BUFFER_LEN 40
 
+#define WAIT_LEN 30
+
 struct ScreenStatus {
     int cursorPosition;
     int escaped;
@@ -21,6 +23,7 @@ struct Terminal {
     int active;
     termios termios;
     struct ScreenStatus screen;
+    struct Process* wait[WAIT_LEN];
 };
 
 struct Terminal* tty_current(void);

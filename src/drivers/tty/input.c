@@ -73,6 +73,12 @@ static char inputBuffer[BUFFER_SIZE];
 
 static void set_leds(void);
 
+static void addInput(const char* str, size_t len);
+
+static void wait_for_input(struct Process* p);
+
+static void wake_up(void);
+
 /**
  * Add a string of input with a fixed lenght to the keyboard buffer.
  *
@@ -107,6 +113,8 @@ void addInput(const char* str, size_t len) {
             tty_write(str, i);
         }
     }
+
+    wake_up();
 }
 
 /**
@@ -234,6 +242,10 @@ size_t readKeyboard(void* buffer, size_t count) {
         return 0;
     }
 
+    if (!caller->active) {
+        wait_for_input(caller);
+    }
+
     char* buf = (char*) buffer;
     int i, c = (int) count;
 
@@ -243,7 +255,7 @@ size_t readKeyboard(void* buffer, size_t count) {
         for (i = 0; i < bufferEnd && inputBuffer[i] != '\n'; i++);
 
         while (i == bufferEnd) {
-            scheduler_do();
+            wait_for_input(caller);
             for (i = 0; i < bufferEnd && inputBuffer[i] != '\n'; i++);
         }
 
@@ -256,7 +268,7 @@ size_t readKeyboard(void* buffer, size_t count) {
     } else {
 
         while (bufferEnd < c) {
-            scheduler_do();
+            wait_for_input(caller);
         }
     }
 
@@ -310,5 +322,54 @@ void tty_keyboard_init(void) {
 
 void set_leds(void) {
     keyboard_leds(kbStatus.caps, kbStatus.num, kbStatus.scroll);
+}
+
+void tty_detach_process(struct Process* process) {
+
+    if (process->terminal == NO_TERMINAL || !process->schedule.ioWait) {
+        return;
+    }
+
+    struct Terminal* me = tty_terminal(process->terminal);
+
+    for (int i = 0; i < WAIT_LEN; i++) {
+
+        if (me->wait[i] == process) {
+            me->wait[i] = NULL;
+        }
+    }
+}
+
+void wake_up(void) {
+
+    struct Terminal* active = tty_active();
+    for (int i = 0; i < WAIT_LEN; i++) {
+
+        struct Process* p = active->wait[i];
+        if (p != NULL && p->active) {
+            active->wait[i] = NULL;
+            p->schedule.ioWait = 0;
+            p->schedule.status = StatusReady;
+
+            return;
+        }
+    }
+}
+
+void wait_for_input(struct Process* p) {
+
+    struct Terminal* terminal = tty_terminal(p->terminal);
+    for (int i = 0; i < WAIT_LEN; i++) {
+
+        if (terminal->wait[i] == NULL) {
+            terminal->wait[i] = p;
+            p->schedule.ioWait = 1;
+            p->schedule.status = StatusBlocked;
+
+            scheduler_do();
+
+            return;
+        }
+    }
 }
 

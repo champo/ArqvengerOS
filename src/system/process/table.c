@@ -1,5 +1,6 @@
 #include "system/process/table.h"
 #include "system/scheduler.h"
+#include "drivers/tty/tty.h"
 
 #define PTABLE_SIZE 64
 
@@ -33,7 +34,13 @@ struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Proc
     }
 
     processTable[i] = p;
-    createProcess(p, entryPoint, parent, args, terminal, active);
+    createProcess(p, entryPoint, parent, args, terminal);
+
+    p->active = active;
+    if (parent) {
+        parent->active = 0;
+    }
+
     scheduler_add(p);
 
     return p;
@@ -73,8 +80,14 @@ void process_table_exit(struct Process* process) {
     }
 
     scheduler_remove(process);
+    tty_detach_process(process);
 
     if (process->parent) {
+
+        if (process->active && process->parent) {
+            process->parent->active = 1;
+        }
+
         exitProcess(process);
 
         if (process->parent->schedule.inWait) {

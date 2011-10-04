@@ -48,7 +48,7 @@ struct Process {
     struct ProcessMemory mm;
 };
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal, int active);
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal);
 
 void destroyProcess(struct Process* process);
 

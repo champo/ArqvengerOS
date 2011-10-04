@@ -16,11 +16,11 @@ inline static void push(int** esp, int val) {
     **esp = val;
 }
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal, int active) {
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal) {
 
     process->pid = ++pid;
     process->terminal = terminal;
-    process->active = active;
+    process->active = 0;
 
     process->parent = parent;
     process->firstChild = NULL;
@@ -28,7 +28,6 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->prev = NULL;
     if (parent == NULL) {
         process->ppid = 0;
-
         process->next = NULL;
     } else {
         process->ppid = parent->pid;
