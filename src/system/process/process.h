@@ -4,6 +4,8 @@
 #include "system/mm.h"
 #include "type.h"
 
+#define NO_TERMINAL -1
+
 typedef void (*EntryPoint)(char*);
 
 struct ProcessMemory {
@@ -22,6 +24,7 @@ struct ProcessSchedule {
     enum ProcessStatus status;
     unsigned int priority:2;
     unsigned int inWait:1;
+    unsigned int ioWait:1;
     unsigned int done:1;
 };
 
@@ -30,8 +33,12 @@ struct Process {
 
     int ppid;
     struct Process* parent;
+
     EntryPoint entryPoint;
     char args[512];
+
+    int terminal;
+    int active;
 
     struct Process* firstChild;
 
@@ -48,7 +55,7 @@ struct Process {
     int gid;
 };
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args);
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal);
 
 void destroyProcess(struct Process* process);
 

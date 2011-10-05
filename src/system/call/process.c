@@ -10,8 +10,9 @@ pid_t _getppid(void) {
     return scheduler_current()->ppid;
 }
 
-pid_t _run(EntryPoint entryPoint, char* args) {
-    struct Process* p = process_table_new(entryPoint, args, scheduler_current());
+pid_t _run(EntryPoint entryPoint, char* args, int active) {
+    struct Process* parent = scheduler_current();
+    struct Process* p = process_table_new(entryPoint, args, parent, 0, parent->terminal, active);
     return p->pid;
 }
 

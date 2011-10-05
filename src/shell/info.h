@@ -6,10 +6,10 @@
 typedef void (*CommandFunction)(char* argv);
 
 typedef struct {
-    const CommandFunction func;
+    CommandFunction func;
     const char* name;
     const char* desc;
-    const void (*man)(void);
+    void (*man)(void);
 } Command;
 
 const Command* getShellCommands(size_t* len);
