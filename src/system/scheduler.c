@@ -41,6 +41,13 @@ void scheduler_remove(struct Process* process) {
     process_queue_remove(&scheduler_queue, process);
 }
 
+void scheduler_unblock(struct Process* process) {
+    process_queue_push(&scheduler_queue, process);
+}
+
+void scheduler_block(struct Process* process) {
+    process_queue_remove(&scheduler_queue, process);
+}
 
 struct Process* scheduler_current(void) {
     if (scheduler_curr == NULL) {

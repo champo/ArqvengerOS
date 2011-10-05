@@ -87,15 +87,16 @@ void process_table_exit(struct Process* process) {
         if (process->active) {
             process->parent->active = 1;
             if (process->parent->schedule.ioWait) {
-                process->parent->schedule.status = StatusReady;
+                process_table_unblock(process->parent);
             }
         }
 
         exitProcess(process);
 
         if (process->parent->schedule.inWait) {
-            process->parent->schedule.status = StatusReady;
+            process_table_unblock(process->parent);
         }
+
     } else {
         process_table_remove(process);
     }
@@ -109,7 +110,7 @@ pid_t process_table_wait(struct Process* process) {
         while ((c = waitable_child(process)) == NULL) {
 
             process->schedule.inWait = 1;
-            process->schedule.status = StatusBlocked;
+            process_table_block(process);
 
             scheduler_do();
         }
@@ -174,5 +175,15 @@ void process_table_kill(struct Process* process) {
     }
 
     process_table_exit(process);
+}
+
+void process_table_block(struct Process* process) {
+    process->schedule.status = StatusBlocked;
+    scheduler_block(process);
+}
+
+void process_table_unblock(struct Process* process) {
+    process->schedule.status = StatusReady;
+    scheduler_unblock(process);
 }
 
