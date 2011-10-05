@@ -23,4 +23,8 @@ pid_t _wait(void);
 
 int _pinfo(struct ProcessInfo* data, size_t size);
 
+void _sleep(int seconds);
+
+int _nice(int priority);
+
 #endif

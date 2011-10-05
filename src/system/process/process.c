@@ -26,6 +26,8 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
 
     process->cycles = 0;
     process->timeStart = _time(NULL);
+    process->uid = 0;
+    process->gid = 1;
 
     process->prev = NULL;
     if (parent == NULL) {
@@ -53,7 +55,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         process->args[i] = 0;
     }
 
-    process->schedule.priority = 0;
+    process->schedule.priority = 2;
     process->schedule.status = StatusReady;
     process->schedule.inWait = 0;
     process->schedule.done = 0;

@@ -43,6 +43,9 @@ struct Process {
 
     unsigned long long cycles; 
     time_t timeStart;
+
+    int uid;
+    int gid;
 };
 
 void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args);

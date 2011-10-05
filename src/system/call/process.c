@@ -30,3 +30,12 @@ void _kill(pid_t pid) {
     }
 }
 
+void _sleep(int seconds) {
+    scheduler_sleep(scheduler_current(), seconds);
+}
+
+int _nice(int priority) {
+    struct Process* proc = scheduler_current();
+    proc->schedule.priority = priority;
+    return proc->schedule.priority;
+}

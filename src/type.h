@@ -16,11 +16,11 @@ struct ProcessInfo {
     pid_t ppid;
     int priority;
     int state;
-    //startDate;
-    //uid;
-    //gid;
+    int uid;
+    int gid;
     int cputime;
     time_t timeStart;
+    char name[512];
 };
 
 #endif

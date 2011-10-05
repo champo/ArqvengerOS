@@ -1,6 +1,7 @@
 #include "system/scheduler.h"
 #include "system/scheduler/choose_next.h"
 #include "system/processQueue.h"
+#include "system/sleepList.h"
 #include "type.h"
 
 struct ProcessQueue scheduler_queue = {.first = NULL, .last = NULL};
@@ -14,6 +15,8 @@ static union longlong {
 
 static unsigned long long cycles = 0;
 
+SleepList scheduler_sleep_list = NULL;
+
 static void update_cycles();
 
 void scheduler_add(struct Process* process) {
@@ -24,7 +27,12 @@ void scheduler_do(void) {
 
     if (scheduler_curr != NULL) {
         __asm__ __volatile ("mov %%ebp, %0":"=r"(scheduler_curr->mm.esp)::);
-        update_cycles(); 
+        update_cycles();
+
+        if (scheduler_sleep_list == NULL) {
+            scheduler_sleep_list = sleep_list_init();
+        }
+        sleep_list_update(scheduler_sleep_list);
     }
 
     choose_next();
@@ -48,6 +56,7 @@ struct Process* scheduler_current(void) {
     }
 
     return scheduler_curr;
+
 }
 
 unsigned long long scheduler_get_cycles(void) {
@@ -70,5 +79,8 @@ void update_cycles() {
     cycles = newCycles;
 }
 
-
+void scheduler_sleep(struct Process* process, int seconds) {
+    sleep_list_add(scheduler_sleep_list, process, seconds*1000/55);
+    process->schedule.status = StatusBlocked;
+}
 

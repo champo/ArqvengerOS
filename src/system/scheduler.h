@@ -17,5 +17,7 @@ void scheduler_remove(struct Process* process);
 struct Process* scheduler_current(void);
 
 unsigned long long scheduler_get_cycles(void);
+
+void scheduler_sleep(struct Process* process, int seconds);
 #endif
 

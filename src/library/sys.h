@@ -17,5 +17,9 @@ pid_t getppid(void);
 
 void kill(pid_t pid);
 
+void sleep(int seconds);
+
+int nice(int priority);
+
 int pinfo(struct ProcessInfo* data, size_t size);
 #endif

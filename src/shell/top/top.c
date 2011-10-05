@@ -22,19 +22,21 @@ void top(char* argv) {
 
     struct ProcessInfo data[20];
     int pcount = pinfo(data, 20);
+  
+    printf("PID\tPPID\tUSER\tGROUP\t%%CPU\tPRIO\tSTATE\tSTART DATE\tCOMMAND\n");
     
-    printf("PID\tPPID\tUSER\t%%CPU\tPRIO\tSTATE\tSTART DATE\n");
-
     do {
         moveCursor(2, 1);
         for (int i = 0; i < pcount; i++) {
             printf("%d\t", data[i].pid);
             printf("%d\t", data[i].ppid);
-            printf("%s\t", "acrespo");
+            printf("%d\t", data[i].uid);
+            printf("%d\t", data[i].gid);
             printf("%d\t", data[i].cputime);
-            printf("%d\t",data[i].priority);
+            printf("%d\t", data[i].priority);
             printf("%s\t", (data[i].state)? "alive":  "zombie");
-            printf("%s",asctime(localtime(&data[i].timeStart)));
+            printf("%s\t", asctime(localtime(&data[i].timeStart)));
+            printf("%s", data[i].name);
             printf("\n");
         }
 

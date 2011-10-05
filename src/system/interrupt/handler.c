@@ -157,6 +157,12 @@ void int80(registers* regs) {
         case _SYS_PINFO:
             regs->eax = _pinfo(regs->ebx, (size_t)regs->ecx);
             break;
+        case _SYS_SLEEP:
+            _sleep(regs->ebx);
+            break;
+        case _SYS_NICE:
+            regs->eax = _nice(regs->ebx);
+            break;
     }
 }
 

@@ -1,7 +1,5 @@
 #include "system/processQueue.h"
-#include "type.h"
 
-#define QUEUE_SIZE      256
 
 static struct QueueNode* freeNodes = NULL;
 
