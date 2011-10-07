@@ -5,6 +5,7 @@
 #include "system/io.h"
 #include "system/common.h"
 #include "system/scheduler.h"
+#include "system/process/table.h"
 
 #define KEYBOARD_IO_PORT 0x60
 #define KEYBOARD_CTRL_PORT 0x64
@@ -67,7 +68,7 @@ void keyboard_read(void) {
     }
 
     if (consumer->schedule.ioWait) {
-        consumer->schedule.status = StatusReady;
+        process_table_unblock(consumer);
     }
 }
 
@@ -81,9 +82,9 @@ unsigned char keyboard_get_code(void) {
 
     while (bufferPos == bufferStart) {
         consumer->schedule.ioWait = 1;
-        consumer->schedule.status = StatusBlocked;
+        process_table_block(consumer);
 
-        scheduler_do();
+        yield();
     }
 
     consumer->schedule.ioWait = 0;

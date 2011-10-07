@@ -5,6 +5,7 @@
 #include "system/call/ioctl/keyboard.h"
 #include "system/common.h"
 #include "system/scheduler.h"
+#include "system/process/table.h"
 
 #define LAST_CODE_IN_TABLE 0x39
 #define MIN_BREAK_CODE 0x80
@@ -352,7 +353,7 @@ void wake_up(void) {
         struct Process* p = active->wait[i];
         if (p != NULL && p->active) {
             active->wait[i] = NULL;
-            p->schedule.status = StatusReady;
+            process_table_unblock(p);
 
             return;
         }
@@ -367,7 +368,7 @@ void wait_for_input(struct Process* p) {
         if (terminal->wait[i] == NULL) {
             terminal->wait[i] = p;
             p->schedule.ioWait = 1;
-            p->schedule.status = StatusBlocked;
+            process_table_block(p);
 
             scheduler_do();
 

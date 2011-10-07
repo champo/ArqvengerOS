@@ -10,6 +10,9 @@
 
 void top(char* argv) {
 
+    struct ProcessInfo data[20];
+    int pcount;
+    
     static termios oldStatus;
     static termios topStatus = { 0, 0 };
 
@@ -20,13 +23,14 @@ void top(char* argv) {
     moveCursor(1, 1);
     clearScreen(CLEAR_ALL);
 
-    struct ProcessInfo data[20];
-    int pcount = pinfo(data, 20);
   
     printf("PID\tPPID\tUSER\tGROUP\t%%CPU\tPRIO\tSTATE\tSTART DATE\tCOMMAND\n");
     
     do {
         moveCursor(2, 1);
+        
+        pcount = pinfo(data, 20);
+        
         for (int i = 0; i < pcount; i++) {
             printf("%d\t", data[i].pid);
             printf("%d\t", data[i].ppid);
