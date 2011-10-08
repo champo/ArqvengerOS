@@ -18,7 +18,7 @@ static void free_node(struct Node* node);
 
 static struct Node* alloc_node(void);
 
-static void update_list(struct Node* startNode, int value);
+static void update_list(struct Node* startNode, int ticks);
 
 struct Node* alloc_node(void) {
 
@@ -48,44 +48,43 @@ SleepList sleep_list_init(void) {
     return list;
 }
 
-void sleep_list_add(SleepList list, struct Process* process, int value) {
+void sleep_list_add(SleepList list, struct Process* process, int ticks) {
     
     struct Node* node = alloc_node();
     struct Node* curr;
     struct Node* prev;
     node->process = process;
     
-    if (list->first == NULL || list->first >= value) {  
+    if (list->first == NULL || list->first->delta >= ticks) {  
         struct Node* aux = list->first;
         
         list->first = node;
-        list->first->delta = value;
+        list->first->delta = ticks;
         list->first->next = aux;
         
-        update_list(list->first->next, value);
+        update_list(list->first->next, ticks);
 
     } else {
         curr = list->first;
         
-        while (curr != NULL && (value - curr->delta) <= 0) {
-            value -= curr->delta;
+        while (curr != NULL && curr->delta <= ticks) {
+            ticks -= curr->delta;
             prev = curr;
             curr = curr->next;
         }
 
         prev->next = node;
         node->next = curr;
-        node->delta = value;
+        node->delta = ticks;
         
-        update_list(curr->next, value);
+        update_list(curr->next, ticks);
     }
 }
 
-void update_list(struct Node* curr, int value) {
+void update_list(struct Node* curr, int ticks) {
 
-    while (curr != NULL) {
-        curr->delta -= value;
-        curr = curr->next;
+    if (curr != NULL) {
+        curr->delta -= ticks;
     }
 }
 
@@ -101,6 +100,22 @@ void sleep_list_update(SleepList list) {
         list->first->process->schedule.status = StatusReady;
         list->first = list->first->next;
         //TODO free_node(aux);
+    }
+}
+
+void sleep_list_remove(SleepList list, struct Process* process) {
+    struct Node* curr = list->first;
+    struct Node* prev = list->first;
+    
+    while (curr != NULL && curr->process->pid == process->pid) {
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (curr != NULL) {
+        prev->next = curr->next;
+        curr->next->delta += curr->delta;
+        //TODO free(curr)
     }
 }
 

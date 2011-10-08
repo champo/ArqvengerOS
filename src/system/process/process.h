@@ -25,6 +25,7 @@ struct ProcessSchedule {
     unsigned int priority:2;
     unsigned int inWait:1;
     unsigned int ioWait:1;
+    unsigned int asleep:1;
     unsigned int done:1;
 };
 

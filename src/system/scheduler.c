@@ -19,8 +19,6 @@ static unsigned long long cycles = 0;
 static unsigned long long prev_cycles = 0;
 static unsigned long long curr_cycles = 0;
 
-static long int tickCounter = 0;
-
 SleepList scheduler_sleep_list = NULL;
 
 static void update_cycles(void);
@@ -36,20 +34,7 @@ void scheduler_do(void) {
     if (scheduler_curr != NULL) {
         __asm__ __volatile ("mov %%ebp, %0":"=r"(scheduler_curr->mm.esp)::);
         
-        tickCounter++;
-        
-        if (tickCounter > TICKS_SAMPLE_SIZE) {
-            process_table_reset_cycles(); 
-            tickCounter = 0;
-            prev_cycles = curr_cycles;
-            curr_cycles = 0;
-        }
         update_cycles();
-
-        if (scheduler_sleep_list == NULL) {
-            scheduler_sleep_list = sleep_list_init();
-        }
-        sleep_list_update(scheduler_sleep_list);
     }
 
     choose_next();
@@ -63,6 +48,10 @@ void scheduler_remove(struct Process* process) {
     if (scheduler_curr != NULL && process->pid == scheduler_curr->pid) {
         scheduler_curr = NULL;
     }
+    if (process->schedule.asleep) {
+        sleep_list_remove(scheduler_sleep_list, process);
+    }
+
     process_queue_remove(&scheduler_queue, process);
 }
 
@@ -86,7 +75,7 @@ unsigned long long scheduler_get_cycles(void) {
     return cycles;
 }
 
-unsigned long long scheduler_get_sample_cycles(void) {
+unsigned long long scheduler_get_prev_sample_cycles(void) {
     return prev_cycles;
 }
 
@@ -106,10 +95,17 @@ void update_cycles(void) {
     cycles = newCycles;
 }
 
-
-
 void scheduler_sleep(struct Process* process, int seconds) {
-    sleep_list_add(scheduler_sleep_list, process, seconds*1000/55);
-    process->schedule.status = StatusBlocked;
+    sleep_list_add(scheduler_sleep_list, process, seconds*1000/MILLISECONDS_PER_TICK);
+    process->schedule.asleep = 1;
 }
 
+void scheduler_tick(void) {
+    prev_cycles = curr_cycles;
+    curr_cycles = 0;
+    
+    if (scheduler_sleep_list == NULL) {
+        scheduler_sleep_list = sleep_list_init();
+    }
+    sleep_list_update(scheduler_sleep_list);
+}

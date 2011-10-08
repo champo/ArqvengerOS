@@ -18,12 +18,15 @@ struct Process* scheduler_current(void);
 
 unsigned long long scheduler_get_cycles(void);
 
-unsigned long long scheduler_get_sample_cycles(void);
+unsigned long long scheduler_get_prev_sample_cycles(void);
 
 void scheduler_sleep(struct Process* process, int seconds);
 
 void scheduler_unblock(struct Process* process);
 
 void scheduler_block(struct Process* process);
+
+void scheduler_tick(void);
+
 #endif
 

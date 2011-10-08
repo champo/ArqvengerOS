@@ -170,7 +170,7 @@ void process_table_kill(struct Process* process) {
 
         process_table_kill(c);
         process_table_remove(c);
-
+        
         c = next;
     }
 

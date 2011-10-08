@@ -23,6 +23,7 @@ struct ProcessInfo {
     char name[512];
 };
 
-#define TICKS_SAMPLE_SIZE 10000
+#define TICKS_SAMPLE_SIZE 10
+#define MILLISECONDS_PER_TICK 55
 
 #endif
