@@ -1,6 +1,8 @@
 #ifndef __EXT2_BLOCK_GROUP__
 #define __EXT2_BLOCK_GROUP__
 
+#include "type.h"
+
 struct BlockGroupDescriptor {
     unsigned int blockBitmapAddress;
     unsigned int inodeBitmapAddress;
@@ -10,5 +12,12 @@ struct BlockGroupDescriptor {
     unsigned short directoryCount;
     unsigned char padding[14];
 };
+
+struct BlockGroupDescriptorTable {
+    size_t length;
+    struct BlockGroupDescriptor descriptors[];
+};
+
+struct BlockGroupDescriptorTable* ext2_read_blockgroup_table(struct Superblock* sb);
 
 #endif

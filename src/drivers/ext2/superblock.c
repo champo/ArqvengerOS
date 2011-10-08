@@ -2,9 +2,6 @@
 #include "system/mm.h"
 #include "drivers/ext2/superblock.h"
 
-#define SUPERBLOCK_SIZE 1024
-#define SUPERBLOCK_SECTORS 2
-#define SUPERBLOCK_START 2
 
 struct Superblock* ext2_superblock_init(void) {
     struct Superblock* superblock;

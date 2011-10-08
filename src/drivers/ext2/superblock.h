@@ -3,6 +3,10 @@
 
 #include "type.h"
 
+#define SUPERBLOCK_SIZE 1024
+#define SUPERBLOCK_SECTORS 2
+#define SUPERBLOCK_START 2
+
 //If extended fields needed, just ask!
 
 struct Superblock{
@@ -30,7 +34,7 @@ struct Superblock{
     dword operatingSystemID;
     dword majorVersion;
     word userIDforReservedBlocks;
-    word groupIDforReservedBlocks;   
+    word groupIDforReservedBlocks;
 };
 
 struct Superblock* ext2_superblock_init(void);
