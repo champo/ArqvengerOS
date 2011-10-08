@@ -1,8 +1,16 @@
 #ifndef __SUPERBLOCK__
 #define __SUPERBLOCK__
 
+#include "type.h"
+
 //If extended fields needed, just ask!
 
+typedef struct {
+    dword totalInodes;
+    dword totalBlocks;    
+} Superblock;
+
+/*
 int superblock_init(void);
 int superblock_get_total_inodes(void);
 int superblock_get_total_blocks(void);
@@ -30,5 +38,5 @@ int superblock_get_user_ID_reserved_blocks(void);
 int superblock_get_group_ID_reserved_blocks(void);
 int superblock_end(void);
 int superblock_get_total_block_groups(void);
-
+*/
 #endif
