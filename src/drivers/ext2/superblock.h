@@ -5,7 +5,7 @@
 
 //If extended fields needed, just ask!
 
-typedef struct {
+struct Superblock{
     dword totalInodes;
     dword totalBlocks;
     dword blocksForSuperuser;
@@ -31,11 +31,11 @@ typedef struct {
     dword majorVersion;
     word userIDforReservedBlocks;
     word groupIDforReservedBlocks;   
-} Superblock;
+};
 
-Superblock* superblockInit(void);
-int superblockEnd(Superblock* superblock);
-int getTotalBlockGroups(Superblock* superblock);
+struct Superblock* ext2_superblock_init(void);
+int ext2_superblock_end(struct Superblock* superblock);
+int ext2_get_total_block_groups(struct Superblock* superblock);
 
 /*
 int superblock_init(void);
