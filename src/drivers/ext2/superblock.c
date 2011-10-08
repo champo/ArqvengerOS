@@ -2,23 +2,27 @@
 #include "system/mm.h"
 #include "drivers/ext2/superblock.h"
 
-Superblock* superblockInit(void) {
-    Superblock* superblock;
-    if ((superblock = kalloc(1024)) == NULL) {
+#define SUPERBLOCK_SIZE 1024
+#define SUPERBLOCK_SECTORS 2
+#define SUPERBLOCK_START 2
+
+struct Superblock* ext2_superblock_init(void) {
+    struct Superblock* superblock;
+    if ((superblock = kalloc(SUPERBLOCK_SIZE)) == NULL) {
         return NULL;
     }
-    if (ata_read((unsigned long long)2, 2, superblock) != 0) {
+    if (ata_read((unsigned long long)SUPERBLOCK_START, SUPERBLOCK_SECTORS, superblock) != 0) {
         return NULL;
     }
     return superblock;
 }
 
-int superblockEnd(Superblock* superblock) {
+int ext2_superblock_end(struct Superblock* superblock) {
     //TODO Free Superblock
     return 0;
 }
 
-int getTotalBlockGroups(Superblock* superblock) {
+int ext2_get_total_block_groups(struct Superblock* superblock) {
     return superblock->totalBlocks / superblock->blocksPerBlockGroup;
 }
 
