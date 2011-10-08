@@ -1,7 +1,28 @@
 #include "drivers/ata.h"
 #include "system/mm.h"
-#include "system/ext2/superblock.h"
+#include "drivers/ext2/superblock.h"
 
+Superblock* superblockInit(void) {
+    Superblock* superblock;
+    if ((superblock = kalloc(1024)) == NULL) {
+        return NULL;
+    }
+    if (ata_read((unsigned long long)2, 2, superblock) != 0) {
+        return NULL;
+    }
+    return superblock;
+}
+
+int superblockEnd(Superblock* superblock) {
+    //TODO Free Superblock
+    return 0;
+}
+
+int getTotalBlockGroups(Superblock* superblock) {
+    return superblock->totalBlocks / superblock->blocksPerBlockGroup;
+}
+
+/*
 char* superblock;
 
 static int getBytes(int start, int end, char* buff);
@@ -156,3 +177,5 @@ int getBytes(int start, int end, char* buff) {
     }
     return *((int*) buff);
 }
+
+*/

@@ -7,8 +7,35 @@
 
 typedef struct {
     dword totalInodes;
-    dword totalBlocks;    
+    dword totalBlocks;
+    dword blocksForSuperuser;
+    dword unallocatedBlocks;
+    dword unallocatedInodes;
+    dword superblockBlockNumber;
+    dword blockSize; //log2 (blocksize) -10 really.
+    dword fragmentSize; //log2(fragmentsize) -10 really.
+    dword blocksPerBlockGroup;
+    dword fragmentsPerBlockGroup;
+    dword inodesPerBlockGroup;
+    dword lastMountTime; //Posix time.
+    dword lastWrittenTime; //Posix time.
+    word totalMountTimesSinceLastCheck;
+    word mountsUntilNextCheck;
+    word ext2Signature;
+    word fileSystemState;
+    word errorAction;
+    word minorVersion;
+    dword lastCheck; //Posixt time.
+    dword intervalBetweenChecks; //Posix time.
+    dword operatingSystemID;
+    dword majorVersion;
+    word userIDforReservedBlocks;
+    word groupIDforReservedBlocks;   
 } Superblock;
+
+Superblock* superblockInit(void);
+int superblockEnd(Superblock* superblock);
+int getTotalBlockGroups(Superblock* superblock);
 
 /*
 int superblock_init(void);

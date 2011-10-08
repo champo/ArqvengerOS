@@ -1,9 +1,11 @@
 #include "drivers/ata.h"
 #include "system/mm.h"
-#include "system/ext2/superblock.h"
+#include "drivers/ext2/superblock.h"
 #include "library/string.h"
-#include "system/ext2/blockGroup.h"
+#include "drivers/ext2/blockGroup.h"
 
+
+/*
 char* table;
 
 static int getBytes(int start, int end, void* blockGroupDescriptor, char* buff);
@@ -65,3 +67,4 @@ int getBytes(int start, int end, void* blockGroupDescriptor, char* buff) {
     }
     return *((int*) buff);
 }
+*/
