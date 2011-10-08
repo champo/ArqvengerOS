@@ -17,4 +17,5 @@ void process_table_unblock(struct Process* process);
 
 void process_table_kill(struct Process* process);
 
+void process_table_reset_cycles(void);
 #endif

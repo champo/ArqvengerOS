@@ -48,7 +48,9 @@ struct Process {
     struct ProcessSchedule schedule;
     struct ProcessMemory mm;
 
-    unsigned long long cycles; 
+    unsigned long long cycles;
+    unsigned long long curr_cycles;
+    unsigned long long prev_cycles; 
     time_t timeStart;
 
     int uid;

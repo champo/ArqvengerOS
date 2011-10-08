@@ -187,3 +187,12 @@ void process_table_unblock(struct Process* process) {
     scheduler_unblock(process);
 }
 
+void process_table_reset_cycles(void) {
+    for(int i = 0; i < PTABLE_SIZE; i++) {
+        if (processTable[i] != NULL) {
+            processTable[i]->prev_cycles = processTable[i]->curr_cycles;
+            processTable[i]->curr_cycles  = 0;
+        }
+    }
+}
+

@@ -4,6 +4,7 @@
 #include "system/scheduler.h"  
 #include "library/div64.h"
 #include "library/string.h"
+#include "type.h"
 
 int _pinfo(struct ProcessInfo* data, size_t size) {
 
@@ -22,7 +23,7 @@ int _pinfo(struct ProcessInfo* data, size_t size) {
             data[pcount].priority = process->schedule.priority;
             data[pcount].state = !process->schedule.done;
             
-            data[pcount].cputime = uint64_div64(process->cycles*100, scheduler_get_cycles()); 
+            data[pcount].cputime = uint64_div64(process->prev_cycles*100, scheduler_get_sample_cycles());
             data[pcount].timeStart = process->timeStart;
 
             if (*process->args != 0) {

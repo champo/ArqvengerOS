@@ -27,6 +27,8 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->firstChild = NULL;
 
     process->cycles = 0;
+    process->curr_cycles = 0;
+    process->prev_cycles = 0;
     process->timeStart = _time(NULL);
     process->uid = 0;
     process->gid = 1;
