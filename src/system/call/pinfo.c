@@ -2,6 +2,7 @@
 #include "system/mm.h"
 #include "system/call.h"
 #include "system/scheduler.h"  
+#include "system/pinfo.h"
 #include "library/div64.h"
 #include "library/string.h"
 #include "type.h"

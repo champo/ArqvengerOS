@@ -23,7 +23,9 @@ SleepList scheduler_sleep_list = NULL;
 
 static void update_cycles(void);
 
-
+void scheduler_init(void) {
+    sleep_list_init();
+}
 
 void scheduler_add(struct Process* process) {
     process_queue_push(&scheduler_queue, process);
@@ -101,11 +103,10 @@ void scheduler_sleep(struct Process* process, int seconds) {
 }
 
 void scheduler_tick(void) {
+    sleep_list_update(scheduler_sleep_list);
+}
+
+void scheduler_restart_sample(void) {
     prev_cycles = curr_cycles;
     curr_cycles = 0;
-    
-    if (scheduler_sleep_list == NULL) {
-        scheduler_sleep_list = sleep_list_init();
-    }
-    sleep_list_update(scheduler_sleep_list);
 }

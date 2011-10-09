@@ -17,11 +17,13 @@ static long int tickCounter = 0;
 void timerTick(void) {
     ticksSinceStart++;
 
+    scheduler_tick();
+    
     tickCounter++;
     if (tickCounter > TICKS_SAMPLE_SIZE) {
         process_table_reset_cycles(); 
         tickCounter = 0;
-        scheduler_tick();
+        scheduler_restart_sample();
     }
         
 }

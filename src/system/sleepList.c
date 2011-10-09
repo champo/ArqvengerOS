@@ -43,7 +43,7 @@ void free_node(struct Node* node) {
 
 
 SleepList sleep_list_init(void) {
-    struct DeltaQueue* list = kalloc(sizeof(struct Node));
+    struct DeltaQueue* list = kalloc(sizeof(struct DeltaQueue));
     list->first = NULL;
     return list;
 }
@@ -107,7 +107,7 @@ void sleep_list_remove(SleepList list, struct Process* process) {
     struct Node* curr = list->first;
     struct Node* prev = list->first;
     
-    while (curr != NULL && curr->process->pid == process->pid) {
+    while (curr != NULL && curr->process->pid != process->pid) {
         prev = curr;
         curr = curr->next;
     }

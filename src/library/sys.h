@@ -2,6 +2,7 @@
 #define __LIBRARY_SYS__
 
 #include "type.h"
+#include "system/pinfo.h"
 
 void yield(void);
 
@@ -22,4 +23,5 @@ void sleep(int seconds);
 int nice(int priority);
 
 int pinfo(struct ProcessInfo* data, size_t size);
+
 #endif

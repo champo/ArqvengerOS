@@ -8,6 +8,8 @@ extern struct ProcessQueue scheduler_queue;
 
 extern struct Process* scheduler_curr;
 
+void scheduler_init(void);
+
 void scheduler_add(struct Process* process);
 
 void scheduler_do(void);
@@ -27,6 +29,8 @@ void scheduler_unblock(struct Process* process);
 void scheduler_block(struct Process* process);
 
 void scheduler_tick(void);
+
+void scheduler_restart_sample(void);
 
 #endif
 

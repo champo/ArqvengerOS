@@ -2,6 +2,7 @@
 #define _system_call_header_
 
 #include "type.h"
+#include "system/pinfo.h"
 
 size_t _write(int fd, const void* buf, size_t length);
 
