@@ -2,7 +2,6 @@
 #define __SYSTEM_MM__
 
 #include "multiboot.h"
-#include "library/stdlib.h"
 #include "type.h"
 
 #define PAGE_SIZE (4 * 1024u)
