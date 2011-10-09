@@ -27,4 +27,6 @@ struct ext2_Inode {
     dword operatingSystemValue2[3];
 };
 
+struct ext2_Inode* ext2_read_inode(struct ext2* fs, int number);
+
 #endif

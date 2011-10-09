@@ -1,43 +1,9 @@
 #ifndef __SUPERBLOCK__
 #define __SUPERBLOCK__
 
-#include "type.h"
+#include "drivers/ext2/internal.h"
 
-#define SUPERBLOCK_SIZE 1024
-#define SUPERBLOCK_SECTORS 2
-#define SUPERBLOCK_START 2
-
-//If extended fields needed, just ask!
-
-struct Superblock{
-    dword totalInodes;
-    dword totalBlocks;
-    dword blocksForSuperuser;
-    dword unallocatedBlocks;
-    dword unallocatedInodes;
-    dword superblockBlockNumber;
-    dword blockSize; //log2 (blocksize) -10 really.
-    dword fragmentSize; //log2(fragmentsize) -10 really.
-    dword blocksPerBlockGroup;
-    dword fragmentsPerBlockGroup;
-    dword inodesPerBlockGroup;
-    dword lastMountTime; //Posix time.
-    dword lastWrittenTime; //Posix time.
-    word totalMountTimesSinceLastCheck;
-    word mountsUntilNextCheck;
-    word ext2Signature;
-    word fileSystemState;
-    word errorAction;
-    word minorVersion;
-    dword lastCheck; //Posixt time.
-    dword intervalBetweenChecks; //Posix time.
-    dword operatingSystemID;
-    dword majorVersion;
-    word userIDforReservedBlocks;
-    word groupIDforReservedBlocks;
-};
-
-struct Superblock* ext2_superblock_init(void);
+int ext2_superblock_init(struct ext2* fs);
 int ext2_superblock_end(struct Superblock* superblock);
 int ext2_get_total_block_groups(struct Superblock* superblock);
 

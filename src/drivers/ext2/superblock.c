@@ -1,17 +1,20 @@
-#include "drivers/ata.h"
-#include "system/mm.h"
 #include "drivers/ext2/superblock.h"
+#include "system/mm.h"
 
+int ext2_superblock_init(struct ext2* fs) {
 
-struct Superblock* ext2_superblock_init(void) {
     struct Superblock* superblock;
     if ((superblock = kalloc(SUPERBLOCK_SIZE)) == NULL) {
-        return NULL;
+        return -1;
     }
-    if (ata_read((unsigned long long)SUPERBLOCK_START, SUPERBLOCK_SECTORS, superblock) != 0) {
-        return NULL;
+
+    if (read_sectors(fs, SUPERBLOCK_START, SUPERBLOCK_SECTORS, superblock) != 0) {
+        return -1;
     }
-    return superblock;
+
+    fs->sb = superblock;
+
+    return 0;
 }
 
 int ext2_superblock_end(struct Superblock* superblock) {
