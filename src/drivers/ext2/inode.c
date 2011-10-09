@@ -14,7 +14,7 @@ struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
     size_t blockGroup = number / fs->sb->blocksPerBlockGroup;
     size_t index = (number - 1) % fs->sb->blocksPerBlockGroup;
 
-    if (blockGroup >= fs->groupTable->length) {
+    if (blockGroup >= fs->blockGroupCount) {
         return NULL;
     }
 
@@ -24,7 +24,7 @@ struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
     struct ext2_Inode* inode = kalloc(sizeof(struct ext2_Inode));
     read_block_fragment(
         fs,
-        fs->groupTable->descriptors[blockGroup].inodeTableStart + tableBlock,
+        fs->groupTable[blockGroup].inodeTableStart + tableBlock,
         offsetInTable % fs->blockSize,
         sizeof(struct ext2_Inode),
         inode

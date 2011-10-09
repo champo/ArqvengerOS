@@ -23,7 +23,7 @@ int ext2_superblock_end(struct Superblock* superblock) {
 }
 
 int ext2_get_total_block_groups(struct Superblock* superblock) {
-    return superblock->totalBlocks / superblock->blocksPerBlockGroup;
+    return (superblock->totalBlocks / superblock->blocksPerBlockGroup) + 1;
 }
 
 /*

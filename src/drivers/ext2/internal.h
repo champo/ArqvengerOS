@@ -55,13 +55,14 @@ struct BlockGroupDescriptorTable {
 
 struct ext2 {
     struct Superblock* sb;
-    struct BlockGroupDescriptorTable* groupTable;
+    struct BlockGroupDescriptor* groupTable;
     unsigned long long firstSector;
     void* blockBuffer;
     unsigned int blockIndexAddress[3];
     unsigned int* blockIndexBuffer[3];
     size_t sectorsPerBlock;
     size_t blockSize;
+    size_t blockGroupCount;
 };
 
 int read_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, void* buffer);
