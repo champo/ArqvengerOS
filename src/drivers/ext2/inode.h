@@ -7,7 +7,7 @@
 struct ext2_Inode {
     unsigned short typesAndPermissions;
     unsigned short userID;
-    unsigned int lowerSize;
+    unsigned int size;
     unsigned int lastAccess; //Posix time.
     unsigned int creationTime; //Posix time.
     unsigned int lastModification; //Posix time.
@@ -29,5 +29,7 @@ struct ext2_Inode {
 };
 
 struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number);
+
+int ext2_read_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t offset, size_t size, void* buffer);
 
 #endif

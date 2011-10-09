@@ -58,13 +58,15 @@ struct ext2 {
     struct BlockGroupDescriptorTable* groupTable;
     unsigned long long firstSector;
     void* blockBuffer;
+    unsigned int blockIndexAddress[3];
+    unsigned int* blockIndexBuffer[3];
     size_t sectorsPerBlock;
     size_t blockSize;
 };
 
 int read_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, void* buffer);
 
-int read_block(struct ext2* fs, size_t block);
+int read_block(struct ext2* fs, size_t block, void* buffer);
 
 int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, void* buffer);
 
