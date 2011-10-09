@@ -11,31 +11,31 @@
 //If extended fields needed, just ask!
 
 struct Superblock {
-    dword totalInodes;
-    dword totalBlocks;
-    dword blocksForSuperuser;
-    dword unallocatedBlocks;
-    dword unallocatedInodes;
-    dword superblockBlockNumber;
-    dword blockSize; //log2 (blocksize) -10 really.
-    dword fragmentSize; //log2(fragmentsize) -10 really.
-    dword blocksPerBlockGroup;
-    dword fragmentsPerBlockGroup;
-    dword inodesPerBlockGroup;
-    dword lastMountTime; //Posix time.
-    dword lastWrittenTime; //Posix time.
-    word totalMountTimesSinceLastCheck;
-    word mountsUntilNextCheck;
-    word ext2Signature;
-    word fileSystemState;
-    word errorAction;
-    word minorVersion;
-    dword lastCheck; //Posixt time.
-    dword intervalBetweenChecks; //Posix time.
-    dword operatingSystemID;
-    dword majorVersion;
-    word userIDforReservedBlocks;
-    word groupIDforReservedBlocks;
+    unsigned int totalInodes;
+    unsigned int totalBlocks;
+    unsigned int blocksForSuperuser;
+    unsigned int unallocatedBlocks;
+    unsigned int unallocatedInodes;
+    unsigned int superblockBlockNumber;
+    unsigned int blockSize; //log2 (blocksize) -10 really.
+    unsigned int fragmentSize; //log2(fragmentsize) -10 really.
+    unsigned int blocksPerBlockGroup;
+    unsigned int fragmentsPerBlockGroup;
+    unsigned int inodesPerBlockGroup;
+    unsigned int lastMountTime; //Posix time.
+    unsigned int lastWrittenTime; //Posix time.
+    unsigned short totalMountTimesSinceLastCheck;
+    unsigned short mountsUntilNextCheck;
+    unsigned short ext2Signature;
+    unsigned short fileSystemState;
+    unsigned short errorAction;
+    unsigned short minorVersion;
+    unsigned int lastCheck; //Posixt time.
+    unsigned int intervalBetweenChecks; //Posix time.
+    unsigned int operatingSystemID;
+    unsigned int majorVersion;
+    unsigned short userIDforReservedBlocks;
+    unsigned short groupIDforReservedBlocks;
 };
 
 struct BlockGroupDescriptor {
@@ -57,8 +57,15 @@ struct ext2 {
     struct Superblock* sb;
     struct BlockGroupDescriptorTable* groupTable;
     unsigned long long firstSector;
+    void* blockBuffer;
+    size_t sectorsPerBlock;
+    size_t blockSize;
 };
 
 int read_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, void* buffer);
+
+int read_block(struct ext2* fs, size_t block);
+
+int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, void* buffer);
 
 #endif
