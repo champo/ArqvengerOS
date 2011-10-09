@@ -1,7 +1,7 @@
 #include "drivers/ext2/inode.h"
 #include "system/mm.h"
 
-struct ext2_Inode* ext2_read_inode(struct ext2* fs, int number) {
+struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
 
     if (fs->sb->totalInodes < number) {
         return NULL;
