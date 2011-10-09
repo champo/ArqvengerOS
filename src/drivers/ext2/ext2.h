@@ -3,6 +3,8 @@
 
 struct ext2;
 
+struct ext2_Inode;
+
 struct ext2* ext2_load(unsigned long long startSector);
 
 #endif

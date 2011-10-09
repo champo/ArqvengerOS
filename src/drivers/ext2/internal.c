@@ -15,6 +15,7 @@ int read_block(struct ext2* fs, size_t block, void* buffer) {
 
 int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, void* buffer) {
 
+    fs->blockBufferAddress = block;
     if (read_block(fs, block, fs->blockBuffer) == -1) {
         return -1;
     }

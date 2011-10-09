@@ -4,6 +4,13 @@
 #include "type.h"
 #include "drivers/ext2/internal.h"
 
+#define INODE_TYPE(inode) ((inode->typesAndPermissions & 0xF000) >> 12)
+
+#define INODE_FIFO 0x1
+#define INODE_DIR 0x4
+#define INODE_FILE 0x8
+#define INODE_LINK 0xA
+
 struct ext2_Inode {
     unsigned short typesAndPermissions;
     unsigned short userID;

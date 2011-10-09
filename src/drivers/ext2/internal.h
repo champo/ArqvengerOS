@@ -41,28 +41,31 @@ struct Superblock {
 struct BlockGroupDescriptor {
     unsigned int blockBitmapAddress;
     unsigned int inodeBitmapAddress;
+
     unsigned int inodeTableStart;
+
     unsigned short unallocatedBlocks;
     unsigned short unalloactedInodes;
-    unsigned short directoryCount;
-    unsigned char padding[14];
-};
 
-struct BlockGroupDescriptorTable {
-    size_t length;
-    struct BlockGroupDescriptor descriptors[];
+    unsigned short directoryCount;
+
+    unsigned char padding[14];
 };
 
 struct ext2 {
     struct Superblock* sb;
     struct BlockGroupDescriptor* groupTable;
+
     unsigned long long firstSector;
-    void* blockBuffer;
-    unsigned int blockIndexAddress[3];
-    unsigned int* blockIndexBuffer[3];
     size_t sectorsPerBlock;
     size_t blockSize;
     size_t blockGroupCount;
+
+    unsigned int blockBufferAddress;
+    void* blockBuffer;
+
+    unsigned int blockIndexAddress[3];
+    unsigned int* blockIndexBuffer[3];
 };
 
 int read_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, void* buffer);

@@ -45,18 +45,23 @@ int ext2_read_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t of
     size_t endBlockIndex = (offset + size) / fs->blockSize;
 
     char* buf = buffer;
-    for (size_t block = firstBlockIndex; block < endBlockIndex; block++) {
+    for (size_t block = firstBlockIndex; block <= endBlockIndex; block++) {
 
         if (block == firstBlockIndex) {
 
             size_t offsetInBlock = offset % fs->blockSize;
+            size_t partSize = fs->blockSize - offsetInBlock;
+            if (size < partSize) {
+                partSize = size;
+            }
+
             read_inode_block(
                 fs,
                 inode,
                 block,
                 buf,
                 offsetInBlock,
-                fs->blockSize - offsetInBlock
+                partSize
             );
 
             buf += fs->blockSize - offsetInBlock;
