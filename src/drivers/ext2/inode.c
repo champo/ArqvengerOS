@@ -5,6 +5,8 @@ static int read_inode_block(struct ext2* fs, struct ext2_Inode* inode, size_t bl
 
 static int read_block_index(struct ext2* fs, int level, size_t block);
 
+static size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex);
+
 struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
 
     if (fs->sb->totalInodes < number) {
@@ -45,18 +47,23 @@ int ext2_read_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t of
     size_t endBlockIndex = (offset + size) / fs->blockSize;
 
     char* buf = buffer;
-    for (size_t block = firstBlockIndex; block < endBlockIndex; block++) {
+    for (size_t block = firstBlockIndex; block <= endBlockIndex; block++) {
 
         if (block == firstBlockIndex) {
 
             size_t offsetInBlock = offset % fs->blockSize;
+            size_t partSize = fs->blockSize - offsetInBlock;
+            if (size < partSize) {
+                partSize = size;
+            }
+
             read_inode_block(
                 fs,
                 inode,
                 block,
                 buf,
                 offsetInBlock,
-                fs->blockSize - offsetInBlock
+                partSize
             );
 
             buf += fs->blockSize - offsetInBlock;
@@ -82,6 +89,64 @@ int ext2_read_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t of
 }
 
 int read_inode_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len) {
+
+    size_t block = block_index_to_block(fs, inode, blockIndex);
+
+    size_t bufferIndex;
+    for (bufferIndex = 0 ; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
+        if (fs->blockBufferOwner[bufferIndex] == inode) {
+            break;
+        }
+    }
+
+    if (bufferIndex == BLOCK_BUFFER_COUNT) {
+        for (bufferIndex = 0; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
+            if (fs->blockBufferOwner[bufferIndex] == NULL) {
+                break;
+            }
+        }
+
+        if (bufferIndex == BLOCK_BUFFER_COUNT) {
+            bufferIndex = fs->evictBlockBuffer++;
+        }
+
+        fs->blockBufferOwner[bufferIndex] = inode;
+        fs->blockBufferAddress[bufferIndex] = 0;
+    }
+
+    if (fs->blockBufferAddress[bufferIndex] != block) {
+
+        fs->blockBufferAddress[bufferIndex] = block;
+        if (read_block(fs, block, fs->blockBuffer[bufferIndex]) == -1) {
+            return -1;
+        }
+    }
+
+    char* from = (char*) fs->blockBuffer[bufferIndex] + offset;
+    char* to = buffer;
+    for (size_t i = 0; i < len; i++) {
+        to[i] = from[i];
+    }
+
+    return 0;
+}
+
+int read_block_index(struct ext2* fs, int level, size_t block) {
+
+    if (fs->blockIndexAddress[level] != block) {
+        fs->blockIndexAddress[level] = block;
+        return read_block(fs, fs->blockIndexAddress[level], fs->blockIndexBuffer[level]);
+    }
+
+    return 0;
+}
+
+int ext2_write_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t offset, size_t size, void* buffer) {
+
+
+}
+
+size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex) {
 
     size_t block;
     size_t pointersPerBlock = fs->blockSize / sizeof(size_t);
@@ -120,20 +185,8 @@ int read_inode_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockInde
         block = fs->blockIndexBuffer[2][thirdLevel];
     }
 
-    if (offset == 0 && len == fs->blockSize) {
-        return read_block(fs, block, buffer);
-    } else {
-        return read_block_fragment(fs, block, offset, len, buffer);
-    }
+    return block;
 }
 
-int read_block_index(struct ext2* fs, int level, size_t block) {
 
-    if (fs->blockIndexAddress[level] != block) {
-        fs->blockIndexAddress[level] = block;
-        return read_block(fs, fs->blockIndexAddress[level], fs->blockIndexBuffer[level]);
-    }
-
-    return 0;
-}
 
