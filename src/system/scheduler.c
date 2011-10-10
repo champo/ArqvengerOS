@@ -24,7 +24,7 @@ SleepList scheduler_sleep_list = NULL;
 static void update_cycles(void);
 
 void scheduler_init(void) {
-    sleep_list_init();
+    scheduler_sleep_list = sleep_list_init();
 }
 
 void scheduler_add(struct Process* process) {

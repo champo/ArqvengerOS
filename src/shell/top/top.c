@@ -28,7 +28,8 @@ void top(char* argv) {
     
     do {
         moveCursor(2, 1);
-        
+        clearScreen(CLEAR_BELOW);
+
         pcount = pinfo(data, 20);
         
         for (int i = 0; i < pcount; i++) {
