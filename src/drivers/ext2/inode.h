@@ -39,4 +39,6 @@ struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number);
 
 int ext2_read_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t offset, size_t size, void* buffer);
 
+int ext2_write_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t offset, size_t size, void* buffer);
+
 #endif

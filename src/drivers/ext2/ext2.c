@@ -19,11 +19,19 @@ struct ext2* ext2_load(unsigned long long startSector) {
     fs->sectorsPerBlock = fs->blockSize / SECTOR_SIZE;
     fs->blockGroupCount = ext2_get_total_block_groups(fs->sb);
 
-    fs->blockBufferAddress = 0;
-    fs->blockBuffer = kalloc(fs->blockSize);
     for (int i = 0; i < 3; i++) {
         fs->blockIndexAddress[i] = 0;
         fs->blockIndexBuffer[i] = kalloc(fs->blockSize);
+    }
+
+    fs->fragmentReadBlock = 0;
+    fs->fragmentReadBuffer = kalloc(fs->blockSize);
+
+    fs->evictBlockBuffer = 0;
+    for (int i = 0; i < BLOCK_BUFFER_COUNT; i++) {
+        fs->blockBufferAddress[i] = 0;
+        fs->blockBufferOwner[i] = NULL;
+        fs->blockBuffer[i] = kalloc(fs->blockSize);
     }
 
     ext2_read_blockgroup_table(fs);

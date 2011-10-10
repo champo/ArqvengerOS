@@ -15,13 +15,13 @@ int read_block(struct ext2* fs, size_t block, void* buffer) {
 
 int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, void* buffer) {
 
-    fs->blockBufferAddress = block;
-    if (read_block(fs, block, fs->blockBuffer) == -1) {
+    fs->fragmentReadBlock = block;
+    if (read_block(fs, block, fs->fragmentReadBuffer) == -1) {
         return -1;
     }
 
     char* dest = buffer;
-    char* origin = (char*) fs->blockBuffer + offset;
+    char* origin = (char*) fs->fragmentReadBuffer + offset;
 
     for (size_t i = 0; i < len; i++) {
         dest[i] = origin[i];
