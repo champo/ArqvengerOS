@@ -204,16 +204,27 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
 
         } else {
 
+            for (size_t i = 0; i < BLOCK_BUFFER_COUNT; i++) {
+                if (fs->blockBufferAddress[i] == block) {
+                    fs->blockBufferAddress[i] = 0;
+                }
+            }
+
             write_block(fs, block, from);
             from += fs->blockSize;
         }
     }
 
+    //TODO: Update the inode size
+
     return 0;
 }
 
 int allocate_blocks(struct fs_Inode* inode, size_t totalBlocks) {
-    //TODO: Do sth
+    // Search the block bitmap in the same block group as the inode
+    // If none can be found, search elsewhere
+    // remember to update the block group block count, and the sb block count
+    // Also, the amount of blocks in the inode
     return 0;
 }
 
