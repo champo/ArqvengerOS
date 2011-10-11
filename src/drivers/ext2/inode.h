@@ -3,6 +3,7 @@
 
 #include "type.h"
 #include "drivers/ext2/internal.h"
+#include "system/fs/inode.h"
 
 #define INODE_TYPE(inode) ((inode->typesAndPermissions & 0xF000) >> 12)
 
@@ -35,10 +36,10 @@ struct ext2_Inode {
     unsigned int operatingSystemValue2[3];
 };
 
-struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number);
+struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number);
 
-int ext2_read_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t offset, size_t size, void* buffer);
+int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer);
 
-int ext2_write_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t offset, size_t size, void* buffer);
+int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer);
 
 #endif

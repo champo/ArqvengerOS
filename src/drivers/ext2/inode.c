@@ -1,13 +1,14 @@
 #include "drivers/ext2/inode.h"
 #include "system/mm.h"
+#include "system/fs/inode.h"
 
-static int read_inode_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len);
+static int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len);
 
 static int read_block_index(struct ext2* fs, int level, size_t block);
 
 static size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex);
 
-struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
+struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
 
     if (fs->sb->totalInodes < number) {
         return NULL;
@@ -23,42 +24,44 @@ struct ext2_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
     size_t offsetInTable = sizeof(struct ext2_Inode) * index;
     size_t tableBlock = offsetInTable / fs->blockSize;
 
-    struct ext2_Inode* inode = kalloc(sizeof(struct ext2_Inode));
+    struct fs_Inode* fs_inode = kalloc(sizeof(struct fs_Inode));
+    fs_inode->data = kalloc(sizeof(struct ext2_Inode));
+    fs_inode->fileSystem = fs;
+    fs_inode->number = number;
     read_block_fragment(
         fs,
         fs->groupTable[blockGroup].inodeTableStart + tableBlock,
         offsetInTable % fs->blockSize,
         sizeof(struct ext2_Inode),
-        inode
+        fs_inode->data
     );
 
-    return inode;
+    return fs_inode;
 }
 
-int ext2_read_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t offset, size_t size, void* buffer) {
+int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer) {
 
-    if (offset > inode->size) {
+    if (offset > inode->data->size) {
         return -1;
-    } else if (offset + size > inode->size) {
-        size = inode->size - offset;
+    } else if (offset + size > inode->data->size) {
+        size = inode->data->size - offset;
     }
 
-    size_t firstBlockIndex = offset / fs->blockSize;
-    size_t endBlockIndex = (offset + size) / fs->blockSize;
+    size_t firstBlockIndex = offset / inode->fileSystem->blockSize;
+    size_t endBlockIndex = (offset + size) / inode->fileSystem->blockSize;
 
     char* buf = buffer;
     for (size_t block = firstBlockIndex; block <= endBlockIndex; block++) {
 
         if (block == firstBlockIndex) {
 
-            size_t offsetInBlock = offset % fs->blockSize;
-            size_t partSize = fs->blockSize - offsetInBlock;
+            size_t offsetInBlock = offset % inode->fileSystem->blockSize;
+            size_t partSize = inode->fileSystem->blockSize - offsetInBlock;
             if (size < partSize) {
                 partSize = size;
             }
 
             read_inode_block(
-                fs,
                 inode,
                 block,
                 buf,
@@ -66,63 +69,62 @@ int ext2_read_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t of
                 partSize
             );
 
-            buf += fs->blockSize - offsetInBlock;
+            buf += inode->fileSystem->blockSize - offsetInBlock;
 
         } else if (block == endBlockIndex) {
 
             read_inode_block(
-                fs,
                 inode,
                 block,
                 buf,
                 0,
-                (offset + size) % fs->blockSize
+                (offset + size) % inode->fileSystem->blockSize
             );
 
         } else {
-            read_inode_block(fs, inode, block, buffer, 0, fs->blockSize);
-            buf += fs->blockSize;
+            read_inode_block(inode, block, buffer, 0, inode->fileSystem->blockSize);
+            buf += inode->fileSystem->blockSize;
         }
     }
 
     return 0;
 }
 
-int read_inode_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len) {
+static int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len) {
 
-    size_t block = block_index_to_block(fs, inode, blockIndex);
+    size_t block = block_index_to_block(inode->fileSystem, inode->data, blockIndex);
 
     size_t bufferIndex;
     for (bufferIndex = 0 ; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
-        if (fs->blockBufferOwner[bufferIndex] == inode) {
+        if (inode->fileSystem->blockBufferOwner[bufferIndex] == inode->data) {
             break;
         }
     }
 
     if (bufferIndex == BLOCK_BUFFER_COUNT) {
         for (bufferIndex = 0; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
-            if (fs->blockBufferOwner[bufferIndex] == NULL) {
+            if (inode->fileSystem->blockBufferOwner[bufferIndex] == NULL) {
                 break;
             }
         }
 
         if (bufferIndex == BLOCK_BUFFER_COUNT) {
-            bufferIndex = fs->evictBlockBuffer++;
+            bufferIndex = inode->fileSystem->evictBlockBuffer++;
         }
 
-        fs->blockBufferOwner[bufferIndex] = inode;
-        fs->blockBufferAddress[bufferIndex] = 0;
+        inode->fileSystem->blockBufferOwner[bufferIndex] = inode->data;
+        inode->fileSystem->blockBufferAddress[bufferIndex] = 0;
     }
 
-    if (fs->blockBufferAddress[bufferIndex] != block) {
+    if (inode->fileSystem->blockBufferAddress[bufferIndex] != block) {
 
-        fs->blockBufferAddress[bufferIndex] = block;
-        if (read_block(fs, block, fs->blockBuffer[bufferIndex]) == -1) {
+        inode->fileSystem->blockBufferAddress[bufferIndex] = block;
+        if (read_block(inode->fileSystem, block, inode->fileSystem->blockBuffer[bufferIndex]) == -1) {
             return -1;
         }
     }
 
-    char* from = (char*) fs->blockBuffer[bufferIndex] + offset;
+    char* from = (char*) inode->fileSystem->blockBuffer[bufferIndex] + offset;
     char* to = buffer;
     for (size_t i = 0; i < len; i++) {
         to[i] = from[i];
@@ -141,7 +143,7 @@ int read_block_index(struct ext2* fs, int level, size_t block) {
     return 0;
 }
 
-int ext2_write_inode_content(struct ext2* fs, struct ext2_Inode* inode, size_t offset, size_t size, void* buffer) {
+int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer) {
 
 
 }
