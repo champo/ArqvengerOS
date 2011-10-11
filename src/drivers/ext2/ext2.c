@@ -44,9 +44,8 @@ struct ext2* ext2_load(unsigned long long startSector) {
     }
 
     struct fs_Directory* dir = kalloc(sizeof(struct fs_Directory));
-    dir->inode = kalloc(sizeof(struct fs_Inode));
     dir->offset = 0;
-    dir->inode->data = ext2_read_inode(fs, 2);
+    dir->inode = ext2_read_inode(fs, 2);
     kprintf("Root dir size %u type %u\n", dir->inode->data->size, INODE_TYPE(dir->inode->data));
     struct DirectoryEntry entry = ext2_dir_read(dir);
     while (entry.inode != 0) {
