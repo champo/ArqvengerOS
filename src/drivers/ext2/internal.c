@@ -30,3 +30,17 @@ int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len
     return 0;
 }
 
+int write_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, const void* buffer) {
+    return ata_write(fs->firstSector + sector, sectors, buffer);
+}
+
+int write_block(struct ext2* fs, size_t block, const void* buffer) {
+
+    if (block > fs->sb->totalBlocks) {
+        return -1;
+    }
+
+    return write_sectors(fs, block * fs->sectorsPerBlock, fs->sectorsPerBlock, buffer);
+}
+
+

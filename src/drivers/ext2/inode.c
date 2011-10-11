@@ -8,6 +8,10 @@ static int read_block_index(struct ext2* fs, int level, size_t block);
 
 static size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex);
 
+static int load_buffer(struct fs_Inode* inode, size_t block);
+
+static int allocate_blocks(struct fs_Inode* inode, size_t totalBlocks);
+
 struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
 
     if (fs->sb->totalInodes < number) {
@@ -90,9 +94,26 @@ int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, 
     return 0;
 }
 
-static int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len) {
+int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len) {
 
     size_t block = block_index_to_block(inode->fileSystem, inode->data, blockIndex);
+    int bufferIndex = load_buffer(inode, block);
+
+    if (bufferIndex == -1) {
+        return -1;
+    }
+
+
+    char* from = (char*) inode->fileSystem->blockBuffer[bufferIndex] + offset;
+    char* to = buffer;
+    for (size_t i = 0; i < len; i++) {
+        to[i] = from[i];
+    }
+
+    return 0;
+}
+
+int load_buffer(struct fs_Inode* inode, size_t block) {
 
     size_t bufferIndex;
     for (bufferIndex = 0 ; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
@@ -124,13 +145,7 @@ static int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buf
         }
     }
 
-    char* from = (char*) inode->fileSystem->blockBuffer[bufferIndex] + offset;
-    char* to = buffer;
-    for (size_t i = 0; i < len; i++) {
-        to[i] = from[i];
-    }
-
-    return 0;
+    return bufferIndex;
 }
 
 int read_block_index(struct ext2* fs, int level, size_t block) {
@@ -145,7 +160,61 @@ int read_block_index(struct ext2* fs, int level, size_t block) {
 
 int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer) {
 
+    struct ext2_Inode* node = inode->data;
+    struct ext2* fs = inode->fileSystem;
 
+    size_t allocatedDataBlocks = node->size / fs->blockSize;
+
+    size_t firstBlockIndex = offset / inode->fileSystem->blockSize;
+    size_t endBlockIndex = (offset + size) / inode->fileSystem->blockSize;
+
+    if (endBlockIndex > allocatedDataBlocks) {
+        if (allocate_blocks(inode, endBlockIndex) == -1) {
+            return -1;
+        }
+    }
+
+    size_t remainingBytes = size;
+    char* from = buffer;
+
+    for (size_t blockIndex = firstBlockIndex; blockIndex <= endBlockIndex; blockIndex++) {
+
+        size_t blockOffset = blockIndex * fs->blockSize;
+        size_t startInBlock = offset - blockOffset;
+        size_t block = block_index_to_block(fs, node, blockIndex);
+
+        if (startInBlock > 0 || remainingBytes < fs->blockSize) {
+
+            // We gotta read the block, modify it, and write it
+
+            size_t bufferIndex = load_buffer(inode, block);
+            char* to = fs->blockBuffer[bufferIndex];
+
+            size_t end = fs->blockSize;
+            if (remainingBytes < fs->blockSize) {
+                end = remainingBytes + startInBlock;
+            }
+
+            for (size_t i = startInBlock; i < end; i++) {
+                to[i] = *from;
+                from++;
+            }
+
+            write_block(fs, block, fs->blockBuffer[bufferIndex]);
+
+        } else {
+
+            write_block(fs, block, from);
+            from += fs->blockSize;
+        }
+    }
+
+    return 0;
+}
+
+int allocate_blocks(struct fs_Inode* inode, size_t totalBlocks) {
+    //TODO: Do sth
+    return 0;
 }
 
 size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex) {
