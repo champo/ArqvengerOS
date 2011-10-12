@@ -22,7 +22,7 @@ struct ext2_Inode {
     unsigned int deletitionTime; //Posix time.
     unsigned short groupID;
     unsigned short hardLinks;
-    unsigned int counDiskSectors;
+    unsigned int countDiskSectors;
     unsigned int flags;
     unsigned int operatingSystemValue;
     unsigned int directBlockPointers[12];

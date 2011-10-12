@@ -36,6 +36,9 @@ struct ext2* ext2_load(unsigned long long startSector) {
         fs->blockBuffer[i] = kalloc(fs->blockSize);
     }
 
+    fs->bitmapBlock = 0;
+    fs->bitmapBuffer = kalloc(fs->blockSize);
+
     ext2_read_blockgroup_table(fs);
 
     kprintf("Block size %u Sectors per block %u\n", fs->blockSize, fs->sectorsPerBlock);

@@ -73,6 +73,9 @@ struct ext2 {
 
     unsigned int fragmentReadBlock;
     void* fragmentReadBuffer;
+
+    unsigned int bitmapBlock;
+    void* bitmapBuffer;
 };
 
 int read_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, void* buffer);
@@ -84,5 +87,7 @@ int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len
 int write_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, const void* buffer);
 
 int write_block(struct ext2* fs, size_t block, const void* buffer);
+
+int write_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, const void* buffer);
 
 #endif

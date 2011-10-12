@@ -15,9 +15,12 @@ int read_block(struct ext2* fs, size_t block, void* buffer) {
 
 int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, void* buffer) {
 
-    fs->fragmentReadBlock = block;
-    if (read_block(fs, block, fs->fragmentReadBuffer) == -1) {
-        return -1;
+    if (fs->fragmentReadBlock != block) {
+        fs->fragmentReadBlock = block;
+        if (read_block(fs, block, fs->fragmentReadBuffer) == -1) {
+            fs->fragmentReadBuffer = 0;
+            return -1;
+        }
     }
 
     char* dest = buffer;
@@ -41,6 +44,26 @@ int write_block(struct ext2* fs, size_t block, const void* buffer) {
     }
 
     return write_sectors(fs, block * fs->sectorsPerBlock, fs->sectorsPerBlock, buffer);
+}
+
+int write_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, const void* buffer) {
+
+    if (fs->fragmentReadBlock != block) {
+        fs->fragmentReadBlock = block;
+        if (read_block(fs, block, fs->fragmentReadBuffer) == -1) {
+            fs->fragmentReadBuffer = 0;
+            return -1;
+        }
+    }
+
+    char* dest = (char*) fs->fragmentReadBuffer + offset;
+    const char* origin = buffer;
+
+    for (size_t i = 0; i < len; i++) {
+        dest[i] = origin[i];
+    }
+
+    return write_block(fs, block, fs->fragmentReadBuffer);
 }
 
 
