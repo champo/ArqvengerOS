@@ -2,11 +2,11 @@
 #include "drivers/ext2/superblock.h"
 #include "drivers/ext2/blockGroup.h"
 
-#define BYTE_FOR_BLOCK(block) fs->bitmapBuffer[block / sizeof(unsigned char)]
-#define HAS_FREE_BLOCK(index) (fs->bitmapBuffer[index] != 0xFF)
-#define BLOCK_TEST(block) ((BYTE_FOR_BLOCK(block) >> (block % sizeof(unsigned char))) & 0x1)
-#define SET_BLOCK(block) (BYTE_FOR_BLOCK(block) |= (0x1 << (block % sizeof(unsigned char))))
-#define UNSET_BLOCK(block) (BYTE_FOR_BLOCK(block) &= ~(1 << (block % sizeof(unsigned char))))
+#define BYTE_FOR_BLOCK(block) fs->bitmapBuffer[(block) / sizeof(unsigned char)]
+#define HAS_FREE_BLOCK(index) (fs->bitmapBuffer[(index)] != 0xFF)
+#define BLOCK_TEST(block) ((BYTE_FOR_BLOCK(block) >> ((block) % sizeof(unsigned char))) & 0x1)
+#define SET_BLOCK(block) (BYTE_FOR_BLOCK(block) |= (0x1 << ((block) % sizeof(unsigned char))))
+#define UNSET_BLOCK(block) (BYTE_FOR_BLOCK(block) &= ~(1 << ((block) % sizeof(unsigned char))))
 
 static int write_group_bitmap(struct ext2* fs, int group);
 
@@ -46,7 +46,8 @@ size_t allocate_in_group(struct ext2* fs, int blockGroup) {
             for (size_t j = 0; j < sizeof(unsigned char); j++) {
                 if (!BLOCK_TEST(i * sizeof(unsigned char) + j)) {
                     reserve_block(fs, blockGroup, i * sizeof(unsigned char) + j);
-                    return i * sizeof(unsigned char) + j;
+                    if (!BLOCK_TEST(i * sizeof(unsigned char) + j)) kprintf("WTF");
+                    return blockGroup * fs->sb->blocksPerBlockGroup + i * sizeof(unsigned char) + j;
                 }
             }
         }
