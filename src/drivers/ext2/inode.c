@@ -27,8 +27,8 @@ struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
         return NULL;
     }
 
-    size_t blockGroup = number / fs->sb->blocksPerBlockGroup;
-    size_t index = (number - 1) % fs->sb->blocksPerBlockGroup;
+    size_t blockGroup = number / fs->sb->inodesPerBlockGroup;
+    size_t index = (number - 1) % fs->sb->inodesPerBlockGroup;
 
     if (blockGroup >= fs->blockGroupCount) {
         return NULL;
@@ -260,7 +260,7 @@ size_t allocate_data_block(struct fs_Inode* inode, size_t blockIndex) {
 
     size_t pointersPerBlock = fs->blockSize / sizeof(size_t);
 
-    size_t blockGroup = inode->number / fs->sb->blocksPerBlockGroup;
+    size_t blockGroup = inode->number / fs->sb->inodesPerBlockGroup;
 
     size_t newBlock = allocate_block(fs, blockGroup);
     if (newBlock == 0) {
@@ -469,8 +469,8 @@ int write_inode(struct fs_Inode* inode) {
 
     struct ext2* fs = inode->fileSystem;
 
-    size_t blockGroup = inode->number / fs->sb->blocksPerBlockGroup;
-    size_t index = (inode->number - 1) % fs->sb->blocksPerBlockGroup;
+    size_t blockGroup = inode->number / fs->sb->inodesPerBlockGroup;
+    size_t index = (inode->number - 1) % fs->sb->inodesPerBlockGroup;
 
     size_t offsetInTable = sizeof(struct ext2_Inode) * index;
     size_t tableBlock = offsetInTable / fs->blockSize;
