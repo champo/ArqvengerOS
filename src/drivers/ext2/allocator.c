@@ -89,8 +89,14 @@ int read_block_bitmap(struct ext2* fs, int group) {
 }
 
 int deallocate_block(struct ext2* fs, size_t block) {
-    int blockGroup = block / fs->sb->blocksPerBlockGroup;
-    int blockIndex = block % fs->sb->blocksPerBlockGroup;
+
+    // If the block size is 1024 bytes, then we have an empty block at the start
+    size_t blockOffset = fs->sb->blockSize == 0;
+
+    int blockGroup = (block - blockOffset) / fs->sb->blocksPerBlockGroup;
+    int blockIndex = (block - blockOffset) % fs->sb->blocksPerBlockGroup;
+
+    kprintf("Deallocating block %u, on group %u\n", block, blockGroup);
 
     if (read_block_bitmap(fs, blockGroup) == -1) {
         return -1;
@@ -148,6 +154,12 @@ int deallocate_inode(struct ext2* fs, size_t inode) {
     if (write_inode_bitmap(fs, blockGroup) == -1) {
         return -1;
     }
+
+    fs->sb->unallocatedInodes++;
+    ext2_superblock_write(fs);
+
+    fs->groupTable[blockGroup].unallocatedInodes++;
+    ext2_write_blockgroup_table(fs);
 
     return 0;
 }
