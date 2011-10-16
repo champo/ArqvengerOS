@@ -506,7 +506,7 @@ struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, i
 
     inode->data->countDiskSectors = 0;
     inode->data->size = 0;
-    inode->data->hardLinks = 1;
+    inode->data->hardLinks = 0;
 
     size_t now = _time(NULL);
     inode->data->lastAccess = now;
