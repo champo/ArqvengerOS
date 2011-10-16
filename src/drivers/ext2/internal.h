@@ -80,7 +80,7 @@ struct ext2 {
     void* fragmentReadBuffer;
 
     unsigned int bitmapBlock;
-    unsigned char* bitmapBuffer;
+    unsigned int* bitmapBuffer;
 };
 
 int read_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, void* buffer);
