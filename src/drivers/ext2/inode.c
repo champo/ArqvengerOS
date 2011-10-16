@@ -585,7 +585,6 @@ int free_blocks(struct ext2* fs, unsigned int* table, size_t size) {
         if (table[i] != 0) {
             deallocate_block(fs, table[i]);
         } else {
-            kprintf("Breaking at index %u of %u\n", i, size);
             break;
         }
     }
