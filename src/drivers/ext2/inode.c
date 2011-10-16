@@ -187,6 +187,18 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
     size_t remainingBytes = size;
     unsigned char* from = buffer;
 
+    // If the offset is after the file end, let's make sure we fill in any blocks in the middle
+    for (size_t blockIndex = node->size / fs->blockSize; blockIndex < firstBlockIndex; blockIndex++) {
+        size_t block = block_index_to_block(fs, node, blockIndex);
+        if (block == 0) {
+            kprintf("Allocating block to fill empty area\n");
+            block = allocate_data_block(inode, blockIndex);
+            if (block == 0) {
+                break;
+            }
+        }
+    }
+
     for (size_t blockIndex = firstBlockIndex; blockIndex <= endBlockIndex; blockIndex++) {
 
         size_t blockOffset = blockIndex * fs->blockSize;
@@ -201,7 +213,6 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
             kprintf("Allocating block\n");
             block = allocate_data_block(inode, blockIndex);
             if (block == 0) {
-                kprintf("Failed to get a new one, bailing\n");
                 break;
             }
         }
@@ -242,7 +253,6 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
     size_t writtenBytes = size - remainingBytes;
     if (offset + writtenBytes > node->size) {
         node->size = offset + writtenBytes;
-        kprintf("New size %u\n", node->size);
     }
 
     ext2_write_inode(inode);
@@ -264,7 +274,6 @@ size_t allocate_data_block(struct fs_Inode* inode, size_t blockIndex) {
 
     size_t newBlock = allocate_block(fs, blockGroup);
     if (newBlock == 0) {
-        kprintf("Got none\n");
         return 0;
     }
 
