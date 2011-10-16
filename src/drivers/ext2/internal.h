@@ -87,11 +87,15 @@ int read_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, voi
 
 int read_block(struct ext2* fs, size_t block, void* buffer);
 
+int read_blocks(struct ext2* fs, size_t start, size_t blocks, void* buffer);
+
 int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, void* buffer);
 
 int write_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, const void* buffer);
 
 int write_block(struct ext2* fs, size_t block, const void* buffer);
+
+int write_blocks(struct ext2* fs, size_t start, size_t blocks, const void* buffer);
 
 int write_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, const void* buffer);
 

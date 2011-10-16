@@ -47,4 +47,6 @@ int ext2_write_inode(struct fs_Inode* inode);
 
 struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, int uid, int gid);
 
+int ext2_delete_inode(struct fs_Inode* inode);
+
 #endif

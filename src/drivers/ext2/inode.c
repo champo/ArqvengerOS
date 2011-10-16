@@ -17,8 +17,11 @@ static int load_buffer(struct fs_Inode* inode, size_t block);
 
 static size_t allocate_data_block(struct fs_Inode* inode, size_t blockIndex);
 
+static int free_blocks(struct ext2* fs, unsigned int* table, size_t size);
 
 static int clear_block_index(struct ext2* fs, int level, size_t block);
+
+static int free_index(struct ext2* fs, unsigned int indexBlock, int level, int maxLevel);
 
 struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
 
@@ -503,7 +506,7 @@ struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, i
 
     inode->data->countDiskSectors = 0;
     inode->data->size = 0;
-    inode->data->hardLinks = 0;
+    inode->data->hardLinks = 1;
 
     size_t now = _time(NULL);
     inode->data->lastAccess = now;
@@ -517,5 +520,62 @@ struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, i
 
     ext2_write_inode(inode);
     return inode;
+}
+
+int ext2_delete_inode(struct fs_Inode* inode) {
+
+    inode->data->hardLinks = 0;
+    inode->data->deletionTime = _time(NULL);
+    ext2_write_inode(inode);
+
+    struct ext2_Inode* node = inode->data;
+    struct ext2* fs = inode->fileSystem;
+
+    free_blocks(fs, node->directBlockPointers, 12);
+    free_index(fs, node->singlyIndirectBlockPointer, 0, 1);
+    free_index(fs, node->doublyIndirectBlockPointer, 0, 2);
+    free_index(fs, node->triplyIndirectBlockPointer, 0, 3);
+
+    return deallocate_inode(inode->fileSystem, inode->number);
+}
+
+int free_index(struct ext2* fs, unsigned int indexBlock, int level, int maxLevel) {
+
+    if (indexBlock == 0) {
+        return 0;
+    }
+
+    if (read_block_index(fs, level, indexBlock) == -1) {
+        return -1;
+    }
+
+    size_t entries = fs->blockSize / sizeof(unsigned int);
+
+    if (level + 1 < maxLevel) {
+        for (size_t i = 0; i < entries; i++) {
+
+            if (fs->blockIndexBuffer[level][i] != 0) {
+                free_index(fs, fs->blockIndexBuffer[level][i], level + 1, maxLevel);
+            } else {
+                break;
+            }
+        }
+    }
+
+    return free_blocks(fs, fs->blockIndexBuffer[level], entries);
+}
+
+int free_blocks(struct ext2* fs, unsigned int* table, size_t size) {
+
+    for (size_t i = 0; i < size; i++) {
+
+        if (table[i] != 0) {
+            deallocate_block(fs, table[i]);
+        } else {
+            break;
+        }
+    }
+
+    return 0;
 }
 

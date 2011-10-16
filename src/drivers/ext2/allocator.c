@@ -40,14 +40,21 @@ size_t allocate_in_group(struct ext2* fs, int blockGroup) {
         return 0;
     }
 
-    size_t bitmapLength = fs->sb->blocksPerBlockGroup / sizeof(unsigned char);
+    // If the block size is 1024 bytes, then we have an empty block at the start
+    size_t blockOffset = fs->sb->blockSize == 0;
+
+    size_t bitmapLength = fs->sb->blocksPerBlockGroup;
+
+    kprintf("Looking for block in group %u, with bitmap len %u, block start %u\n", blockGroup, bitmapLength,
+            blockOffset + blockGroup * fs->sb->blocksPerBlockGroup);
+
     int block = bitmap_first_clear(fs->bitmapBuffer, bitmapLength);
     if (block == -1) {
         return 0;
     }
 
     reserve_block(fs, blockGroup, block);
-    return blockGroup * fs->sb->blocksPerBlockGroup + block;
+    return blockOffset + blockGroup * fs->sb->blocksPerBlockGroup + block;
 }
 
 int reserve_block(struct ext2* fs, int blockGroup, size_t block) {
@@ -103,7 +110,7 @@ int deallocate_block(struct ext2* fs, size_t block) {
 
 size_t allocate_inode(struct ext2* fs) {
 
-    size_t entries = fs->sb->inodesPerBlockGroup / sizeof(unsigned int);
+    size_t entries = fs->sb->inodesPerBlockGroup;
     for (size_t i = 0; i < fs->blockGroupCount; i++) {
 
         if (read_inode_bitmap(fs, i) == -1) {

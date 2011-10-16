@@ -13,6 +13,15 @@ int read_block(struct ext2* fs, size_t block, void* buffer) {
     return read_sectors(fs, block * fs->sectorsPerBlock, fs->sectorsPerBlock, buffer);
 }
 
+int read_blocks(struct ext2* fs, size_t start, size_t blocks, void* buffer) {
+
+    if (start + blocks > fs->sb->totalBlocks) {
+        return -1;
+    }
+
+    return read_sectors(fs, start * fs->sectorsPerBlock, fs->sectorsPerBlock * blocks, buffer);
+}
+
 int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, void* buffer) {
 
     if (fs->fragmentReadBlock != block) {
@@ -44,6 +53,15 @@ int write_block(struct ext2* fs, size_t block, const void* buffer) {
     }
 
     return write_sectors(fs, block * fs->sectorsPerBlock, fs->sectorsPerBlock, buffer);
+}
+
+int write_blocks(struct ext2* fs, size_t start, size_t blocks, const void* buffer) {
+
+    if (start + blocks > fs->sb->totalBlocks) {
+        return -1;
+    }
+
+    return write_sectors(fs, start * fs->sectorsPerBlock, blocks * fs->sectorsPerBlock, buffer);
 }
 
 int write_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len, const void* buffer) {

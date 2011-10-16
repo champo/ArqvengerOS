@@ -15,9 +15,11 @@ int ext2_read_blockgroup_table(struct ext2* fs) {
         block = 2;
     }
 
-    struct BlockGroupDescriptor* table = kalloc(fs->blockSize);
+    size_t tableSize = fs->blockGroupCount * sizeof(struct BlockGroupDescriptor);
+    size_t blocks = (tableSize / fs->blockSize) + 1;
+    struct BlockGroupDescriptor* table = kalloc(fs->blockSize * blocks);
 
-    if (read_block(fs, block, table) == -1) {
+    if (read_blocks(fs, block, blocks, table) == -1) {
         return -1;
     }
 
@@ -35,7 +37,9 @@ int ext2_write_blockgroup_table(struct ext2* fs) {
         block = 2;
     }
 
+    size_t tableSize = fs->blockGroupCount * sizeof(struct BlockGroupDescriptor);
+    size_t blocks = (tableSize / fs->blockSize) + 1;
 
-    return write_block(fs, block, fs->groupTable);
+    return write_blocks(fs, block, blocks, fs->groupTable);
 }
 
