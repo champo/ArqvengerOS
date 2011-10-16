@@ -45,7 +45,7 @@ struct BlockGroupDescriptor {
     unsigned int inodeTableStart;
 
     unsigned short unallocatedBlocks;
-    unsigned short unalloactedInodes;
+    unsigned short unallocatedInodes;
 
     unsigned short directoryCount;
 

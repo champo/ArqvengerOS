@@ -42,4 +42,8 @@ int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, 
 
 int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer);
 
+int ext2_write_inode(struct fs_Inode* inode);
+
+struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, int uid, int gid);
+
 #endif

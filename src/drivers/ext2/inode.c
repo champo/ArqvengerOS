@@ -17,7 +17,6 @@ static int load_buffer(struct fs_Inode* inode, size_t block);
 
 static size_t allocate_data_block(struct fs_Inode* inode, size_t blockIndex);
 
-static int write_inode(struct fs_Inode* inode);
 
 static int clear_block_index(struct ext2* fs, int level, size_t block);
 
@@ -50,7 +49,7 @@ struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
     );
     fs_inode->data->lastAccess = _time(NULL);
 
-    write_inode(fs_inode);
+    ext2_write_inode(fs_inode);
 
     return fs_inode;
 }
@@ -203,7 +202,6 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
                 break;
             }
         }
-        kprintf("Writing to block %u (%u) - offset %u remaining %u\n", blockIndex, block, startInBlock, remainingBytes);
 
         if (startInBlock > 0 || remainingBytes < fs->blockSize) {
 
@@ -216,7 +214,7 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
             if (startInBlock + remainingBytes < fs->blockSize) {
                 end = remainingBytes + startInBlock;
             }
-            kprintf("Buf idx %u end %u start %u\n", bufferIndex, end, startInBlock);
+            kprintf("Writing to block %u (%u) - offset %u remaining %u, start %u, end %u\n", blockIndex, block, startInBlock, remainingBytes, startInBlock, end);
 
             for (size_t i = startInBlock; i < end; i++) {
                 to[i] = *from;
@@ -238,14 +236,13 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
         }
     }
 
-    node->lastModification = _time(NULL);
     size_t writtenBytes = size - remainingBytes;
     if (offset + writtenBytes > node->size) {
         node->size = offset + writtenBytes;
         kprintf("New size %u\n", node->size);
     }
 
-    write_inode(inode);
+    ext2_write_inode(inode);
     fs->sb->lastWrittenTime = node->lastModification;
 
     ext2_superblock_write(fs);
@@ -465,7 +462,7 @@ size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t bl
     return block;
 }
 
-int write_inode(struct fs_Inode* inode) {
+int ext2_write_inode(struct fs_Inode* inode) {
 
     struct ext2* fs = inode->fileSystem;
 
@@ -474,6 +471,7 @@ int write_inode(struct fs_Inode* inode) {
 
     size_t offsetInTable = sizeof(struct ext2_Inode) * index;
     size_t tableBlock = offsetInTable / fs->blockSize;
+    inode->data->lastModification = _time(NULL);
 
     return write_block_fragment(
         fs,
@@ -482,5 +480,39 @@ int write_inode(struct fs_Inode* inode) {
         sizeof(struct ext2_Inode),
         inode->data
     );
+}
+
+struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, int uid, int gid) {
+
+    size_t number = allocate_inode(fs);
+    if (number == 0) {
+        return NULL;
+    }
+
+    struct fs_Inode* inode = ext2_read_inode(fs, number);
+    if (inode == NULL) {
+        return NULL;
+    }
+
+    for (int i = 0; i < 12; i++) {
+        inode->data->directBlockPointers[i] = 0;
+    }
+    inode->data->singlyIndirectBlockPointer = 0;
+    inode->data->doublyIndirectBlockPointer = 0;
+    inode->data->triplyIndirectBlockPointer = 0;
+
+    inode->data->countDiskSectors = 0;
+
+    size_t now = _time(NULL);
+    inode->data->lastAccess = now;
+    inode->data->creationTime = now;
+    inode->data->lastModification = now;
+
+    inode->data->userID = uid;
+    inode->data->groupID = gid;
+    inode->data->typesAndPermissions = (type << 12) | permissions;
+
+    ext2_write_inode(inode);
+    return inode;
 }
 

@@ -8,4 +8,8 @@ size_t allocate_block(struct ext2* fs, int groupHint);
 
 int deallocate_block(struct ext2* fs, size_t block);
 
+size_t allocate_inode(struct ext2* fs);
+
+int deallocate_inode(struct ext2* fs, size_t inode);
+
 #endif
