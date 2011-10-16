@@ -3,6 +3,8 @@
 #include "drivers/ext2/blockGroup.h"
 #include "bitmap.h"
 
+#define FIRST_USABLE_INODE 11
+
 static int write_block_bitmap(struct ext2* fs, int group);
 
 static int read_block_bitmap(struct ext2* fs, int group);
@@ -109,7 +111,7 @@ size_t allocate_inode(struct ext2* fs) {
         }
 
         int entry = bitmap_first_clear(fs->bitmapBuffer, entries);
-        if (entry != -1) {
+        if (entry != -1 && entry + i * fs->sb->inodesPerBlockGroup >= FIRST_USABLE_INODE) {
             bitmap_set(fs->bitmapBuffer, entry);
             write_inode_bitmap(fs, i);
 
