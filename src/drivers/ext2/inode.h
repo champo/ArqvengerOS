@@ -20,7 +20,7 @@ struct ext2_Inode {
     unsigned int lastAccess; //Posix time.
     unsigned int creationTime; //Posix time.
     unsigned int lastModification; //Posix time.
-    unsigned int deletitionTime; //Posix time.
+    unsigned int deletionTime; //Posix time.
     unsigned short gid;
     unsigned short hardLinks;
     unsigned int countDiskSectors;

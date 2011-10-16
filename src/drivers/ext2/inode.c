@@ -509,6 +509,7 @@ struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, i
     inode->data->lastAccess = now;
     inode->data->creationTime = now;
     inode->data->lastModification = now;
+    inode->data->deletionTime = 0;
 
     inode->data->uid = uid;
     inode->data->gid = gid;
