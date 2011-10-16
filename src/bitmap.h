@@ -10,7 +10,7 @@ inline static void bitmap_set(unsigned int* map, int bit) {
 }
 
 inline static void bitmap_clear(unsigned int* map, int bit) {
-    BYTE(map, bit) &= ~(0x1 << (bit % ENTRIES_PER_SLOT));
+    BYTE(map, bit) &= ~(0x1u << (bit % ENTRIES_PER_SLOT));
 }
 
 inline static int bitmap_test(unsigned int* map, int bit) {
