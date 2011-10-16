@@ -26,3 +26,16 @@ int ext2_read_blockgroup_table(struct ext2* fs) {
     return 0;
 }
 
+int ext2_write_blockgroup_table(struct ext2* fs) {
+
+    size_t block;
+    if (SUPERBLOCK_END <= fs->blockSize) {
+        block = 1;
+    } else {
+        block = 2;
+    }
+
+
+    return write_block(fs, block, fs->groupTable);
+}
+

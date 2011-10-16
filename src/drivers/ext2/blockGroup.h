@@ -5,4 +5,6 @@
 
 int ext2_read_blockgroup_table(struct ext2* fs);
 
+int ext2_write_blockgroup_table(struct ext2* fs);
+
 #endif

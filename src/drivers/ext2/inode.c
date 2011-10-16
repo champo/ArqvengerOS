@@ -3,18 +3,23 @@
 #include "system/mm.h"
 #include "system/fs/inode.h"
 #include "system/call.h"
+#include "drivers/ext2/allocator.h"
 
 static int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len);
 
 static int read_block_index(struct ext2* fs, int level, size_t block);
 
+static int write_block_index(struct ext2* fs, int level);
+
 static size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex);
 
 static int load_buffer(struct fs_Inode* inode, size_t block);
 
-static int allocate_blocks(struct fs_Inode* inode, size_t totalBlocks);
+static size_t allocate_data_block(struct fs_Inode* inode, size_t blockIndex);
 
 static int write_inode(struct fs_Inode* inode);
+
+static int clear_block_index(struct ext2* fs, int level, size_t block);
 
 struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
 
@@ -155,6 +160,10 @@ int load_buffer(struct fs_Inode* inode, size_t block) {
     return bufferIndex;
 }
 
+int write_block_index(struct ext2* fs, int level) {
+    return write_block(fs, fs->blockIndexAddress[level], fs->blockIndexBuffer[level]);
+}
+
 int read_block_index(struct ext2* fs, int level, size_t block) {
 
     if (fs->blockIndexAddress[level] != block) {
@@ -170,39 +179,44 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
     struct ext2_Inode* node = inode->data;
     struct ext2* fs = inode->fileSystem;
 
-    size_t allocatedDataBlocks = 512 * node->countDiskSectors / fs->blockSize;
-
-    size_t firstBlockIndex = offset / inode->fileSystem->blockSize;
-    size_t endBlockIndex = (offset + size) / inode->fileSystem->blockSize;
-
-    if (endBlockIndex >= allocatedDataBlocks) {
-        if (allocate_blocks(inode, endBlockIndex + 1) == -1) {
-            return -1;
-        }
-
-        //FIXME: allocate_blocks can actually fail to allocate everything, so take that into account
-    }
+    size_t firstBlockIndex = offset / fs->blockSize;
+    size_t endBlockIndex = (offset + size) / fs->blockSize;
 
     size_t remainingBytes = size;
-    char* from = buffer;
+    unsigned char* from = buffer;
 
     for (size_t blockIndex = firstBlockIndex; blockIndex <= endBlockIndex; blockIndex++) {
 
         size_t blockOffset = blockIndex * fs->blockSize;
-        size_t startInBlock = offset - blockOffset;
+        size_t startInBlock;
+        if (offset < blockOffset) {
+            startInBlock = 0;
+        } else {
+            startInBlock = offset - blockOffset;
+        }
         size_t block = block_index_to_block(fs, node, blockIndex);
+        if (block == 0) {
+            kprintf("Allocating block\n");
+            block = allocate_data_block(inode, blockIndex);
+            if (block == 0) {
+                kprintf("Failed to get a new one, bailing\n");
+                break;
+            }
+        }
+        kprintf("Writing to block %u (%u) - offset %u remaining %u\n", blockIndex, block, startInBlock, remainingBytes);
 
         if (startInBlock > 0 || remainingBytes < fs->blockSize) {
 
             // We gotta read the block, modify it, and write it
 
             size_t bufferIndex = load_buffer(inode, block);
-            char* to = fs->blockBuffer[bufferIndex];
+            unsigned char* to = fs->blockBuffer[bufferIndex];
 
             size_t end = fs->blockSize;
-            if (remainingBytes < fs->blockSize) {
+            if (startInBlock + remainingBytes < fs->blockSize) {
                 end = remainingBytes + startInBlock;
             }
+            kprintf("Buf idx %u end %u start %u\n", bufferIndex, end, startInBlock);
 
             for (size_t i = startInBlock; i < end; i++) {
                 to[i] = *from;
@@ -210,7 +224,7 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
             }
 
             write_block(fs, block, fs->blockBuffer[bufferIndex]);
-
+            remainingBytes -= end - startInBlock;
         } else {
 
             for (size_t i = 0; i < BLOCK_BUFFER_COUNT; i++) {
@@ -225,8 +239,10 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
     }
 
     node->lastModification = _time(NULL);
-    if (offset + size > node->size) {
-        node->size = offset + size;
+    size_t writtenBytes = size - remainingBytes;
+    if (offset + writtenBytes > node->size) {
+        node->size = offset + writtenBytes;
+        kprintf("New size %u\n", node->size);
     }
 
     write_inode(inode);
@@ -234,24 +250,152 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
 
     ext2_superblock_write(fs);
 
-    //TODO: Return the number of bytes written
-    return 0;
+    return writtenBytes;
 }
 
-int allocate_blocks(struct fs_Inode* inode, size_t totalBlocks) {
+size_t allocate_data_block(struct fs_Inode* inode, size_t blockIndex) {
 
     struct ext2_Inode* node = inode->data;
     struct ext2* fs = inode->fileSystem;
 
-    size_t allocatedDataBlocks = 512 * node->countDiskSectors / fs->blockSize;
+    size_t pointersPerBlock = fs->blockSize / sizeof(size_t);
 
     size_t blockGroup = inode->number / fs->sb->blocksPerBlockGroup;
-    size_t index = (inode->number - 1) % fs->sb->blocksPerBlockGroup;
 
-    // Search the block bitmap in the same block group as the inode
-    // If none can be found, search elsewhere
-    // remember to update the block group block count, and the sb block count
-    // Also, the amount of blocks in the inode
+    size_t newBlock = allocate_block(fs, blockGroup);
+    if (newBlock == 0) {
+        kprintf("Got none\n");
+        return 0;
+    }
+
+    if (blockIndex < 12) {
+        node->directBlockPointers[blockIndex] = newBlock;
+    } else if (blockIndex < 12 + pointersPerBlock) {
+
+        if (node->singlyIndirectBlockPointer == 0) {
+
+            node->singlyIndirectBlockPointer = allocate_block(fs, blockGroup);
+            if (node->singlyIndirectBlockPointer == 0) {
+                deallocate_block(fs, newBlock);
+                return 0;
+            }
+
+            inode->data->countDiskSectors += fs->sectorsPerBlock;
+        }
+
+        read_block_index(fs, 0, node->singlyIndirectBlockPointer);
+        fs->blockIndexBuffer[0][blockIndex - 12] = newBlock;
+        write_block_index(fs, 0);
+
+    } else if (blockIndex < 12 + pointersPerBlock + pointersPerBlock * pointersPerBlock) {
+
+        size_t offsetInLevel = blockIndex - 12 - pointersPerBlock;
+        size_t firstLevel = offsetInLevel / pointersPerBlock;
+        size_t secondLevel = offsetInLevel % pointersPerBlock;
+
+        if (node->doublyIndirectBlockPointer == 0) {
+
+            node->doublyIndirectBlockPointer = allocate_block(fs, blockGroup);
+            if (node->doublyIndirectBlockPointer == 0) {
+                deallocate_block(fs, newBlock);
+                return 0;
+            }
+
+            inode->data->countDiskSectors += fs->sectorsPerBlock;
+        }
+
+        read_block_index(fs, 0, node->doublyIndirectBlockPointer);
+
+        if (fs->blockIndexBuffer[0][firstLevel] == 0) {
+
+            fs->blockIndexBuffer[0][firstLevel] = allocate_block(fs, blockGroup);
+            if (fs->blockIndexBuffer[0][firstLevel] == 0) {
+                deallocate_block(fs, newBlock);
+                return 0;
+            }
+
+            write_block_index(fs, 0);
+            clear_block_index(fs, 1, fs->blockIndexBuffer[0][firstLevel]);
+            inode->data->countDiskSectors += fs->sectorsPerBlock;
+        }
+
+        read_block_index(fs, 1, fs->blockIndexBuffer[0][firstLevel]);
+
+        fs->blockIndexBuffer[1][secondLevel] = newBlock;
+        write_block_index(fs, 1);
+
+    } else {
+
+        size_t pointersInSecondLevel = pointersPerBlock * pointersPerBlock;
+        size_t offsetInLevel = blockIndex - 12 - pointersPerBlock - pointersInSecondLevel;
+
+        size_t firstLevel = offsetInLevel / pointersInSecondLevel;
+        size_t secondLevel = (offsetInLevel / pointersPerBlock) % pointersPerBlock;
+        size_t thirdLevel = offsetInLevel % pointersPerBlock;
+
+        if (node->triplyIndirectBlockPointer == 0) {
+
+            node->triplyIndirectBlockPointer = allocate_block(fs, blockGroup);
+            if (node->triplyIndirectBlockPointer == 0) {
+                deallocate_block(fs, newBlock);
+                return 0;
+            }
+
+            inode->data->countDiskSectors += fs->sectorsPerBlock;
+        }
+
+        read_block_index(fs, 0, node->triplyIndirectBlockPointer);
+
+        if (fs->blockIndexBuffer[0][firstLevel] == 0) {
+
+            fs->blockIndexBuffer[0][firstLevel] = allocate_block(fs, blockGroup);
+            if (fs->blockIndexBuffer[0][firstLevel] == 0) {
+                deallocate_block(fs, newBlock);
+                return 0;
+            }
+
+            write_block_index(fs, 0);
+            clear_block_index(fs, 1, fs->blockIndexBuffer[0][firstLevel]);
+            inode->data->countDiskSectors += fs->sectorsPerBlock;
+        }
+
+        read_block_index(fs, 1, fs->blockIndexBuffer[0][firstLevel]);
+
+        if (fs->blockIndexBuffer[1][secondLevel] == 0) {
+
+            fs->blockIndexBuffer[1][secondLevel] = allocate_block(fs, blockGroup);
+            if (fs->blockIndexBuffer[1][secondLevel] == 0) {
+                deallocate_block(fs, newBlock);
+                return 0;
+            }
+
+            write_block_index(fs, 1);
+            clear_block_index(fs, 2, fs->blockIndexBuffer[1][secondLevel]);
+            inode->data->countDiskSectors += fs->sectorsPerBlock;
+        }
+
+        read_block_index(fs, 2, fs->blockIndexBuffer[1][secondLevel]);
+
+        fs->blockIndexBuffer[2][thirdLevel] = newBlock;
+        write_block_index(fs, 2);
+    }
+
+    inode->data->countDiskSectors += fs->sectorsPerBlock;
+
+    return newBlock;
+}
+
+int clear_block_index(struct ext2* fs, int level, size_t block) {
+
+    read_block_index(fs, level, block);
+
+    size_t entries = fs->blockSize / sizeof(unsigned int);
+    for (size_t i = 0; i < entries; i++) {
+        fs->blockIndexBuffer[level][i] = 0;
+    }
+
+    write_block_index(fs, level);
+
     return 0;
 }
 
@@ -264,6 +408,10 @@ size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t bl
         block = inode->directBlockPointers[blockIndex];
     } else if (blockIndex - 12 < pointersPerBlock) {
 
+        if (inode->singlyIndirectBlockPointer == 0) {
+            return 0;
+        }
+
         read_block_index(fs, 0, inode->singlyIndirectBlockPointer);
         block = fs->blockIndexBuffer[0][blockIndex - 12];
 
@@ -273,7 +421,15 @@ size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t bl
         size_t firstLevel = offsetInLevel / pointersPerBlock;
         size_t secondLevel = offsetInLevel % pointersPerBlock;
 
+        if (inode->doublyIndirectBlockPointer == 0) {
+            return 0;
+        }
+
         read_block_index(fs, 0, inode->doublyIndirectBlockPointer);
+        if (fs->blockIndexBuffer[0][firstLevel] == 0) {
+            return 0;
+        }
+
         read_block_index(fs, 1, fs->blockIndexBuffer[0][firstLevel]);
 
         block = fs->blockIndexBuffer[1][secondLevel];
@@ -287,8 +443,20 @@ size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t bl
         size_t secondLevel = (offsetInLevel / pointersPerBlock) % pointersPerBlock;
         size_t thirdLevel = offsetInLevel % pointersPerBlock;
 
+        if (inode->triplyIndirectBlockPointer == 0) {
+            return 0;
+        }
+
         read_block_index(fs, 0, inode->triplyIndirectBlockPointer);
+        if (fs->blockIndexBuffer[0][firstLevel] == 0) {
+            return 0;
+        }
+
         read_block_index(fs, 1, fs->blockIndexBuffer[0][firstLevel]);
+        if (fs->blockIndexBuffer[1][secondLevel] == 0) {
+            return 0;
+        }
+
         read_block_index(fs, 2, fs->blockIndexBuffer[1][secondLevel]);
 
         block = fs->blockIndexBuffer[2][thirdLevel];

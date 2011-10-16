@@ -28,6 +28,6 @@ int ext2_get_total_block_groups(struct Superblock* superblock) {
 }
 
 int ext2_superblock_write(struct ext2* fs) {
-    //TODO: Write it back
+    return write_sectors(fs, SUPERBLOCK_START, SUPERBLOCK_SECTORS, fs->sb);
 }
 
