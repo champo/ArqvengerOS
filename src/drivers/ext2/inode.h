@@ -5,7 +5,8 @@
 #include "drivers/ext2/internal.h"
 #include "system/fs/inode.h"
 
-#define INODE_TYPE(inode) ((inode->typesAndPermissions & 0xF000) >> 12)
+#define INODE_TYPE(inode) (((inode)->typesAndPermissions & 0xF000) >> 12)
+#define INODE_PERMISSIONS(inode) ((inode)->typesAndPermissions & 0x0FFF)
 
 #define INODE_FIFO 0x1
 #define INODE_DIR 0x4
@@ -14,13 +15,13 @@
 
 struct ext2_Inode {
     unsigned short typesAndPermissions;
-    unsigned short userID;
+    unsigned short uid;
     unsigned int size;
     unsigned int lastAccess; //Posix time.
     unsigned int creationTime; //Posix time.
     unsigned int lastModification; //Posix time.
     unsigned int deletitionTime; //Posix time.
-    unsigned short groupID;
+    unsigned short gid;
     unsigned short hardLinks;
     unsigned int countDiskSectors;
     unsigned int flags;

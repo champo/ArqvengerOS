@@ -502,14 +502,16 @@ struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, i
     inode->data->triplyIndirectBlockPointer = 0;
 
     inode->data->countDiskSectors = 0;
+    inode->data->size = 0;
+    inode->data->hardLinks = 0;
 
     size_t now = _time(NULL);
     inode->data->lastAccess = now;
     inode->data->creationTime = now;
     inode->data->lastModification = now;
 
-    inode->data->userID = uid;
-    inode->data->groupID = gid;
+    inode->data->uid = uid;
+    inode->data->gid = gid;
     inode->data->typesAndPermissions = (type << 12) | permissions;
 
     ext2_write_inode(inode);
