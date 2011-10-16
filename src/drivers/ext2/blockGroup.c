@@ -29,7 +29,7 @@ int ext2_read_blockgroup_table(struct ext2* fs) {
 int ext2_write_blockgroup_table(struct ext2* fs) {
 
     size_t block;
-    if (SUPERBLOCK_END <= fs->blockSize) {
+    if (SUPERBLOCK_END <= fs->sectorsPerBlock) {
         block = 1;
     } else {
         block = 2;
