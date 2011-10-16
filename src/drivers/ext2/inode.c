@@ -562,7 +562,11 @@ int free_index(struct ext2* fs, unsigned int indexBlock, int level, int maxLevel
         }
     }
 
-    return free_blocks(fs, fs->blockIndexBuffer[level], entries);
+    if (free_blocks(fs, fs->blockIndexBuffer[level], entries) == -1) {
+        return -1;
+    }
+
+    return deallocate_block(fs, indexBlock);
 }
 
 int free_blocks(struct ext2* fs, unsigned int* table, size_t size) {
@@ -572,6 +576,7 @@ int free_blocks(struct ext2* fs, unsigned int* table, size_t size) {
         if (table[i] != 0) {
             deallocate_block(fs, table[i]);
         } else {
+            kprintf("Breaking at index %u of %u\n", i, size);
             break;
         }
     }
