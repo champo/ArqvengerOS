@@ -57,7 +57,7 @@ struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
 
 int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer) {
 
-    if (offset > inode->data->size) {
+    if (offset >= inode->data->size) {
         return -1;
     } else if (offset + size > inode->data->size) {
         size = inode->data->size - offset;
