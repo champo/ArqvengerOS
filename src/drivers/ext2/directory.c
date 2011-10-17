@@ -7,6 +7,14 @@
 
 #define ENTRY_HEADER_LEN (sizeof(unsigned int) + 2 * sizeof(unsigned short))
 
+/**
+ * Pad a size to a given aligment.
+ *
+ * @param value The size to pad.
+ * @param align The desired aligment.
+ *
+ * @return the aligned size.
+ */
 inline static unsigned int pad(unsigned int value, unsigned int align) {
 
     unsigned int padding = align - (value % align);

@@ -5,16 +5,65 @@
 
 #define FIRST_USABLE_INODE 11
 
+/**
+ * Write the block bitmap for a group back to disk, from cache.
+ *
+ * @param fs The current fs.
+ * @param group The group number.
+ *
+ * @return 0 on success, -1 on error
+ */
 static int write_block_bitmap(struct ext2* fs, int group);
 
+/**
+ * Read the block bitmap for a group from disk, to cache.
+ *
+ * @param fs The current fs.
+ * @param group The group number.
+ *
+ * @return 0 on success, -1 on error
+ */
 static int read_block_bitmap(struct ext2* fs, int group);
 
+/**
+ * Write the inode bitmap for a group to disk, from cache.
+ *
+ * @param fs The current fs.
+ * @param group The group number.
+ *
+ * @return 0 on success, -1 on error
+ */
 static int write_inode_bitmap(struct ext2* fs, int group);
 
+/**
+ * Read the inode bitmap for a group from disk, to cache.
+ *
+ * @param fs The current fs.
+ * @param group The group number.
+ *
+ * @return 0 on success, -1 on error
+ */
 static int read_inode_bitmap(struct ext2* fs, int group);
 
+/**
+ * Try to allocate a block in a given block group.
+ *
+ * @param fs The current fs.
+ * @param group The group number.
+ *
+ * @return 0 on error, the allocated block number otherwise
+ */
 static size_t allocate_in_group(struct ext2* fs, int blockGroup);
 
+/**
+ * Mark a logical block as used in its block group, and update related metadata.
+ *
+ * @param fs The current fs
+ * @param blockGroup The block group the block belongs to.
+ * @param block The block number in the group.
+ *
+ * @return 0 on success, -1 on error
+ */
 static int reserve_block(struct ext2* fs, int blockGroup, size_t block);
 
 size_t allocate_block(struct ext2* fs, int groupHint) {

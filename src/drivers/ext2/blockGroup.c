@@ -9,6 +9,8 @@
 int ext2_read_blockgroup_table(struct ext2* fs) {
 
     size_t block;
+    // The superblock is always in the same place, and the table is always the next block
+    // So we need to take into account the block size to know which block that is
     if (SUPERBLOCK_END <= fs->sectorsPerBlock) {
         block = 1;
     } else {

@@ -68,17 +68,30 @@ struct ext2 {
     size_t blockSize;
     size_t blockGroupCount;
 
+    /*
+     * Cache for indirect pointer blocks.
+     */
     unsigned int blockIndexAddress[3];
     unsigned int* blockIndexBuffer[3];
 
+    /*
+     * Cache for data blocks.
+     * Each entry has an inode owner, and which block it contains.
+     *
+     * When no entries are available, one is forcibly evicted.
+     * The choice is made in a round robin fashion.
+     */
     unsigned int evictBlockBuffer;
     unsigned int blockBufferAddress[BLOCK_BUFFER_COUNT];
     struct ext2_Inode* blockBufferOwner[BLOCK_BUFFER_COUNT];
     void* blockBuffer[BLOCK_BUFFER_COUNT];
 
+
+    // Intermediate buffer for fragment reads
     unsigned int fragmentReadBlock;
     void* fragmentReadBuffer;
 
+    // Buffer for block group's bitmaps
     unsigned int bitmapBlock;
     unsigned int* bitmapBuffer;
 };

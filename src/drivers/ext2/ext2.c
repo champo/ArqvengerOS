@@ -21,6 +21,8 @@ struct ext2* ext2_load(unsigned long long startSector) {
     fs->sectorsPerBlock = fs->blockSize / SECTOR_SIZE;
     fs->blockGroupCount = ext2_get_total_block_groups(fs->sb);
 
+    // Setup the various caches
+
     for (int i = 0; i < 3; i++) {
         fs->blockIndexAddress[i] = 0;
         fs->blockIndexBuffer[i] = kalloc(fs->blockSize);

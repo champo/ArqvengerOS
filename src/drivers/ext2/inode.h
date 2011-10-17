@@ -37,16 +37,69 @@ struct ext2_Inode {
     unsigned int operatingSystemValue2[3];
 };
 
+/**
+ * Read an inode given its number.
+ *
+ * @param fs The current fs.
+ * @param number The inode number.
+ *
+ * @return The inode on success, NULL on error.
+ */
 struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number);
 
+/**
+ * Read content off inode.
+ *
+ * @param inode The inode to read off.
+ * @param offset The start of the data to read.
+ * @param size The number of bytes of data to read.
+ * @param buffer The buffer to write to.
+ *
+ * @return 0 on success, -1 on error
+ */
 int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer);
 
+/**
+ * Write content to an inode.
+ *
+ * @param inode The inode to write to.
+ * @param offset The first byte to write to.
+ * @param size The number of bytes of data to write.
+ * @param buffer The buffer to read from.
+ *
+ * @return 0 on success, -1 on error
+ */
 int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer);
 
+/**
+ * Write an inode to the inode table.
+ *
+ * @param inode The inode to write.
+ *
+ * @return 0 on success, -1 on error
+ */
 int ext2_write_inode(struct fs_Inode* inode);
 
+/**
+ * Create a new inode.
+ *
+ * @param fs The current fs.
+ * @param type The inode type.
+ * @param permissions The permissions to set.
+ * @param uid Owner id.
+ * @param gid Group id.
+ *
+ * @return The inode on success, or NULL on error
+ */
 struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, int uid, int gid);
 
+/**
+ * Delete an inode, and free all associated resources.
+ *
+ * @param inode The inode to free.
+ *
+ * @return 0 on success, -1 on error
+ */
 int ext2_delete_inode(struct fs_Inode* inode);
 
 #endif

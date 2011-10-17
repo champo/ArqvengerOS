@@ -5,22 +5,96 @@
 #include "system/call.h"
 #include "drivers/ext2/allocator.h"
 
+/**
+ * Read a fragment of an inode, given the block index.
+ *
+ * The fragment to read from must be between block boundaries.
+ *
+ * @param inode The inode to read from.
+ * @param blockIndex The index of the block in the inode block pointer table.
+ * @param buffer The buffer to read to.
+ * @param offset The offset to start reading from
+ * @param len The number of bytes to read.
+ *
+ * @return 0 on success, -1 on error.
+ */
 static int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buffer, size_t offset, size_t len);
 
+/**
+ * Read the block pointer index at block, to the index cache level.
+ *
+ * @param fs The current fs.
+ * @param level The index level (ranges from 0 to 2)
+ * @param block The physical block number to read from.
+ *
+ * @return 0 on success, -1 on error.
+ */
 static int read_block_index(struct ext2* fs, int level, size_t block);
 
+/**
+ * Write the block index at level back to disk.
+ *
+ * @param fs The current fs.
+ * @param level The level to write.
+ *
+ * @return 0 on success, -1 on error.
+ */
 static int write_block_index(struct ext2* fs, int level);
 
 static size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex);
 
+/**
+ * Load a block into one of the data block buffers.
+ *
+ * @param inode The inode the block belongs to.
+ * @param block The block to load.
+ *
+ * @return The buffer index used, -1 on error
+ */
 static int load_buffer(struct fs_Inode* inode, size_t block);
 
+/**
+ * Alocate a new data block and set it as the block in index.
+ *
+ * @param inode The inode to add it to.
+ * @param blockIndex The index in the block index table to set the new block to.
+ *
+ * @return The block number on success, 0 on error.
+ */
 static size_t allocate_data_block(struct fs_Inode* inode, size_t blockIndex);
 
+/**
+ * Free the blocks pointed to by table.
+ *
+ * @param fs The current fs.
+ * @param table A table of allocated blocks.
+ * @param size The number of entries in the table.
+ *
+ * @return 0 on success, -1 on error.
+ */
 static int free_blocks(struct ext2* fs, unsigned int* table, size_t size);
 
+/**
+ * Set all the entries in index to 0.
+ *
+ * @param fs The current fs.
+ * @param level The level the index belongs to.
+ * @param block The block to clear.
+ *
+ * @return 0 on success, -1 on error.
+ */
 static int clear_block_index(struct ext2* fs, int level, size_t block);
 
+/**
+ * Free all blocks associated with an index.
+ *
+ * @param fs The current fs.
+ * @param indexBlock The block the index is on.
+ * @param level The index level to block belongs to.
+ * @param maxLevel The maximum level of indirection in this index tree.
+ *
+ * @return 0 on success, -1 on error.
+ */
 static int free_index(struct ext2* fs, unsigned int indexBlock, int level, int maxLevel);
 
 struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
@@ -117,7 +191,6 @@ int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buffer, si
         return -1;
     }
 
-
     char* from = (char*) inode->fileSystem->blockBuffer[bufferIndex] + offset;
     char* to = buffer;
     for (size_t i = 0; i < len; i++) {
@@ -130,6 +203,8 @@ int read_inode_block(struct fs_Inode* inode, size_t blockIndex, void* buffer, si
 int load_buffer(struct fs_Inode* inode, size_t block) {
 
     size_t bufferIndex;
+
+    // Try to find an entry we own
     for (bufferIndex = 0 ; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
         if (inode->fileSystem->blockBufferOwner[bufferIndex] == inode->data) {
             break;
@@ -137,6 +212,9 @@ int load_buffer(struct fs_Inode* inode, size_t block) {
     }
 
     if (bufferIndex == BLOCK_BUFFER_COUNT) {
+
+        // If we didnt find an entry, try to find one owned by no onw
+
         for (bufferIndex = 0; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
             if (inode->fileSystem->blockBufferOwner[bufferIndex] == NULL) {
                 break;
@@ -144,14 +222,20 @@ int load_buffer(struct fs_Inode* inode, size_t block) {
         }
 
         if (bufferIndex == BLOCK_BUFFER_COUNT) {
+
+            // Otherwise, evict one
             bufferIndex = inode->fileSystem->evictBlockBuffer++;
         }
+
+        // Reset the buffer, and mark it as ours
 
         inode->fileSystem->blockBufferOwner[bufferIndex] = inode->data;
         inode->fileSystem->blockBufferAddress[bufferIndex] = 0;
     }
 
     if (inode->fileSystem->blockBufferAddress[bufferIndex] != block) {
+
+        // If the buffer didnt contain the block, already, load it
 
         inode->fileSystem->blockBufferAddress[bufferIndex] = block;
         if (read_block(inode->fileSystem, block, inode->fileSystem->blockBuffer[bufferIndex]) == -1) {
@@ -208,6 +292,7 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
         } else {
             startInBlock = offset - blockOffset;
         }
+
         size_t block = block_index_to_block(fs, node, blockIndex);
         if (block == 0) {
             kprintf("Allocating block\n");
@@ -272,11 +357,13 @@ size_t allocate_data_block(struct fs_Inode* inode, size_t blockIndex) {
 
     size_t blockGroup = inode->number / fs->sb->inodesPerBlockGroup;
 
+    // Get a new block
     size_t newBlock = allocate_block(fs, blockGroup);
     if (newBlock == 0) {
         return 0;
     }
 
+    // Once we have add it to the index, and allocate any index blocks if needed
     if (blockIndex < 12) {
         node->directBlockPointers[blockIndex] = newBlock;
     } else if (blockIndex < 12 + pointersPerBlock) {
@@ -563,6 +650,7 @@ int free_index(struct ext2* fs, unsigned int indexBlock, int level, int maxLevel
     if (level + 1 < maxLevel) {
         for (size_t i = 0; i < entries; i++) {
 
+            // If the entry is not empty, recursively free all the data it points to.
             if (fs->blockIndexBuffer[level][i] != 0) {
                 free_index(fs, fs->blockIndexBuffer[level][i], level + 1, maxLevel);
             } else {
@@ -571,6 +659,7 @@ int free_index(struct ext2* fs, unsigned int indexBlock, int level, int maxLevel
         }
     }
 
+    // Free myself
     if (free_blocks(fs, fs->blockIndexBuffer[level], entries) == -1) {
         return -1;
     }
