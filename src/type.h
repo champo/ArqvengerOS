@@ -1,6 +1,8 @@
 #ifndef _type_header
 #define _type_header
 
+#define NULL ((void*) 0)
+
 typedef unsigned int size_t;
 
 typedef unsigned char byte;

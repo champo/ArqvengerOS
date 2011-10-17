@@ -4,6 +4,7 @@
 #include "type.h"
 #include "system/process/table.h"
 #include "system/scheduler.h"
+#include "drivers/ext2/ext2.h"
 
 static int activeTerminal = -1;
 

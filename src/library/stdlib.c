@@ -1,7 +1,6 @@
 #include "library/ctype.h"
 #include "library/string.h"
 #include "library/stdlib.h"
-#include "system/call/codes.h"
 
 static size_t randSeed;
 

@@ -54,7 +54,7 @@ static int checkBSY(void);
 
 void ata_init(struct multiboot_info* info) {
 
-    
+
     if ((info->flags & (0x1 << 7)) && info->drives_length) {
 
         struct DriveInfo* drive = (struct DriveInfo*) info->drives_addr;
@@ -72,15 +72,15 @@ void ata_init(struct multiboot_info* info) {
 int ata_read(unsigned long long sector, int count, void* buffer) {
     int i,j;
 
-    unsigned int edi = (unsigned int) buffer;    
+    unsigned int edi = (unsigned int) buffer;
 
     if ( sector + count > sectors ) {
         return -1;
     }
-    
+
     for ( i = 0; i < count; i++) {
         set_ports(sector + i, 1, READ_COMMAND);
-        
+
         if ( poll() == -1 ) {
             return -1;
         }
@@ -93,7 +93,7 @@ int ata_read(unsigned long long sector, int count, void* buffer) {
             inB(STATUS_PORT);
         }
     }
-    
+
     return 0;
 
 }
@@ -106,7 +106,7 @@ int ata_write(unsigned long long sector, int count, const void* buffer) {
     if ( sector + count > sectors ) {
         return -1;
     }
-    
+
     for ( i = 0; i < count; i++) {
         set_ports(sector + i, 1, WRITE_COMMAND);
         poll();
@@ -116,7 +116,7 @@ int ata_write(unsigned long long sector, int count, const void* buffer) {
 
     outB(COMMAND_PORT, CACHE_FLUSH);
     checkBSY();
-    
+
     return 0;
 }
 
@@ -135,7 +135,7 @@ int poll(void) {
     if (checkBSY() != 0) {
         return -1;
     }
-    
+
     status = inB(STATUS_PORT);
 
     while (!DRQ(status)) {
@@ -143,15 +143,15 @@ int poll(void) {
             return -1;
         }
         status = inB(STATUS_PORT);
-    }   
+    }
 
     return 0;
 }
 
 int checkBSY(void) {
-    
+
     unsigned char status = inB(STATUS_PORT);
-    
+
     while (BSY(status)) {
         if (ERR(status) || DF(status)) {
             return -1;
