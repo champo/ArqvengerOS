@@ -65,6 +65,15 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->schedule.ioWait = 0;
     process->schedule.done = 0;
 
+    for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
+
+        if (parent) {
+            //TODO: Create a new FD using the data from the parent
+        } else {
+            process->fdTable[i].inode = NULL;
+        }
+    }
+
     process->mm.pagesInStack = 256;
     process->mm.stackStart = allocPages(process->mm.pagesInStack);
 

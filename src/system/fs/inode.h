@@ -5,9 +5,12 @@
 #include "drivers/ext2/inode.h"
 
 struct fs_Inode {
-    int number;
+    unsigned int number;
+
     struct ext2_Inode* data;
     struct ext2* fileSystem;
+
+    size_t refCount;
 };
 
 #endif

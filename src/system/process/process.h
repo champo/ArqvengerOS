@@ -3,8 +3,10 @@
 
 #include "system/mm.h"
 #include "type.h"
+#include "system/fs/fd.h"
 
 #define NO_TERMINAL -1
+#define MAX_OPEN_FILES 10
 
 typedef void (*EntryPoint)(char*);
 
@@ -51,11 +53,13 @@ struct Process {
 
     unsigned long long cycles;
     unsigned long long curr_cycles;
-    unsigned long long prev_cycles; 
+    unsigned long long prev_cycles;
     time_t timeStart;
 
     int uid;
     int gid;
+
+    struct FileDescriptor fdTable[MAX_OPEN_FILES];
 };
 
 void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal);
