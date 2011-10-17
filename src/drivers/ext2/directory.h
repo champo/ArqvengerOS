@@ -17,4 +17,14 @@ struct DirectoryEntry {
 
 struct DirectoryEntry ext2_dir_read(struct fs_Directory* directory);
 
+struct DirectoryEntry ext2_dir_find(struct fs_Directory* directory, const char* name);
+
+int ext2_dir_add(struct fs_Directory* directory, const char* name, size_t inodeNumber);
+
+int ext2_dir_remove(struct fs_Directory* directory, const char* name);
+
+int ext2_dir_rename(struct fs_Directory* directory, const char* from, const char* to);
+
+struct fs_Directory* ext2_dir_create(struct ext2* fs, int permissions, int uid, int gid);
+
 #endif
