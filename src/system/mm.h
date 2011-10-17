@@ -8,12 +8,9 @@
 
 void initMemoryMap(struct multiboot_info* info);
 
-void* allocPage(void);
-
-/**
- * Alloc size bytes padded to PAGE_SIZE
- */
 void* kalloc(size_t size);
+
+void kfree(void* data);
 
 void* allocPages(size_t pages);
 

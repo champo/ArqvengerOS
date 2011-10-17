@@ -2,6 +2,7 @@
 #include "library/stdio.h"
 #include "system/common.h"
 #include "system/panic.h"
+#include "system/malloc/malloc.h"
 
 struct MemoryMapEntry {
     size_t size;
@@ -35,11 +36,18 @@ static void initPages(struct multiboot_info* info);
 
 static void reservePageMap(struct multiboot_info* info);
 
+static void* allocator(size_t size, size_t* allocatedSize);
+
 void initMemoryMap(struct multiboot_info* info) {
 
     if (info->flags & (0x1 << 6)) {
+
         reservePageMap(info);
         initPages(info);
+
+        init_malloc(allocPages(1), PAGE_SIZE);
+        set_external_alloc(allocator);
+
     } else {
         panic();
     }
@@ -136,32 +144,12 @@ int isPageSet(int page) {
     return !(pageMap[page / PAGES_PER_ENTRY] & (0x1 << (page % PAGES_PER_ENTRY)));
 }
 
-void* allocPage(void) {
-
-    for (size_t i = 0; i < ENTRIES_IN_MAP; i++) {
-
-        if (pageMap[i]) {
-
-            size_t start = i * PAGES_PER_ENTRY + UNUSABLE_PAGES;
-            for (size_t offset = 0; offset < PAGES_PER_ENTRY; offset++) {
-
-                if (isPageSet(offset + start)) {
-                    return (void*)((start + offset) * PAGE_SIZE);
-                }
-            }
-        }
-    }
-
-    return NULL;
+void* kalloc(size_t size) {
+    return malloc(size);
 }
 
-void* kalloc(size_t size) {
-
-    if (size == 0) {
-        return NULL;
-    }
-
-    return allocPages((size / PAGE_SIZE) + 1);
+void kfree(void* data) {
+    free(data);
 }
 
 void* allocPages(size_t pages) {
@@ -223,5 +211,19 @@ void freePages(void* page, size_t pages) {
     for (size_t i = 0; i < pages; i++) {
         unsetPage(start + i);
     }
+}
+
+void* allocator(size_t size, size_t* allocatedSize) {
+
+    size_t pages = (size / PAGE_SIZE) + 1;
+    void* memory = allocPages(pages);
+
+    if (memory) {
+        *allocatedSize = PAGE_SIZE * pages;
+    } else {
+        *allocatedSize = 0;
+    }
+
+    return memory;
 }
 
