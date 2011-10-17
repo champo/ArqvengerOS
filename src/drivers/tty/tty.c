@@ -18,7 +18,6 @@ void tty_run(char* unused) {
     terminals[activeTerminal].active = 1;
 
     tty_write("\033[1;1H\033[2J", 10);
-    struct ext2* fs = ext2_load(0);
 
     // Spawn the shells (this is a kernel process, so we can do this)
     // TODO: Setup file descriptors
