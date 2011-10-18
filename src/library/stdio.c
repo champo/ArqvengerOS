@@ -471,6 +471,7 @@ int fscanf(FILE *stream, const char *format, ...){
  * Closes a file already opened by the process.
  *
  * @param stream, a pointer to the file to be closed.
+ * @return 0 if success, -1 if error, 1 if a default action was taken.
  */
 int close(FILE* stream) {
     return system_call(_SYS_CLOSE, getfd(stream), 0, 0);    
