@@ -480,6 +480,8 @@ int fscanf(FILE *stream, const char *format, ...){
     return vfscanf(stream, format, ap);
 }
 
-int close(FILE* stream) {
+
+
+/*int close(FILE* stream) {
     return system_call(_SYS_CLOSE, getfd(stream));    
-}
+}*/
