@@ -1,0 +1,184 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{t1enc}
+\usepackage[spanish]{babel}
+\usepackage[pdftex,usenames,dvipsnames]{color}
+\usepackage[pdftex]{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\lstset{language=C}
+\lstset{showstringspaces=false}
+\lstset{basicstyle=\ttfamily,}
+
+\begin{document}
+
+
+\renewcommand{\lstlistingname}{C\'odigo Fuente}
+\lstloadlanguages{Octave} 
+\lstdefinelanguage{MyPseudoCode}[]{Octave}{
+	deletekeywords={beta,det},
+	morekeywords={repmat}
+} 
+\lstset{
+	language=MyPseudoCode,
+	stringstyle=\ttfamily,
+	showstringspaces = false,
+	basicstyle=\footnotesize\ttfamily,
+	commentstyle=\color{gray},
+	keywordstyle=\bfseries,
+	numbers=left,
+	numberstyle=\ttfamily\footnotesize,
+	stepnumber=1,                   
+	framexleftmargin=0.20cm,
+	numbersep=0.37cm,              
+	backgroundcolor=\color{white},
+	showspaces=false,
+	showtabs=false,
+	frame=l,
+	tabsize=4,
+	captionpos=b,               
+	breaklines=true,             
+	breakatwhitespace=false,      
+	mathescape=true
+}
+\begin{titlepage}
+        \thispagestyle{empty}
+        \begin{center}
+                \includegraphics{./images/itba.jpg}
+                \vfill
+                \Huge{Sistemas Operativos}\\
+                \vspace{1cm}
+                \huge{Trabajo Práctico Especial}\\
+        \end{center}
+        \vspace{2cm}
+        \large{
+                \begin{tabular}{lcrc}
+                        \textbf{Alvaro Crespo} & & 50758 & \ \ \texttt{acrespo@alu.itba.edu.ar}\\
+                        \textbf{Juan Pablo Civile} & & 50453 & \ \ \texttt{jcivile@alu.itba.edu.ar}\\
+                        \textbf{Darío Susnisky} & & 50592 & \ \ \texttt{dsusnisk@alu.itba.edu.ar}\\
+                        \\ 
+                \end{tabular}
+        }
+        \vfill
+        \flushright{24 de Octubre del 2011}
+\end{titlepage}
+
+\setcounter{page}{1}
+
+\tableofcontents
+\newpage
+\section{Introducción}
+El trabajo práctico consistía en la extensión del sistema operativo armado en la materia arquitectura de las 
+computadoras. Este debia ser modificado de modo tal que esta nueva versión soporte procesamiento multitareas
+ (inclusive con más de una técnica de \texit{scheduling}), soporte de acceso a disco rígido y un \textit{file system}
+ no tan básico con varios detalles interesantes (soporte de usuarios y grupos, \textit{FIFO's}, entre otros).
+
+\newpage
+\section{Breve resumen de la vieja versión de Arqvengers OS}
+El trabajo práctico fue comenzado tomando como base el trabajo hecho en la materia Arquitectura de las Computadoras.
+ Este trabajo contaba con un sistema operativo booteable que contaba con soporte para \textit{drivers} de
+  teclado y de video facilitando varias consolas en donde podían ejecutarse distintos comandos. 
+  A un nivel más bajo, contabamos con una rudimentaria e incompleta librería de C así como una interfaz para realizar
+  llamadas a sistema.
+\newpage
+\section{Procesos}
+    Al comenzar el nuevo trabajo práctico, uno de los primeros desafios era el de implementar un sistema multitarea.
+     En un principio, se diseñaron estructuras adecuadas para poder contener toda la información que formaba a un proceso,
+      así como los datos necesarios para poder recuperar los estados de un proceso a la hora de ser el proceso ejecutado
+      por el procesador. En esta instancia fue aprovechado el diseño de estas estructuras para agregarle ciertas
+      funcionalidades a los procesos, como por ejemplo usuarios y grupos.
+     La jerarquía de los procesos fue modelada de forme similar a la de \textit{Linux} y una vez preparados los datos
+      necesarios se utilizó el uso de llamadas como ???? para la creación de estos procesos.
+    \subsection{Scheduling}
+
+    \subsection{Multiples Terminales}
+\newpage
+\section{Driver Ata}
+    Se comenzó a implementar un \textit{driver} ATA en modo PIO. Esto significaba que los accesos a disco iban a ser
+    por medio de puertos de entrada/salida. Esto hace que el tiempo de ejecución sea considerable pero era un estandar
+    confiable y sencillo de implementar.
+    El estandar permite acceder a dos discos simultaneamente pero nosotros no vimos la necesidad de implementar el 
+    acceso a más de uno.
+    
+    El primer paso era detectar el disco y obtener ciertos datos del disco en sí. Por suerte, GRUB provee una estructura
+    con varios datos del sistema, entre ellos, datos del disco. Trás leer las especificaciones de \textit{multiboot}
+    fue relativamente sencillo realizar este trabajo.
+
+    A la hora de elegir el modo de direccionamiento nos encontramos con tres opciones. CHS se vió descartada de forma
+    inmediata dado su estado de obsoleta. Luego existian las opciones de LBA 28 y LBA 48 (sus números representan
+    la cantidad de bits relevantes utilizados para la dirección). LBA 28 también estaba obsoleto para ciertos discos
+    pero era más rapido, más sencillo de implementar y dejaba satisfechas las necesidades de este trabajo.
+
+    Las unidades minimas de lectura y escritura en nuestra implementación son de a sectores, pudiendo ser de a
+    varios a la vez. Es un paso escencial poner los datos correctos en los puertos necesarios previo a los accesos, pero
+    es un aún más interesante la lectura del estado del disco. Esto es necesario para detectar errores en el disco
+    y para saber si el disco esta listo para recibir o enviar datos. Es posible que haya que esperar a que el disco
+    este listo antes de realizar alguna operación. Hay dos maneras de realizar esta espera, se puede esperar a que una IRQ
+    indique que el disco esta listo o se puede consultar el estado del disco hasta que este este listo (\textit{polling}).
+    Hacer \textit{polling} puede hacer que se pierda tiempo en un sistema multitareas, pero por otro lado una sola
+    consulta de \{polling} es más rápido que esperar a una IRQ e implementar \textit{polling} es mucho más sencillo.
+    Por esta última razón fue elegida la técnica de \textit{polling}.
+\newpage
+\section{File System}
+    
+    Una vez implementado el \textit{driver} ATA era posible comenzar a implementar nuestro \textit{file system}.
+    Dado que nuestra intención era realizar un \textit{file system} persistente debiamos contar con ciertas estructuras
+    y ciertas especificaciones de como iba a estar representado el mismo en el disco. Luego de hacer un relevamiento
+    en el tópico decidimos que el implementar un sistema de tipo Ext2 abarcaba todas las caracteristicas que deseabamos
+    en nuestro sistema. Si bien es posible que un sistema Ext2 exceda los requerimientos del trabajo práctico, decidimos
+    que era más seguro seguir este estandar.
+    
+    Por otro lado, habia que realizar una lógica interna para la representación del \textit{file system}
+    incluyendo nuevas prestaciones en las llamadas a sistema y en nuestra libreria estandar.
+
+    \subsection{Sistema Ext2}
+    El sistema Ext2 provee un estandar de como guardar la información en el disco. Utiliza conceptos como super bloque, 
+    grupo de bloques, bloques y \textit{inodes} (algunos de los cuales fueron vistos en profundidad en clase). Como fue
+    dicho anteriormente, seguir este estandar fue una forma ordenada de tener la especificación de toda la estructura
+    de nuestro \textit{file system}.
+
+    Fue muy importante para nosotros al leer las especificaciones de Ext2 que todas las consideraciones a tener en cuenta
+    para armar nuestro sistema operativo según los requerimientos del trabajo práctico y lo más similar a un ambiente
+    UNIX ya estaban especificadas. Por ejemplo, grupos y usuarios pudieron ser usados facilmente. Inclusive, cosas más
+    especificas, como si un inode representa un archivo FIFO ya esataban implementadas en Ext2. Si bien fue un trabajo
+    largo, ayudó a simplificar el resto de la organización del sistema.
+
+    Hay ciertos detalles interesantes a tener en cuenta sobre la implementación. Sobre el sistema Ext2 se implementaron
+    ciertos \textit{buffers} para así disminuir los accesos a disco.
+    
+    \subsection{Lógica interna}
+    En una primera instancia nos enrcagamos de adaptar nuevamente nuestras llamadas a sistema y nuestra librería estandar
+    para que puedan desarrollar las nuevas funcionalidades de nuestro sistema operativo. Las llamadas a \textit{read} y
+    \textit{write} podían ahora escribir en archivos, así como las llamadas a \textit{open} y \textit{close} se hicieron
+    necesarias cuando antes no lo fueron.
+    Por otra parte, fue necesarios modificar nuestros procesos para que soporten el manejo de archivos.
+
+\newpage     
+\section{Referencias}
+
+\begin{itemize}
+  \item Material provisto por la cátedra
+  \item The C programming language - Kernighan y Ritchie
+  \item http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+  \item http://webpages.charter.net/danrollins/techhelp/0087.HTM
+  \item http://faydoc.tripod.com/cpu/rdtsc.htm
+  \item http://stanislavs.org/helppc/
+  \item http://www.linux.it/~rubini/docs/ksys/ksys.html
+  \item http://wiki.osdev.org
+  \item http://wiki.osdev.org/Detecting\_CPU\_Speed
+  \item	http://wiki.osdev.org/CMOS\#Accessing\_CMOS\_Registers
+  \item http://wiki.osdev.org/Bootable\_CD
+  \item http://wiki.osdev.org/Boot\_sequence\#Easy\_Way\_Out
+  \item http://wiki.osdev.org/Ext2
+  \item http://wiki.osdev.org/IDE
+  \item http://wiki.osdev.org/ATA\_PIO\_Mode
+  \item http://en.wikipedia.org/wiki/System\_time\#Retrieving\_system\_time
+  \item http://en.wikipedia.org/wiki/Calculating\_the\_day\_of\_the\_week
+  \item http://cplusplus.com/
+  \item http://github.com/esneider/malloc
+\end{itemize}
+   
+\end{document}
