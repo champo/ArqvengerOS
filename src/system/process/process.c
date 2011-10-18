@@ -5,6 +5,7 @@
 #include "system/scheduler.h"
 #include "system/call.h"
 #include "library/sys.h"
+#include "system/fs/fs.h"
 
 static int pid = 0;
 
@@ -94,6 +95,13 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
 
 void exitProcess(struct Process* process) {
     process->schedule.done = 1;
+
+    for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
+
+        if (process->fdTable[i].inode == NULL) {
+            fs_inode_close(process->fdTable[i].inode);
+        }
+    }
 }
 
 void destroyProcess(struct Process* process) {

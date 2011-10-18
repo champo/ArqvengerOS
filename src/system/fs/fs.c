@@ -8,6 +8,9 @@ static struct ext2* fs;
 
 static struct fs_Inode *inodeTable[MAX_OPEN_INODES];
 
+// There's only 16 file types supported by ext2
+static struct FileDescriptorOps opsTable[16];
+
 static void free_inode(struct fs_Inode* inode);
 
 struct fs_Inode* fs_inode_open(size_t inode) {
@@ -65,5 +68,18 @@ int fs_load(void) {
     fs_inode_open(2);
 
     return 0;
+}
+
+void fs_register_ops(int fileType, struct FileDescriptorOps ops) {
+    opsTable[fileType] = ops;
+}
+
+struct FileDescriptor fs_fd(struct fs_Inode* inode, int flags) {
+    return (struct FileDescriptor) {
+        .inode = inode,
+        .offset = 0,
+        .flags = flags,
+        .ops = &opsTable[INODE_TYPE(inode->data)]
+    };
 }
 
