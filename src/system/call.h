@@ -28,10 +28,10 @@ void _sleep(int seconds);
 
 int _nice(int priority);
 
-int _open(const char* path, int flags);
-
 int _creat(const char* path, int mode);
 
 int _close(int fd);
+
+int _open(const char* filename, int flags);
 
 #endif

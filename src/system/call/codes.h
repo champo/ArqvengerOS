@@ -4,6 +4,9 @@
 #define     _SYS_READ       3
 #define     _SYS_WRITE      4
 #define     _SYS_IOCTL      54
+#define     _SYS_OPEN       5
+#define     _SYS_CLOSE      6
+#define     _SYS_CREAT      8
 
 #define     _SYS_TIME       13
 #define     _SYS_TICKS      191

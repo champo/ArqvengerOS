@@ -164,6 +164,16 @@ void int80(registers* regs) {
         case _SYS_NICE:
             regs->eax = _nice(regs->ebx);
             break;
+        case _SYS_CLOSE:
+            regs->eax = _close(regs->ebx);
+            break;
+        case _SYS_OPEN:
+            regs->eax = _open((char*)regs->ebx, regs->ecx);
+            break;
+        case _SYS_CREAT:
+            regs->eax = _creat((char*)regs->ebx, regs->ecx);
+            break;
+
     }
 }
 

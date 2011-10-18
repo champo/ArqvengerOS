@@ -13,7 +13,6 @@ typedef unsigned int time_t;
 
 typedef int pid_t;
 
-
 #define TICKS_SAMPLE_SIZE 10
 #define MILLISECONDS_PER_TICK 55
 

@@ -466,3 +466,40 @@ int fscanf(FILE *stream, const char *format, ...){
     va_start(ap, format);
     return vfscanf(stream, format, ap);
 }
+
+/**
+ * Closes a file already opened by the process.
+ *
+ * @param stream, a pointer to the file to be closed.
+ */
+int close(FILE* stream) {
+    return system_call(_SYS_CLOSE, getfd(stream), 0, 0);    
+}
+
+/**
+ * Opens a file.
+ *
+ * @param filename, the string where the file is located.
+ * @param flags, the access mode.
+ * @param mode, in case O_CREAT is specified in the flags, a third parameter,
+ *              mode indicates the permissions of the new file.
+ */
+int open(char* filename, int flags, ...) {
+    int mode;
+    if (flags & O_CREAT) {
+        int aux;
+        aux = system_call(_SYS_OPEN, (int)filename, flags, 0);
+        if (aux == 0) {
+            return 0;
+        }
+        va_list ap;
+        va_start(ap, flags);
+        mode = va_arg(ap, int);
+        if (system_call(_SYS_CREAT, (int)filename, mode, 0) != 0) {
+            return -1;
+        }
+        return system_call(_SYS_OPEN, (int)filename, flags, 0);
+    } else {
+        return system_call(_SYS_OPEN, (int)filename, flags, 0);
+    }
+} 
