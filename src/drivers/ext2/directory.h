@@ -4,7 +4,6 @@
 #include "type.h"
 #include "drivers/ext2/internal.h"
 #include "drivers/ext2/inode.h"
-#include "system/fs/directory.h"
 
 #define NAME_MAX_LEN 256
 
@@ -19,10 +18,11 @@ struct DirectoryEntry {
  * Read the directory entry at the current offset.
  *
  * @param directory The directory to read from.
+ * @param offset The offset in the directory.
  *
  * @return The entry if one exists, otherwise the field entryLenght is set to 0.
  */
-struct DirectoryEntry ext2_dir_read(struct fs_Directory* directory);
+struct DirectoryEntry ext2_dir_read(struct fs_Inode* directory, size_t offset);
 
 /**
  * Find an entry with a given name.
@@ -32,7 +32,7 @@ struct DirectoryEntry ext2_dir_read(struct fs_Directory* directory);
  *
  * @return The entry if it exists, otherwie the field entryLength is set to 0.
  */
-struct DirectoryEntry ext2_dir_find(struct fs_Directory* directory, const char* name);
+struct DirectoryEntry ext2_dir_find(struct fs_Inode* directory, const char* name);
 
 /**
  * Add a new entry to the directory. If it already exists, it's consired a success.
@@ -43,7 +43,7 @@ struct DirectoryEntry ext2_dir_find(struct fs_Directory* directory, const char* 
  *
  * @return 0 on success, -1 on failure.
  */
-int ext2_dir_add(struct fs_Directory* directory, const char* name, size_t inodeNumber);
+int ext2_dir_add(struct fs_Inode* directory, const char* name, size_t inodeNumber);
 
 /**
  * Remove an entry from the directory.
@@ -53,7 +53,7 @@ int ext2_dir_add(struct fs_Directory* directory, const char* name, size_t inodeN
  *
  * @return 0 on success, -1 on failure.
  */
-int ext2_dir_remove(struct fs_Directory* directory, const char* name);
+int ext2_dir_remove(struct fs_Inode* directory, const char* name);
 
 /**
  * Rename an entry.
@@ -64,7 +64,7 @@ int ext2_dir_remove(struct fs_Directory* directory, const char* name);
  *
  * @return 0 on success, -1 on failure.
  */
-int ext2_dir_rename(struct fs_Directory* directory, const char* from, const char* to);
+int ext2_dir_rename(struct fs_Inode* directory, const char* from, const char* to);
 
 /**
  * Create a new directory.
@@ -76,6 +76,6 @@ int ext2_dir_rename(struct fs_Directory* directory, const char* from, const char
  *
  * @return The entry on success, NULL on failure.
  */
-struct fs_Directory* ext2_dir_create(struct ext2* fs, int permissions, int uid, int gid);
+struct fs_Inode* ext2_dir_create(struct ext2* fs, int permissions, int uid, int gid);
 
 #endif

@@ -1,5 +1,4 @@
 #include "drivers/ext2/directory.h"
-#include "system/fs/directory.h"
 #include "library/string.h"
 #include "drivers/ext2/internal.h"
 #include "drivers/ext2/blockGroup.h"
@@ -25,16 +24,16 @@ inline static unsigned int pad(unsigned int value, unsigned int align) {
     }
 }
 
-struct DirectoryEntry ext2_dir_read(struct fs_Directory* directory) {
+struct DirectoryEntry ext2_dir_read(struct fs_Inode* directory, size_t offset) {
 
     struct DirectoryEntry entry;
 
-    if (INODE_TYPE(directory->inode->data) != INODE_DIR) {
+    if (INODE_TYPE(directory->data) != INODE_DIR) {
         entry.entryLength = 0;
         return entry;
     }
 
-    if (ext2_read_inode_content(directory->inode, directory->offset, sizeof(struct DirectoryEntry), &entry) == -1) {
+    if (ext2_read_inode_content(directory, offset, sizeof(struct DirectoryEntry), &entry) == -1) {
         entry.entryLength = 0;
     }
 
@@ -45,31 +44,28 @@ struct DirectoryEntry ext2_dir_read(struct fs_Directory* directory) {
     return entry;
 }
 
-struct DirectoryEntry ext2_dir_find(struct fs_Directory* directory, const char* name) {
+struct DirectoryEntry ext2_dir_find(struct fs_Inode* directory, const char* name) {
 
-    size_t oldOffset = directory->offset;
-    directory->offset = 0;
+    size_t offset = 0;
 
-    struct DirectoryEntry entry = ext2_dir_read(directory);
+    struct DirectoryEntry entry = ext2_dir_read(directory, offset);
     while (entry.entryLength != 0) {
 
         if (strcmp(entry.name, name) == 0) {
             break;
         }
 
-        directory->offset += entry.entryLength;
-        entry = ext2_dir_read(directory);
+        offset += entry.entryLength;
+        entry = ext2_dir_read(directory, offset);
     }
 
-    directory->offset = oldOffset;
     return entry;
 }
 
-int ext2_dir_add(struct fs_Directory* directory, const char* name, size_t inodeNumber) {
+int ext2_dir_add(struct fs_Inode* directory, const char* name, size_t inodeNumber) {
 
     struct DirectoryEntry entry;
-    struct fs_Inode* inode = directory->inode;
-    struct ext2* fs = inode->fileSystem;
+    struct ext2* fs = directory->fileSystem;
 
     if (ext2_dir_find(directory, name).entryLength != 0) {
         return -1;
@@ -90,15 +86,14 @@ int ext2_dir_add(struct fs_Directory* directory, const char* name, size_t inodeN
     // Align the length to a 4-byte boundary
     entry.entryLength = pad(len, 4);
 
-    if (directory->inode->data->size == 0) {
+    if (directory->data->size == 0) {
         // The last entry in the a block has to span the whole block
         entry.entryLength = fs->blockSize;
     } else {
 
-        size_t oldOffset = directory->offset;
-        directory->offset = 0;
+        size_t dirOffset = 0;
 
-        struct DirectoryEntry cur = ext2_dir_read(directory);
+        struct DirectoryEntry cur = ext2_dir_read(directory, dirOffset);
         while (cur.entryLength != 0) {
 
             // Check if this entry has more space than it needs, and if we fit there
@@ -110,24 +105,22 @@ int ext2_dir_add(struct fs_Directory* directory, const char* name, size_t inodeN
                 entry.entryLength = cur.entryLength - realLen;
                 cur.entryLength = realLen;
 
-                if (ext2_write_inode_content(inode, directory->offset, realLen, &cur) == -1) {
+                if (ext2_write_inode_content(directory, dirOffset, realLen, &cur) == -1) {
                     return -1;
                 }
 
-                offset = directory->offset + realLen;
+                offset = dirOffset + realLen;
                 break;
             }
 
-            directory->offset += cur.entryLength;
-            cur = ext2_dir_read(directory);
+            dirOffset += cur.entryLength;
+            cur = ext2_dir_read(directory, dirOffset);
         }
 
         if (offset == 0) {
-            offset = directory->offset;
+            offset = dirOffset;
             entry.entryLength = fs->blockSize - (offset % fs->blockSize);
         }
-
-        directory->offset = oldOffset;
     }
 
     if ((offset % fs->blockSize) + len >= fs->blockSize) {
@@ -151,32 +144,30 @@ int ext2_dir_add(struct fs_Directory* directory, const char* name, size_t inodeN
     }
 
     kprintf("settings offset to %u, len %u\n", offset, entry.entryLength);
-    if (ext2_write_inode_content(inode, offset, len, &entry) == -1) {
+    if (ext2_write_inode_content(directory, offset, len, &entry) == -1) {
         return -1;
     }
 
     // A directory's size is always aligned to a block
-    inode->data->size = pad(inode->data->size, fs->blockSize);
+    directory->data->size = pad(directory->data->size, fs->blockSize);
 
-    return ext2_write_inode(inode);
+    return ext2_write_inode(directory);
 }
 
-int ext2_dir_remove(struct fs_Directory* directory, const char* name) {
+int ext2_dir_remove(struct fs_Inode* directory, const char* name) {
 
-    struct fs_Inode* inode = directory->inode;
-    struct ext2* fs = inode->fileSystem;
+    struct ext2* fs = directory->fileSystem;
 
-    size_t oldOffset = directory->offset;
-    directory->offset = 0;
+    size_t offset = 0;
 
-    struct DirectoryEntry entry = ext2_dir_read(directory);
+    struct DirectoryEntry entry = ext2_dir_read(directory, offset);
     size_t lastOffset = 0;
 
     while (entry.entryLength != 0) {
 
         if (strncmp(entry.name, name, entry.nameLength) == 0) {
 
-            if ((directory->offset % fs->blockSize) == 0) {
+            if ((offset % fs->blockSize) == 0) {
 
                 // If it's the first entry in a block, we just mark it as empty
                 entry.inode = 0;
@@ -185,49 +176,43 @@ int ext2_dir_remove(struct fs_Directory* directory, const char* name) {
 
                 // We adjust the length of the previous entry to cover this one
                 size_t entryLen = entry.entryLength;
-                directory->offset = lastOffset;
+                offset = lastOffset;
 
-                entry = ext2_dir_read(directory);
+                entry = ext2_dir_read(directory, offset);
                 entry.entryLength += entryLen;
             }
 
             size_t realLen = pad(ENTRY_HEADER_LEN + entry.nameLength, 4);
-            ext2_write_inode_content(inode, directory->offset, realLen, &entry);
+            ext2_write_inode_content(directory, offset, realLen, &entry);
 
             break;
         }
 
-        lastOffset = directory->offset;
-        directory->offset += entry.entryLength;
+        lastOffset = offset;
+        offset += entry.entryLength;
 
-        entry = ext2_dir_read(directory);
+        entry = ext2_dir_read(directory, offset);
     }
 
-    directory->offset = oldOffset;
     return 0;
 }
 
-struct fs_Directory* ext2_dir_create(struct ext2* fs, int permissions, int uid, int gid) {
+struct fs_Inode* ext2_dir_create(struct ext2* fs, int permissions, int uid, int gid) {
 
     struct fs_Inode* inode = ext2_create_inode(fs, INODE_DIR, permissions, uid, gid);
     if (inode == NULL) {
         return NULL;
     }
 
-    struct fs_Directory* dir = kalloc(sizeof(struct fs_Directory));
-
-    dir->inode = inode;
-    dir->offset = 0;
-
     // Update the amount of directories in this block group
     size_t blockGroup = inode->number / fs->sb->inodesPerBlockGroup;
     fs->groupTable[blockGroup].directoryCount++;
     ext2_write_blockgroup_table(fs);
 
-    return dir;
+    return inode;
 }
 
-int ext2_dir_rename(struct fs_Directory* directory, const char* from, const char* to) {
+int ext2_dir_rename(struct fs_Inode* directory, const char* from, const char* to) {
 
     struct DirectoryEntry original = ext2_dir_find(directory, from);
     if (original.entryLength == 0) {

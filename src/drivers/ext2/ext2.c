@@ -3,11 +3,6 @@
 #include "drivers/ext2/superblock.h"
 #include "drivers/ext2/blockGroup.h"
 #include "system/mm.h"
-#include "system/kprintf.h"
-#include "drivers/ext2/inode.h"
-#include "drivers/ext2/directory.h"
-#include "system/fs/directory.h"
-#include "system/fs/inode.h"
 
 struct ext2* ext2_load(unsigned long long startSector) {
 
