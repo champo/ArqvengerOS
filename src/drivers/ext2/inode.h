@@ -55,7 +55,7 @@ struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number);
  * @param size The number of bytes of data to read.
  * @param buffer The buffer to write to.
  *
- * @return 0 on success, -1 on error
+ * @return  the number of read bytes, -1 on error
  */
 int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer);
 
@@ -67,7 +67,7 @@ int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, 
  * @param size The number of bytes of data to write.
  * @param buffer The buffer to read from.
  *
- * @return 0 on success, -1 on error
+ * @return the number of written bytes, -1 on error
  */
 int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer);
 
