@@ -10,7 +10,6 @@ struct FileDescriptorOps {
     size_t (*read)(struct FileDescriptor*, void*, size_t);
     size_t (*ioctl)(struct FileDescriptor*, int, void*);
     struct fs_DirectoryEntry (*readdir)(struct FileDescriptor*);
-    struct fs_DirectoryEntry (*findentry)(struct FileDescriptor*, const char* name);
     int (*close)(struct FileDescriptor*);
 };
 

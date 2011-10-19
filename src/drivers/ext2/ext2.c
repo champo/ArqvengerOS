@@ -13,8 +13,6 @@ static size_t inode_read(struct FileDescriptor* fd, void* buffer, size_t len);
 
 static struct fs_DirectoryEntry readdir(struct FileDescriptor* fd);
 
-static struct fs_DirectoryEntry findentry(struct FileDescriptor* fd, const char* name);
-
 struct ext2* ext2_load(unsigned long long startSector) {
 
     struct ext2* fs = kalloc(sizeof(struct ext2));
@@ -54,7 +52,6 @@ struct ext2* ext2_load(unsigned long long startSector) {
             .read = NULL,
             .ioctl = NULL,
             .readdir = readdir,
-            .findentry = findentry,
             .close = NULL
     });
 
@@ -63,7 +60,6 @@ struct ext2* ext2_load(unsigned long long startSector) {
         .read = inode_read,
         .ioctl = NULL,
         .readdir = NULL,
-        .findentry = NULL,
         .close = NULL
     };
 
@@ -114,21 +110,6 @@ struct fs_DirectoryEntry readdir(struct FileDescriptor* fd) {
     };
 
     strcpy(res.name, entry.name);
-
-    return res;
-}
-
-struct fs_DirectoryEntry findentry(struct FileDescriptor* fd, const char* name) {
-    struct DirectoryEntry entry = ext2_dir_find(fd->inode, name);
-    struct fs_DirectoryEntry res;
-
-    if (entry.entryLength) {
-        res.inode = entry.inode;
-        res.length = entry.nameLength;
-        strcpy(res.name, entry.name);
-    } else {
-        res.inode = 0;
-    }
 
     return res;
 }

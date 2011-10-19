@@ -88,3 +88,18 @@ struct FileDescriptor fs_dup(struct FileDescriptor fd) {
     return fs_fd(fd.inode, fd.flags);
 }
 
+struct fs_DirectoryEntry findentry(struct fs_Inode* inode, const char* name) {
+    struct DirectoryEntry entry = ext2_dir_find(inode, name);
+    struct fs_DirectoryEntry res;
+
+    if (entry.entryLength) {
+        res.inode = entry.inode;
+        res.length = entry.nameLength;
+        strcpy(res.name, entry.name);
+    } else {
+        res.inode = 0;
+    }
+
+    return res;
+}
+
