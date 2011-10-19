@@ -1,12 +1,16 @@
 #ifndef __SYSTEM_FS_FD__
 #define __SYSTEM_FS_FD__
 
+#include "system/fs/direntry.h"
+
 struct FileDescriptor;
 
 struct FileDescriptorOps {
     size_t (*write)(struct FileDescriptor*, const void*, size_t);
     size_t (*read)(struct FileDescriptor*, void*, size_t);
     size_t (*ioctl)(struct FileDescriptor*, int, void*);
+    struct fs_DirectoryEntry (*readdir)(struct FileDescriptor*);
+    struct fs_DirectoryEntry (*findentry)(struct FileDescriptor*, const char* name);
     int (*close)(struct FileDescriptor*);
 };
 
