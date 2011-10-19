@@ -7,18 +7,20 @@ SECTIONS{
         *(.text)
     }
 
-    .rodata : {
-        *(.rodata)
+    .bss ALIGN (0x1000) : {
+        _sbss = .;
+        *(COMMON)
+        *(.bss)
+        _ebss = .;
     }
 
     .data : {
         *(.data)
     }
 
-    .bss : {
-        _sbss = .;
-        *(COMMON)
-        *(.bss)
-        _ebss = .;
+    .rodata : {
+        *(.rodata)
     }
+
+
 }
