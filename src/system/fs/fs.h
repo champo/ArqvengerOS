@@ -15,6 +15,8 @@ int fs_load(void);
 
 struct FileDescriptor fs_fd(struct fs_Inode* inode, int flags);
 
+struct FileDescriptor fs_dup(struct FileDescriptor fd);
+
 void fs_register_ops(int fileType, struct FileDescriptorOps ops);
 
 #endif

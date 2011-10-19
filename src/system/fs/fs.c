@@ -75,11 +75,16 @@ void fs_register_ops(int fileType, struct FileDescriptorOps ops) {
 }
 
 struct FileDescriptor fs_fd(struct fs_Inode* inode, int flags) {
+    inode->refCount++;
     return (struct FileDescriptor) {
         .inode = inode,
         .offset = 0,
         .flags = flags,
         .ops = &opsTable[INODE_TYPE(inode->data)]
     };
+}
+
+struct FileDescriptor fs_dup(struct FileDescriptor fd) {
+    return fs_fd(fd.inode, fd.flags);
 }
 
