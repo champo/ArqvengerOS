@@ -8,6 +8,7 @@
 #include "system/call/codes.h"
 #include "library/ctype.h"
 #include "library/call.h"
+#include "constants.h"
 
 FILE *stdout;
 FILE *stdin;
@@ -471,7 +472,7 @@ int fscanf(FILE *stream, const char *format, ...){
  * Closes a file already opened by the process.
  *
  * @param stream, a pointer to the file to be closed.
- * @return 0 if success, -1 if error, 1 if a default action was taken.
+ * @return 0 if success, -1 if error.
  */
 int close(FILE* stream) {
     return system_call(_SYS_CLOSE, getfd(stream), 0, 0);    
@@ -484,23 +485,17 @@ int close(FILE* stream) {
  * @param flags, the access mode.
  * @param mode, in case O_CREAT is specified in the flags, a third parameter,
  *              mode indicates the permissions of the new file.
+ * @return 0 if succes, -1 if error.
  */
 int open(char* filename, int flags, ...) {
     int mode;
     if (flags & O_CREAT) {
-        int aux;
-        aux = system_call(_SYS_OPEN, (int)filename, flags, 0);
-        if (aux == 0) {
-            return 0;
-        }
         va_list ap;
         va_start(ap, flags);
         mode = va_arg(ap, int);
-        if (system_call(_SYS_CREAT, (int)filename, mode, 0) != 0) {
-            return -1;
-        }
-        return system_call(_SYS_OPEN, (int)filename, flags, 0);
+        va_end(ap);
     } else {
-        return system_call(_SYS_OPEN, (int)filename, flags, 0);
+        mode = 0;
     }
+    return system_call(_SYS_OPEN, (int)filename, flags, mode);
 } 
