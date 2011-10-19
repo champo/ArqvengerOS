@@ -2,35 +2,30 @@
 #include "drivers/tty/tty.h"
 #include "system/process/table.h"
 #include "system/process/process.h"
+#include "system/fs/fd.h"
 
 size_t _read(int fd, void* buf, size_t length) {
     return readKeyboard(buf, length);
     
     struct Process* process = process_table_get(_getpid());
-    
-    if (process->fdTable[fd].inode == NULL) {
+    struct FileDescriptor* fileDescriptor = &(process->fdTable[fd]);
+
+    if (fileDescriptor->inode == NULL || fileDescriptor->ops->read == NULL) {
         return -1;
     }
-    if (process->fdTable[fd].ops->read == NULL ||
-            process->fdTable[fd].ops->read(&(process->fdTable[fd]), buf, length) != 0) {
-        return -1;
-    }
-    return 0;
+    return fileDescriptor->ops->read(fileDescriptor, buf, length);
 }
 
 size_t _write(int fd, const void* buf, size_t length) {
     return tty_write(buf, length);
-
-    struct Process* process = process_table_get(_getpid());
     
-    if (process->fdTable[fd].inode == NULL) {
+    struct Process* process = process_table_get(_getpid());
+    struct FileDescriptor* fileDescriptor = &(process->fdTable[fd]);
+
+    if (fileDescriptor->inode == NULL || fileDescriptor->ops->write == NULL) {
         return -1;
     }
-    if (process->fdTable[fd].ops->write == NULL ||
-            process->fdTable[fd].ops->write(&(process->fdTable[fd]), buf, length) != 0) {
-        return -1;
-    }
-    return 0;
+    return fileDescriptor->ops->write(fileDescriptor, buf, length);
 }
 
 int _open(const char* path, int flags) {
@@ -43,14 +38,16 @@ int _creat(const char* path, int mode) {
 }
 
 int _close(int fd) {
+    
     struct Process* process = process_table_get(_getpid());
+    struct FileDescriptor* fileDescriptor = &(process->fdTable[fd]);
 
-    if (process->fdTable[fd].inode == NULL) {
+    if (fileDescriptor->inode == NULL) {
         return -1;
     }
-    if (process->fdTable[fd].ops->close == NULL ||
-            process->fdTable[fd].ops->close(&(process->fdTable[fd])) != 0) {
-        fs_inode_close(process->fdTable[fd].inode);
+    if (fileDescriptor->ops->close == NULL ||
+            fileDescriptor->ops->close(fileDescriptor) != 0) {
+        fs_inode_close(fileDescriptor->inode);
     }
     return 0;
 
