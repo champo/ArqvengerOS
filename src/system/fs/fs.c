@@ -1,5 +1,6 @@
 #include "system/fs/fs.h"
 #include "drivers/ext2/ext2.h"
+#include "drivers/ext2/directory.h"
 #include "system/mm.h"
 
 #define MAX_OPEN_INODES 50
@@ -12,6 +13,10 @@ static struct fs_Inode *inodeTable[MAX_OPEN_INODES];
 static struct FileDescriptorOps opsTable[16];
 
 static void free_inode(struct fs_Inode* inode);
+
+static int remove_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode);
+
+static int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode);
 
 struct fs_Inode* fs_inode_open(size_t inode) {
 
@@ -88,8 +93,8 @@ struct FileDescriptor fs_dup(struct FileDescriptor fd) {
     return fs_fd(fd.inode, fd.flags);
 }
 
-struct fs_DirectoryEntry findentry(struct fs_Inode* inode, const char* name) {
-    struct DirectoryEntry entry = ext2_dir_find(inode, name);
+struct fs_DirectoryEntry fs_findentry(struct fs_Inode* path, const char* name) {
+    struct DirectoryEntry entry = ext2_dir_find(path, name);
     struct fs_DirectoryEntry res;
 
     if (entry.entryLength) {
@@ -101,5 +106,153 @@ struct fs_DirectoryEntry findentry(struct fs_Inode* inode, const char* name) {
     }
 
     return res;
+}
+
+int fs_rmdir(struct fs_Inode* path, const char* name) {
+
+    struct fs_DirectoryEntry entry = fs_findentry(path, name);
+    if (!entry.inode) {
+        return ENOENT;
+    }
+
+    struct fs_Inode* dir = fs_inode_open(entry.inode);
+    if (dir == NULL) {
+        return EIO;
+    }
+
+    if (INODE_TYPE(dir->data) != INODE_DIR) {
+        fs_inode_close(dir);
+        return ENOTDIR;
+    }
+
+    size_t offset = 0;
+    struct DirectoryEntry child = ext2_dir_read(dir, offset);
+    while (child.entryLength != 0) {
+        if (child.inode != path->number || child.inode != entry.inode) {
+            fs_inode_close(dir);
+            return ENOTEMPTY;
+        }
+    }
+
+    int res = remove_link(path, name, dir);
+    if (dir->data->hardLinks == 1) {
+        remove_link(dir, ".", dir);
+        remove_link(dir, "..", path);
+    }
+    fs_inode_close(dir);
+
+    return res;
+}
+
+int fs_unlink(struct fs_Inode* path, const char* name) {
+
+    struct fs_DirectoryEntry entry = fs_findentry(path, name);
+    if (!entry.inode) {
+        return ENOENT;
+    }
+
+    struct fs_Inode* dir = fs_inode_open(entry.inode);
+    if (dir == NULL) {
+        return EIO;
+    }
+
+    if (INODE_TYPE(dir->data) != INODE_DIR) {
+        fs_inode_close(dir);
+        return ENOTDIR;
+    }
+
+    if (ext2_dir_read(dir, 0).entryLength == 0) {
+        fs_inode_close(dir);
+        return ENOTEMPTY;
+    }
+
+    int res = remove_link(path, name, dir);
+    fs_inode_close(dir);
+
+    return res;
+}
+
+int fs_symlink(struct fs_Inode* path, const char* entry, const char* to) {
+}
+
+int fs_rename(struct fs_Inode* from, const char* original, struct fs_Inode* to, const char* new) {
+
+    struct fs_DirectoryEntry entry = fs_findentry(from, original);
+    if (!entry.inode) {
+        return ENOENT;
+    }
+
+    if (ext2_dir_remove(from, original) == -1) {
+        return EIO;
+    }
+
+    if (ext2_dir_add(to, new, entry.inode) == -1) {
+        return EIO;
+    }
+
+    return 0;
+}
+
+int fs_permission(struct fs_Inode* inode) {
+    return INODE_PERMISSIONS(inode->data);
+}
+
+int fs_set_permission(struct fs_Inode* inode, int perm) {
+    inode->data->typesAndPermissions = (INODE_TYPE(inode->data) << 24) | perm;
+    return ext2_write_inode(inode) == -1 ? EIO : 0;
+}
+
+int fs_mknod(struct fs_Inode* path, const char* name, int type) {
+
+    //TODO: This needs to check out the current user
+    struct fs_Inode* nod = ext2_create_inode(fs, type, PERM_DEFAULT, 0, 0);
+    int res = add_link(path, name, nod);
+    free_inode(nod);
+
+    return res;
+}
+
+int fs_mkdir(struct fs_Inode* path, const char* name) {
+
+    //TODO: This needs to check out the current user
+    struct fs_Inode* dir = ext2_dir_create(fs, PERM_DEFAULT, 0, 0);
+
+    int res = add_link(path, name, dir);
+    if (res == 0) {
+        add_link(dir, ".", dir);
+        add_link(dir, "..", path);
+    }
+
+    free_inode(dir);
+
+    return res;
+}
+
+int remove_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
+
+    int res;
+
+    if (ext2_dir_remove(path, name) == -1) {
+        return EIO;
+    }
+
+    inode->data->hardLinks--;
+    if (inode->data->hardLinks == 0) {
+        res = ext2_delete_inode(inode);
+    } else {
+        res = ext2_write_inode(inode);
+    }
+
+    return res == -1 ? EIO : 0;
+}
+
+int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
+
+    if (ext2_dir_add(path, name, inode->number) == -1) {
+        return EIO;
+    }
+
+    inode->data->hardLinks++;
+    return 0;
 }
 
