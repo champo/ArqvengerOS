@@ -125,9 +125,13 @@ int fs_rmdir(struct fs_Inode* path, const char* name) {
         return ENOTDIR;
     }
 
-    if (ext2_dir_read(dir, 0).entryLength == 0) {
-        fs_inode_close(dir);
-        return ENOTEMPTY;
+    size_t offset = 0;
+    struct DirectoryEntry child = ext2_dir_read(dir, offset);
+    while (child.entryLength != 0) {
+        if (child.inode != path->number || child.inode != entry.inode) {
+            fs_inode_close(dir);
+            return ENOTEMPTY;
+        }
     }
 
     int res = remove_link(path, name, dir);
@@ -210,6 +214,11 @@ int fs_mkdir(struct fs_Inode* path, const char* name) {
     struct fs_Inode* dir = ext2_dir_create(fs, PERM_DEFAULT, 0, 0);
 
     int res = add_link(path, name, dir);
+    if (res == 0) {
+        add_link(dir, ".", dir);
+        add_link(dir, "..", path);
+    }
+
     free_inode(dir);
 
     return res;
