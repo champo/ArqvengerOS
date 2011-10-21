@@ -135,6 +135,10 @@ int fs_rmdir(struct fs_Inode* path, const char* name) {
     }
 
     int res = remove_link(path, name, dir);
+    if (dir->data->hardLinks == 1) {
+        remove_link(dir, ".", dir);
+        remove_link(dir, "..", path);
+    }
     fs_inode_close(dir);
 
     return res;
