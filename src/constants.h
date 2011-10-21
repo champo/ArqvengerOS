@@ -19,14 +19,22 @@
 #define O_EXCL         00200    /* exclusive use flag */
 #define O_NOCTTY       00400    /* do not assign a controlling terminal */
 #define O_TRUNC        01000    /* truncate flag */
- 
+
 /* File status flags for open() and fcntl().  POSIX Table 6-5. */
 #define O_APPEND       02000    /* set append mode */
 #define O_NONBLOCK     04000    /* no delay */
- 
+
 /* File access modes for open() and fcntl().  POSIX Table 6-6. */
 #define O_RDONLY           0    /* open(name, O_RDONLY) opens read only */
 #define O_WRONLY           1    /* open(name, O_WRONLY) opens write only */
 #define O_RDWR             2    /* open(name, O_RDWR) opens read/write */
+
+/* Error constants for IO calls */
+#define ENOENT -2
+#define ENOTDIR -3
+#define EACCES -4
+#define EEXIST -5
+#define EIO -6
+#define ENOTEMPTY -7
 
 #endif

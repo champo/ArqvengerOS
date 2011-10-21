@@ -1,5 +1,6 @@
 #include "drivers/ext2/inode.h"
 #include "drivers/ext2/superblock.h"
+#include "drivers/ext2/blockgroup.h"
 #include "system/mm.h"
 #include "system/fs/inode.h"
 #include "system/call.h"
@@ -620,9 +621,16 @@ struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, i
 
 int ext2_delete_inode(struct fs_Inode* inode) {
 
-    inode->data->hardLinks = 0;
     inode->data->deletionTime = _time(NULL);
     ext2_write_inode(inode);
+
+    //FIXME: Hack :D
+    if (INODE_TYPE(inode->data) == INODE_DIR) {
+        struct ext2* fs = inode->fileSystem;
+        size_t blockGroup = inode->number / fs->sb->inodesPerBlockGroup;
+        fs->groupTable[blockGroup].directoryCount--;
+        ext2_write_blockgroup_table(fs);
+    }
 
     struct ext2_Inode* node = inode->data;
     struct ext2* fs = inode->fileSystem;
