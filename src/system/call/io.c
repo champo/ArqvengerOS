@@ -45,10 +45,10 @@ int _close(int fd) {
     if (fileDescriptor->inode == NULL) {
         return -1;
     }
-    if (fileDescriptor->ops->close == NULL ||
-            fileDescriptor->ops->close(fileDescriptor) != 0) {
-        fs_inode_close(fileDescriptor->inode);
+    if (fileDescriptor->ops->close != NULL) {
+        fileDescriptor->ops->close(fileDescriptor);
     }
+    fs_inode_close(fileDescriptor->inode);
     return 0;
 
 }
