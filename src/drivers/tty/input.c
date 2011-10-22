@@ -236,7 +236,7 @@ void process_scancode(void) {
  *
  * @return the number of bytes read.
  */
-size_t readKeyboard(void* buffer, size_t count) {
+size_t tty_read(void* buffer, size_t count) {
 
     struct Process* caller = scheduler_current();
     if (caller->terminal == NO_TERMINAL) {

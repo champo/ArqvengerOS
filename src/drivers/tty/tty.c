@@ -4,13 +4,20 @@
 #include "type.h"
 #include "system/process/table.h"
 #include "system/scheduler.h"
-#include "drivers/ext2/ext2.h"
+#include "system/fs/fs.h"
 
 static int activeTerminal = -1;
 
 static struct Terminal terminals[NUM_TERMINALS];
 
+static size_t op_write(struct FileDescriptor* fd, const void* buffer, size_t len);
+
+static size_t op_read(struct FileDescriptor* fd, void* buffer, size_t len);
+
+static int op_ioctl(struct FileDescriptor* fd, int cmd, void* argp);
+
 void tty_run(char* unused) {
+
     tty_screen_init();
     tty_keyboard_init();
 
@@ -19,8 +26,22 @@ void tty_run(char* unused) {
 
     tty_write("\033[1;1H\033[2J", 10);
 
+    fs_register_ops(INODE_CHARDEV, (struct FileDescriptorOps) {
+            .write = op_write,
+            .read = op_read,
+            .ioctl = op_ioctl,
+            .readdir = NULL,
+            .close = NULL
+    });
+
+    struct fs_Inode* root = fs_root();
+    fs_mknod(root, "tty", INODE_CHARDEV);
+
+    open("/tty", O_RDONLY);
+    open("/tty", O_WRONLY);
+    open("/tty", O_WRONLY);
+
     // Spawn the shells (this is a kernel process, so we can do this)
-    // TODO: Setup file descriptors
     for (int i = 0; i < NUM_TERMINALS; i++) {
         terminals[i].termios.canon = 1;
         terminals[i].termios.echo = 1;
@@ -58,5 +79,17 @@ struct Terminal* tty_active(void) {
 
 struct Terminal* tty_terminal(int number) {
     return &terminals[number];
+}
+
+size_t op_write(struct FileDescriptor* fd, const void* buffer, size_t len) {
+    return tty_write(buffer, len);
+}
+
+size_t op_read(struct FileDescriptor* fd, void* buffer, size_t len) {
+    return tty_read(buffer, len);
+}
+
+int op_ioctl(struct FileDescriptor* fd, int cmd, void* argp) {
+    return ioctlKeyboard(cmd, argp);
 }
 

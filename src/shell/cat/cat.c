@@ -15,7 +15,16 @@ void cat(char* argv) {
     }
 
     cmdEnd++;
-    printf("Got fd %d\n", open(cmdEnd, O_RDWR));
+    int fd = open(cmdEnd, O_RDWR);
+    if (fd < 0) {
+        printf("Cant open the file. Sorry dude.\n");
+    }
+
+    char c;
+    while (read(fd, &c, 1) == 1) {
+        putchar(c);
+    }
+    printf("\n");
 }
 
 void manCat(void) {

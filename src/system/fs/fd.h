@@ -8,7 +8,7 @@ struct FileDescriptor;
 struct FileDescriptorOps {
     size_t (*write)(struct FileDescriptor*, const void*, size_t);
     size_t (*read)(struct FileDescriptor*, void*, size_t);
-    size_t (*ioctl)(struct FileDescriptor*, int, void*);
+    int (*ioctl)(struct FileDescriptor*, int, void*);
     struct fs_DirectoryEntry (*readdir)(struct FileDescriptor*);
     int (*close)(struct FileDescriptor*);
 };

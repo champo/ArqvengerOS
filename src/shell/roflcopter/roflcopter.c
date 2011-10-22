@@ -1,7 +1,5 @@
-#include "shell/echo/echo.h"
+#include "shell/roflcopter/roflcopter.h"
 #include "library/stdio.h"
-#include "library/stdlib.h"
-#include "library/string.h"
 #include "mcurses/mcurses.h"
 
 
@@ -15,7 +13,7 @@ void roflcopter(char* argv) {
            "           |\n"
            "  L   /---------\n"
            " LOL===       []\\\n"
-           "  L    \\         \\\n" 
+           "  L    \\         \\\n"
            "        \\_________\\\n"
            "          |     |\n"
            "       -------------/\n\n");
