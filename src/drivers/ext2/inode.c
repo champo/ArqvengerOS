@@ -1,6 +1,6 @@
 #include "drivers/ext2/inode.h"
 #include "drivers/ext2/superblock.h"
-#include "drivers/ext2/blockgroup.h"
+#include "drivers/ext2/blockGroup.h"
 #include "system/mm.h"
 #include "system/fs/inode.h"
 #include "system/call.h"

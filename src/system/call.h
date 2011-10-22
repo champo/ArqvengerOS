@@ -32,6 +32,6 @@ int _creat(const char* path, int mode);
 
 int _close(int fd);
 
-int _open(const char* filename, int flags);
+int _open(const char* filename, int flags, int mode);
 
 #endif

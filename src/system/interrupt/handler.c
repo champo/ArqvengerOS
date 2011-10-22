@@ -168,7 +168,7 @@ void int80(registers* regs) {
             regs->eax = _close(regs->ebx);
             break;
         case _SYS_OPEN:
-            regs->eax = _open((char*)regs->ebx, regs->ecx);
+            regs->eax = _open((char*)regs->ebx, regs->ecx, regs->edx);
             break;
         case _SYS_CREAT:
             regs->eax = _creat((char*)regs->ebx, regs->ecx);
