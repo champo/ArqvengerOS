@@ -1,2 +1,6 @@
+VFS:
+ - Setup the char device handler, and the stdin, stdout and stderr file descriptors
+ - Unwire read & write
+ - System calls for directory manipulation primitives
 Wishlist:
  - Support numpad
