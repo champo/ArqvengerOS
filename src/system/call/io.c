@@ -12,10 +12,13 @@
 size_t _read(int fd, void* buf, size_t length) {
     return readKeyboard(buf, length);
 
-    struct Process* process = process_table_get(_getpid());
+    struct Process* process = scheduler_current();
     struct FileDescriptor* fileDescriptor = &(process->fdTable[fd]);
 
     if (fileDescriptor->inode == NULL || fileDescriptor->ops->read == NULL) {
+        return -1;
+    }
+    if (fileDescriptor->flags & O_WRONLY) {
         return -1;
     }
     return fileDescriptor->ops->read(fileDescriptor, buf, length);
@@ -24,10 +27,13 @@ size_t _read(int fd, void* buf, size_t length) {
 size_t _write(int fd, const void* buf, size_t length) {
     return tty_write(buf, length);
 
-    struct Process* process = process_table_get(_getpid());
+    struct Process* process = scheduler_current();
     struct FileDescriptor* fileDescriptor = &(process->fdTable[fd]);
 
     if (fileDescriptor->inode == NULL || fileDescriptor->ops->write == NULL) {
+        return -1;
+    }
+    if (fileDescriptor->flags & O_RDONLY) {
         return -1;
     }
     return fileDescriptor->ops->write(fileDescriptor, buf, length);
@@ -40,17 +46,17 @@ int _open(const char* path, int flags, int mode) {
     int index = 0;
     char entry[ENTRY_NAME_MAX_LEN];
     int len = strlen(path);
-    int i, gid, uid, file_gid, file_uid;
+    int gid, uid, file_gid, file_uid;
     int fd = -1;
-    int flag = 0;
     int error = 0;
+    int i = 0;
 
     struct Process* process = scheduler_current();
 
     for (i = 0; i < MAX_OPEN_FILES; i++) {
         if (process->fdTable[i].inode == NULL) {
             fd = i;
-            i = MAX_OPEN_FILES;
+            break;
         }
     }
 
@@ -64,33 +70,30 @@ int _open(const char* path, int flags, int mode) {
     } else {
         //TODO curdir = getcwd();
     }
-    while (!flag && !error) {
 
-        i = 0;
+    for (; index < len; index++) {
+        
+        entry[i] = path[index];
+        i++;
 
-        while (path[index] != '/' && index != len) {
-            entry[i] = path[index];
-            index++;
-            i++;
-        }
-        entry[i] = '\0';
+        if (path[index] == '/' || index + 1 == len) {
+            if (index + 1 != len) {
+                i--;
+            }
 
+            entry[i] = '\0';
+            i = 0;
+            
+            nextdir = fs_findentry(curdir, entry);
 
-        nextdir = fs_findentry(curdir, entry);
-
-        if (nextdir.inode == 0) {
-            error = 1;
-        } else {
-            next = fs_inode_open(nextdir.inode);
+            if (nextdir.inode == 0) {
+                error = 1;
+                break;
+            }
             fs_inode_close(curdir);
-            curdir = next;
+            curdir = fs_inode_open(nextdir.inode);
         }
 
-        if ( index == len ) {
-            flag = 1;
-        } else {
-            index++;
-        }
     }
 
     if (!error) {
@@ -119,10 +122,10 @@ int _open(const char* path, int flags, int mode) {
         }
 
         //Pasamos los permisos
-        process->fdTable[fd] = fs_fd(next, flags);
+        process->fdTable[fd] = fs_fd(curdir, flags);
         return fd;
     }
-    if (flag && (flags & O_CREAT)) {
+    if (index == len && (flags & O_CREAT)) {
         //Si el path existe, pero la entry no (flag && error) y en flags esta O_CREAT
         //trato de crear y abrir el archivo
         return _creat(path, mode);
@@ -135,7 +138,7 @@ int _creat(const char* path, int mode) {
 
 int _close(int fd) {
 
-    struct Process* process = process_table_get(_getpid());
+    struct Process* process = scheduler_current();
     struct FileDescriptor* fileDescriptor = &(process->fdTable[fd]);
 
     if (fileDescriptor->inode == NULL) {
