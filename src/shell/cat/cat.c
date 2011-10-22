@@ -15,7 +15,12 @@ void cat(char* argv) {
     }
 
     cmdEnd++;
-    printf("Got fd %d\n", open(cmdEnd, O_RDWR));
+    int fd = open(cmdEnd, O_RDWR);
+    char c;
+    while (read(fd, &c, 1) == 1) {
+        putchar(c);
+    }
+    printf("\n");
 }
 
 void manCat(void) {

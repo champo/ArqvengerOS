@@ -73,7 +73,7 @@ size_t inode_write(struct FileDescriptor* fd, const void* buffer, size_t len) {
 
     int res = ext2_write_inode_content(fd->inode, fd->offset, len, buffer);
     if (res == -1) {
-        return -1;
+        return 0;
     } else {
         fd->offset += res;
         return res;
@@ -83,7 +83,7 @@ size_t inode_write(struct FileDescriptor* fd, const void* buffer, size_t len) {
 size_t inode_read(struct FileDescriptor* fd, void* buffer, size_t len) {
     int res = ext2_read_inode_content(fd->inode, fd->offset, len, buffer);
     if (res == -1) {
-        return -1;
+        return 0;
     } else {
         fd->offset += res;
         return res;
