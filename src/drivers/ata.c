@@ -46,11 +46,15 @@ struct DriveInfo {
 
 #define SIZE_WORD 256
 
-unsigned long long sectors = 0L;
+static unsigned long long sectors = 0L;
 
 static void set_ports(unsigned long long sector, int count, unsigned char command);
 static int poll(void);
 static int checkBSY(void);
+
+int ata_has_drive(void) {
+    return !!sectors;
+}
 
 void ata_init(struct multiboot_info* info) {
 
