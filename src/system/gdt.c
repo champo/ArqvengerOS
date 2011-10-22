@@ -35,8 +35,6 @@ void setupGDT(void) {
 
     struct GDTR gdtr;
 
-    disableInterrupts();
-
     setupGDTEntry(0, 0, 0, 0, 0);
     setupGDTEntry(1, 0, 0x000FFFFF, 0x9A, 0xC0);
     setupGDTEntry(2, 0, 0x000FFFFF, 0x92, 0xC0);
@@ -47,6 +45,5 @@ void setupGDT(void) {
     gdtr.base = (int)&gdt;
 
     __asm__ volatile("lgdt (%%eax)"::"A"(&gdtr):);
-    enableInterrupts();
 }
 

@@ -42,7 +42,6 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     fs_load();
     scheduler_init();
 
-    disableInterrupts();
     struct Process* idleProcess = process_table_new(idle, NULL, NULL, 1, NO_TERMINAL, 0);
     struct Process* shellProcess = process_table_new(tty_run, NULL, idleProcess, 1, NO_TERMINAL, 0);
     enableInterrupts();

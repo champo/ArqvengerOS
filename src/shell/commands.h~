@@ -11,7 +11,10 @@
 #include "shell/date/date.h"
 #include "shell/kill/kill.h"
 #include "shell/top/top.h"
+<<<<<<< HEAD
 #include "shell/cat/cat.h"
+=======
 #include "shell/roflcopter/roflcopter.h"
+>>>>>>> master
 
 #endif
