@@ -68,8 +68,6 @@ static void reMapPIC(int offset1,int offset2);
 
 /* These are all ASM functions used only here, so we just keep the def here */
 void _lidt(InterruptDescriptorTableRegister* idtr);
-void _cli(void);
-void _sti(void);
 
 void _int00Handler(void);
 void _int01Handler(void);
@@ -120,7 +118,6 @@ void setupIDT(void) {
     InterruptDescriptorTableRegister idtr;
 
     // Disabling interrupts to make sure we're in absolute control.
-    _cli();
     reMapPIC(PIC1_BASE_OFFSET,PIC2_BASE_OFFSET);
 
     setIdtEntry(idt, 0x80, 0x08, (dword)&_int80Handler, ACS_INT);
@@ -170,9 +167,6 @@ void setupIDT(void) {
     /* Enable the interrupts we need in the PIC. */
     outB(0x21,0xFC);
     outB(0xA1,0xFF);
-
-    // Enabling the interrupts again.
-    _sti();
 }
 
 

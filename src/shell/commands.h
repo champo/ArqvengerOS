@@ -13,5 +13,6 @@
 #include "shell/top/top.h"
 #include "shell/adduser/adduser.h"
 #include "shell/users/users.h"
+#include "shell/roflcopter/roflcopter.h"
 
 #endif

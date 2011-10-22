@@ -15,7 +15,7 @@
 #define BUFFER_SIZE 500
 #define HISTORY_SIZE 50
 
-#define NUM_COMMANDS 12
+#define NUM_COMMANDS 13
 
 struct History {
     char input[HISTORY_SIZE][BUFFER_SIZE];
@@ -68,6 +68,7 @@ const Command commands[] = {
     { &top, "top", "Display information about running processes.", &manTop},
     { &adduser, "adduser", "Add new user account.", &manAdduser},
     { &users, "users", "Show users loggued.", &manUsers}
+    { &roflcopter, "roflcopter", "We need a ROFLcopter.", &manRoflcopter}
 };
 
 static termios shellStatus = { 0, 0 };
