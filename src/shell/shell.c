@@ -12,7 +12,6 @@
 #define BUFFER_SIZE 500
 #define HISTORY_SIZE 50
 
-#define NUM_COMMANDS 10
 
 struct History {
     char input[HISTORY_SIZE][BUFFER_SIZE];
@@ -52,6 +51,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, Command* cmd);
 
+#define NUM_COMMANDS 11
 const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho },
     { &man, "man", "Display information about command execution.", &manMan },
@@ -62,7 +62,8 @@ const Command commands[] = {
     { &fortune, "fortune", "Receive awesome knowledge.", &manFortune},
     { &date, "date", "Display current date.", &manDate},
     { &killCmd, "kill", "Kill a running process.", &manKill},
-    { &top, "top", "Display information about running processes.", &manTop}
+    { &top, "top", "Display information about running processes.", &manTop},
+    { &cat, "cat", "Output the contents of a file.", &manCat}
 };
 
 static termios shellStatus = { 0, 0 };

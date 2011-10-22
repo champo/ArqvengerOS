@@ -11,5 +11,6 @@
 #include "shell/date/date.h"
 #include "shell/kill/kill.h"
 #include "shell/top/top.h"
+#include "shell/cat/cat.h"
 
 #endif
