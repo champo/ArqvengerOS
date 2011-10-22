@@ -2,6 +2,8 @@
 #include "library/stdlib.h"
 #include "library/stdio.h"
 #include "library/sys.h"
+#include "library/string.h"
+#include "mcurses/mcurses.h"
 
 static void error(void) {
     printf("Usage: kill pid\n");

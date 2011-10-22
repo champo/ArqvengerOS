@@ -127,7 +127,7 @@ void sudoku(char* argv) {
     time_t initialTime = time(NULL);
     time_t elapsedTime;
     srand(initialTime);
-    char* board = boards[rand() % NUM_BOARDS];
+    const char* board = boards[rand() % NUM_BOARDS];
     int in, i, j;
 
     GameState state;
