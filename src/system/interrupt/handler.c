@@ -164,6 +164,9 @@ void int80(registers* regs) {
         case _SYS_NICE:
             regs->eax = _nice(regs->ebx);
             break;
+        case _SYS_SETPPERSONA:
+            _setProcessPersona(regs->ebx, regs->ecx, regs->edx);
+            break;
     }
 }
 

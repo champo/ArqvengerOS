@@ -11,5 +11,7 @@
 #include "shell/date/date.h"
 #include "shell/kill/kill.h"
 #include "shell/top/top.h"
+#include "shell/adduser/adduser.h"
+#include "shell/users/users.h"
 
 #endif

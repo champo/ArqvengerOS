@@ -5,6 +5,8 @@
 #include "library/sys.h"
 #include "system/call/codes.h"
 #include "system/call/ioctl/keyboard.h"
+#include "system/accessControlList/users.h"
+#include "system/accessControlList/groups.h"
 #include "type.h"
 #include "mcurses/mcurses.h"
 
@@ -13,8 +15,8 @@ void top(char* argv) {
     struct ProcessInfo data[20];
     int pcount;
     
-    static termios oldStatus;
-    static termios topStatus = { 0, 0 };
+    termios oldStatus;
+    termios topStatus = { 0, 0 };
 
     ioctl(0, TCGETS, (void*) &oldStatus);
     ioctl(0, TCSETS, (void*) &topStatus);
@@ -35,8 +37,8 @@ void top(char* argv) {
         for (int i = 0; i < pcount; i++) {
             printf("%d\t", data[i].pid);
             printf("%d\t", data[i].ppid);
-            printf("%d\t", data[i].uid);
-            printf("%d\t", data[i].gid);
+            printf("%s\t", get_username(data[i].uid));
+            printf("%s\t", get_groupname(data[i].gid));
             printf("%d\t", data[i].cputime);
             printf("%d\t", data[i].priority);
             printf("%s\t", (data[i].state)? "alive":  "zombie");

@@ -28,4 +28,6 @@ void _sleep(int seconds);
 
 int _nice(int priority);
 
+void _setProcessPersona(int pid, int uid, int gid);
+
 #endif
