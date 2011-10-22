@@ -18,7 +18,7 @@ size_t _read(int fd, void* buf, size_t length) {
     if (fileDescriptor->inode == NULL || fileDescriptor->ops->read == NULL) {
         return -1;
     }
-    if (fileDescriptor->flags & O_WRONLY) {
+    if ((fileDescriptor->flags & 3) == O_WRONLY) {
         return -1;
     }
     return fileDescriptor->ops->read(fileDescriptor, buf, length);
@@ -33,7 +33,7 @@ size_t _write(int fd, const void* buf, size_t length) {
     if (fileDescriptor->inode == NULL || fileDescriptor->ops->write == NULL) {
         return -1;
     }
-    if (fileDescriptor->flags & O_RDONLY) {
+    if ((fileDescriptor->flags & 3) == O_RDONLY) {
         return -1;
     }
     return fileDescriptor->ops->write(fileDescriptor, buf, length);
@@ -48,7 +48,6 @@ int _open(const char* path, int flags, int mode) {
     int len = strlen(path);
     int gid, uid, file_gid, file_uid;
     int fd = -1;
-    int error = 0;
     int i = 0;
 
     struct Process* process = scheduler_current();
@@ -87,8 +86,15 @@ int _open(const char* path, int flags, int mode) {
             nextdir = fs_findentry(curdir, entry);
 
             if (nextdir.inode == 0) {
-                error = 1;
-                break;
+                if (index + 1 != len) {
+                    fs_inode_close(curdir);
+                    return -1;
+                }
+                if (!(flags & O_CREAT) || _creat(path, mode) != 0) {
+                    fs_inode_close(curdir);
+                    return -1;
+                }
+                nextdir = fs_findentry(curdir, entry);
             }
             fs_inode_close(curdir);
             curdir = fs_inode_open(nextdir.inode);
@@ -96,41 +102,32 @@ int _open(const char* path, int flags, int mode) {
 
     }
 
-    if (!error) {
-        //Hermoso caso en donde la entry existe
-        file_uid = curdir->data->uid;
-        file_gid = curdir->data->gid;
-        gid = process->gid;
-        uid = process->uid;
+    file_uid = curdir->data->uid;
+    file_gid = curdir->data->gid;
+    gid = process->gid;
+    uid = process->uid;
 
-        unsigned short perms = curdir->data->typesAndPermissions & 0x0FFF;
+    unsigned short perms = curdir->data->typesAndPermissions & 0x0FFF;
 
-        if (flags & O_RDONLY || flags & O_RDWR) {
-            if (!(perms & S_IROTH) &&
-                !(perms & S_IRGRP && file_gid == gid) &&
-                !(perms & S_IRUSR && file_uid == uid)) {
-                return -1;
-            }
+    if ((flags & 3) == O_RDONLY || (flags & 3) == O_RDWR) {
+       if (!(perms & S_IROTH) &&
+            !(perms & S_IRGRP && file_gid == gid) &&
+            !(perms & S_IRUSR && file_uid == uid)) {
+            return -1;
         }
+    }
 
-        if (flags & O_WRONLY || flags & O_RDWR) {
-            if(!(perms & S_IWOTH) &&
-               !(perms & S_IWGRP && file_gid == gid) &&
-               !(perms & S_IWUSR && file_uid == uid)) {
-                return -1;
-            }
+    if ((flags & 3) == O_WRONLY || (flags & 3) == O_RDWR) {
+       if(!(perms & S_IWOTH) &&
+          !(perms & S_IWGRP && file_gid == gid) &&
+          !(perms & S_IWUSR && file_uid == uid)) {
+            return -1;
         }
+    }
 
-        //Pasamos los permisos
-        process->fdTable[fd] = fs_fd(curdir, flags);
-        return fd;
-    }
-    if (index == len && (flags & O_CREAT)) {
-        //Si el path existe, pero la entry no (flag && error) y en flags esta O_CREAT
-        //trato de crear y abrir el archivo
-        return _creat(path, mode);
-    }
-    return -1;
+    //Pasamos los permisos
+    process->fdTable[fd] = fs_fd(curdir, flags);
+    return fd;
 }
 
 int _creat(const char* path, int mode) {
