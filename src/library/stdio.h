@@ -31,14 +31,18 @@ int printf(const char *format, ...);
 int fprintf(FILE *stream, const char *format, ...);
 int vprintf(const char *format, va_list arg);
 int fgetc(FILE *stream);
-size_t ioctl(FILE *stream, int cmd, void *argp);
+size_t ioctl(int fd, int cmd, void *argp);
 int ungetc(int c, FILE *stream);
 int vfscanf(FILE *stream, const char *format, va_list arg);
 int scanf(const char *format, ...);
 int getfd(FILE *stream);
 int vscanf(const char *format, va_list arg);
 int fscanf(FILE *stream, const char *format, ...);
-int close(FILE *stream);
+int close(int fd);
 int open(char* filename, int flags, ...);
+
+size_t write(int fd, const char *cs, size_t n);
+
+size_t read(int fd, void *buf, size_t n);
 
 #endif

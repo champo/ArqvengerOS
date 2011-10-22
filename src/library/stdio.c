@@ -27,9 +27,6 @@ FILE *stdout;
 FILE *stdin;
 FILE *stderr;
 
-static size_t systemWrite(FILE *stream, const char *cs, size_t n);
-
-static size_t systemRead(FILE *stream, void *buf, size_t n);
 
 /**
  * Insert a character into the given stream.
@@ -39,7 +36,7 @@ static size_t systemRead(FILE *stream, void *buf, size_t n);
  * @return the value of the caracter and in case of failiure it returns EOF.
  */
 int fputc(char c, FILE *stream) {
-    return (systemWrite(stream, &c, 1) == 1? c : EOF);
+    return (write(getfd(stream), &c, 1) == 1? c : EOF);
 }
 
 /**
@@ -54,7 +51,7 @@ int fputs(const char *s, FILE *stream) {
     if (s != NULL) {
         int len = strlen(s);
         int total;
-        total = systemWrite(stream, s, len);
+        total = write(getfd(stream), s, len);
         total = total + (fputc('\n', stream) > 0);
 
         return (total == len + 1? len : EOF);
@@ -101,7 +98,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
 
     while (format[i] != '\0') {
         if (format[i] == '%') {
-            if (systemWrite(stream, format + lastprint, i - lastprint)
+            if (write(getfd(stream), format + lastprint, i - lastprint)
                  != i - lastprint) {
                 return -1;
             }
@@ -113,7 +110,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                 case 'i':
                     sizestring = itoa(buffint,va_arg(arg,int));
                     plus += sizestring;
-                    if (systemWrite(stream,buffint,sizestring) != sizestring) {
+                    if (write(getfd(stream),buffint,sizestring) != sizestring) {
                         return -1;
                     }
                     symb++;
@@ -121,7 +118,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                 case 'u':
                     sizestring = utoa(buffint,va_arg(arg, unsigned int));
                     plus += sizestring;
-                    if (systemWrite(stream,buffint,sizestring) != sizestring) {
+                    if (write(getfd(stream),buffint,sizestring) != sizestring) {
                         return -1;
                     }
                     symb++;
@@ -135,7 +132,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                     buffstring = va_arg(arg,char *);
                     sizestring = strlen(buffstring);
                     plus += sizestring;
-                    if (systemWrite(stream,buffstring,sizestring) != sizestring) {
+                    if (write(getfd(stream),buffstring,sizestring) != sizestring) {
                         return -1;
                     }
                     symb++;
@@ -152,7 +149,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
             i++;
         }
     }
-    if(systemWrite(stream,format + lastprint, i - lastprint)
+    if(write(getfd(stream),format + lastprint, i - lastprint)
                  != (i - lastprint) ) {
         return -1;
     }
@@ -227,21 +224,21 @@ int vprintf(const char *format, va_list arg) {
 /**
  * Calls the system so it can write on the correct file
  */
-size_t systemWrite(FILE *stream, const char *cs, size_t n){
-    return system_call(_SYS_WRITE, getfd(stream), (int) cs, n);
+size_t write(int fd, const char *cs, size_t n){
+    return system_call(_SYS_WRITE, fd, (int) cs, n);
 }
 
 /**
  * Calls the system so it can read on the correct file
  */
-size_t systemRead(FILE *stream, void *buf, size_t n) {
-    return system_call(_SYS_READ, getfd(stream), (int)buf, n);
+size_t read(int fd, void *buf, size_t n) {
+    return system_call(_SYS_READ, fd, (int)buf, n);
 }
 /**
  *  Calls the system to do driver dependent operations
  */
-size_t ioctl(FILE *stream, int cmd, void *argp) {
-    return system_call(_SYS_IOCTL, getfd(stream), cmd, (int)argp);
+size_t ioctl(int fd, int cmd, void *argp) {
+    return system_call(_SYS_IOCTL, fd, cmd, (int)argp);
 }
 
 /**
@@ -255,7 +252,7 @@ int fgetc(FILE *stream) {
         stream->flag = 0;
         return stream->unget;
     }
-    return systemRead(stream, &c, 1) ? c : EOF;
+    return read(getfd(stream), &c, 1) ? c : EOF;
 }
 
 /**
@@ -487,8 +484,8 @@ int fscanf(FILE *stream, const char *format, ...){
  * @param stream, a pointer to the file to be closed.
  * @return 0 if success, -1 if error.
  */
-int close(FILE* stream) {
-    return system_call(_SYS_CLOSE, getfd(stream), 0, 0);
+int close(int fd) {
+    return system_call(_SYS_CLOSE, fd, 0, 0);
 }
 
 /**
