@@ -39,6 +39,7 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
 
     initMemoryMap(info);
     ata_init(info);
+    fs_load();
     scheduler_init();
 
     disableInterrupts();
