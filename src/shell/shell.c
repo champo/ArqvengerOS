@@ -67,7 +67,7 @@ const Command commands[] = {
     { &killCmd, "kill", "Kill a running process.", &manKill},
     { &top, "top", "Display information about running processes.", &manTop},
     { &adduser, "adduser", "Add new user account.", &manAdduser},
-    { &users, "users", "Show users loggued.", &manUsers}
+    { &users, "users", "Show users loggued.", &manUsers},
     { &roflcopter, "roflcopter", "We need a ROFLcopter.", &manRoflcopter}
 };
 
