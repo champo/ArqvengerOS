@@ -174,6 +174,8 @@ int _creat(const char* path, int mode) {
         }
 
     }
+   
+    entry[i] = '\0'; 
     if (fs_mknod(curdir, entry, INODE_FILE) != 0) {
         return -1;
     }
