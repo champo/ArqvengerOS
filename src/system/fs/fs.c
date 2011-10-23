@@ -21,6 +21,14 @@ static int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* in
 struct fs_Inode* fs_inode_open(size_t inode) {
 
     for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
+        if (inodeTable[i]) {
+            if (inodeTable[i]->refCount <= 0) {
+                kprintf("Inode %u in entry %u is broken.\n", inodeTable[i]->number, i);
+                while (1);
+            }
+        }
+    }
+    for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
         if (inodeTable[i] != NULL && inodeTable[i]->number == inode) {
             inodeTable[i]->refCount++;
             return inodeTable[i];
