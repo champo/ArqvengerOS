@@ -525,3 +525,9 @@ int rename(const char* from, const char* to) {
 int readdir(int fd, struct fs_DirectoryEntry* entry) {
 }
 
+int chdir(const char* path) {
+}
+
+int getcwd(char* path, size_t len) {
+}
+
