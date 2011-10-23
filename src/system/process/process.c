@@ -19,7 +19,10 @@ inline static void push(int** esp, int val) {
 }
 
 void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal) {
-
+    
+    process->cwd = kalloc(strlen(parent->cwd) + 1);
+    strcpy(process->cwd, parent->cwd);
+    
     process->pid = ++pid;
     process->terminal = terminal;
     process->active = 0;
@@ -95,6 +98,8 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
 
 void exitProcess(struct Process* process) {
     process->schedule.done = 1;
+
+    kfree(process->cwd);
 
     for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
 

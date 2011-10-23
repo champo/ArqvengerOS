@@ -60,6 +60,8 @@ struct Process {
     int gid;
 
     struct FileDescriptor fdTable[MAX_OPEN_FILES];
+
+    char* cwd;
 };
 
 void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal);
