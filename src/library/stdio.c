@@ -497,7 +497,7 @@ int close(int fd) {
  *              mode indicates the permissions of the new file.
  * @return 0 if succes, -1 if error.
  */
-int open(char* filename, int flags, ...) {
+int open(const char* filename, int flags, ...) {
     int mode;
     if (flags & O_CREAT) {
         va_list ap;
@@ -508,5 +508,20 @@ int open(char* filename, int flags, ...) {
         mode = 0;
     }
     return system_call(_SYS_OPEN, (int)filename, flags, mode);
+}
+
+int mkdir(const char* path, int mode) {
+}
+
+int rmdir(const char* path) {
+}
+
+int unlink(const char* path) {
+}
+
+int rename(const char* from, const char* to) {
+}
+
+int readdir(int fd, struct fs_DirectoryEntry* entry) {
 }
 

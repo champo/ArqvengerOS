@@ -3,6 +3,7 @@
 #define __stdio_header__
 
 #include "type.h"
+#include "system/fs/direntry.h"
 
 #define putchar(x) fputc((x),stdout)
 #define putc(x, stream) fputc((x), (stream))
@@ -39,10 +40,20 @@ int getfd(FILE *stream);
 int vscanf(const char *format, va_list arg);
 int fscanf(FILE *stream, const char *format, ...);
 int close(int fd);
-int open(char* filename, int flags, ...);
+int open(const char* filename, int flags, ...);
 
 size_t write(int fd, const char *cs, size_t n);
 
 size_t read(int fd, void *buf, size_t n);
+
+int mkdir(const char* path, int mode);
+
+int rmdir(const char* path);
+
+int unlink(const char* path);
+
+int rename(const char* from, const char* to);
+
+int readdir(int fd, struct fs_DirectoryEntry* entry);
 
 #endif
