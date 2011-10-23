@@ -19,10 +19,7 @@ inline static void push(int** esp, int val) {
 }
 
 void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal) {
-    
-    process->cwd = kalloc(strlen(parent->cwd) + 1);
-    strcpy(process->cwd, parent->cwd);
-    
+
     process->pid = ++pid;
     process->terminal = terminal;
     process->active = 0;
@@ -41,6 +38,9 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     if (parent == NULL) {
         process->ppid = 0;
         process->next = NULL;
+
+        process->cwd = kalloc(2 * sizeof(char));
+        strcpy(process->cwd, "/");
     } else {
         process->ppid = parent->pid;
 
@@ -50,6 +50,9 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         }
 
         parent->firstChild = process;
+
+        process->cwd = kalloc(strlen(parent->cwd) + 1);
+        strcpy(process->cwd, parent->cwd);
     }
 
     process->entryPoint = entryPoint;
