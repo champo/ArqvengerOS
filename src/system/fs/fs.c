@@ -209,6 +209,10 @@ int fs_set_permission(struct fs_Inode* inode, int perm) {
 
 int fs_mknod(struct fs_Inode* path, const char* name, int type) {
 
+    if (fs_findentry(path, name).inode != 0) {
+        return EEXIST;
+    }
+
     //TODO: This needs to check out the current user
     struct fs_Inode* nod = ext2_create_inode(fs, type, PERM_DEFAULT, 0, 0);
     int res = add_link(path, name, nod);
@@ -219,6 +223,9 @@ int fs_mknod(struct fs_Inode* path, const char* name, int type) {
 
 int fs_mkdir(struct fs_Inode* path, const char* name) {
 
+    if (fs_findentry(path, name).inode != 0) {
+        return EEXIST;
+    }
     //TODO: This needs to check out the current user
     struct fs_Inode* dir = ext2_dir_create(fs, PERM_DEFAULT, 0, 0);
 
