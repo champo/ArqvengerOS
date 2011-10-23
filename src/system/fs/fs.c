@@ -23,13 +23,11 @@ struct fs_Inode* fs_inode_open(size_t inode) {
     for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
         if (inodeTable[i] != NULL && inodeTable[i]->number == inode) {
             inodeTable[i]->refCount++;
-            kprintf("O%d %d\n", inodeTable[i]->number, inodeTable[i]->refCount);
             return inodeTable[i];
         }
     }
 
     struct fs_Inode* node = ext2_read_inode(fs, inode);
-    kprintf("N%u\n", inode);
     if (node == NULL) {
         return NULL;
     }
@@ -55,7 +53,6 @@ void free_inode(struct fs_Inode* inode) {
 void fs_inode_close(struct fs_Inode* inode) {
 
     inode->refCount--;
-    kprintf("C%d %d\n", inode->number, inode->refCount);
     if (inode->refCount == 0) {
 
         for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
@@ -85,7 +82,6 @@ void fs_register_ops(int fileType, struct FileDescriptorOps ops) {
 
 struct FileDescriptor fs_fd(struct fs_Inode* inode, int flags) {
     inode->refCount++;
-    kprintf("D%d %d\n", inode->number, inode->refCount);
     return (struct FileDescriptor) {
         .inode = inode,
         .offset = 0,

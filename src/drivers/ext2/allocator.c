@@ -173,9 +173,13 @@ size_t allocate_inode(struct ext2* fs) {
         }
 
         int entry = bitmap_first_clear(fs->bitmapBuffer, entries);
-        if (entry != -1 && entry + i * fs->sb->inodesPerBlockGroup >= FIRST_USABLE_INODE) {
+        size_t inode = entry + i * fs->sb->inodesPerBlockGroup + 1;
+        if (entry != -1 && inode >= FIRST_USABLE_INODE) {
             bitmap_set(fs->bitmapBuffer, entry);
-            write_inode_bitmap(fs, i);
+            if (write_inode_bitmap(fs, i) == -1) {
+                fs->bitmapBlock = 0;
+                return 0;
+            }
 
             fs->sb->unallocatedInodes--;
             ext2_superblock_write(fs);
@@ -183,7 +187,7 @@ size_t allocate_inode(struct ext2* fs) {
             fs->groupTable[i].unallocatedInodes--;
             ext2_write_blockgroup_table(fs);
 
-            return i * fs->sb->inodesPerBlockGroup + entry + 1;
+            return inode;
         }
     }
 
@@ -214,6 +218,7 @@ int deallocate_inode(struct ext2* fs, size_t inode) {
 }
 
 int write_inode_bitmap(struct ext2* fs, int group) {
+
     if (fs->bitmapBlock != fs->groupTable[group].inodeBitmapAddress) {
         return -1;
     }
@@ -223,11 +228,12 @@ int write_inode_bitmap(struct ext2* fs, int group) {
 
 int read_inode_bitmap(struct ext2* fs, int group) {
 
-    if (fs->bitmapBlock == fs->groupTable[group].inodeBitmapAddress) {
+    size_t block = fs->groupTable[group].inodeBitmapAddress;
+    if (fs->bitmapBlock == block) {
         return 0;
     }
 
-    fs->bitmapBlock = fs->groupTable[group].inodeBitmapAddress;
+    fs->bitmapBlock = block;
     return read_block(fs, fs->bitmapBlock, fs->bitmapBuffer);
 }
 
