@@ -21,6 +21,14 @@ static int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* in
 struct fs_Inode* fs_inode_open(size_t inode) {
 
     for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
+        if (inodeTable[i]) {
+            if (inodeTable[i]->refCount <= 0) {
+                kprintf("Inode %u in entry %u is broken.\n", inodeTable[i]->number, i);
+                while (1);
+            }
+        }
+    }
+    for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
         if (inodeTable[i] != NULL && inodeTable[i]->number == inode) {
             inodeTable[i]->refCount++;
             return inodeTable[i];
@@ -56,9 +64,10 @@ void fs_inode_close(struct fs_Inode* inode) {
     if (inode->refCount == 0) {
 
         for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
-            if (inodeTable[i] != NULL && inodeTable[i] == inode) {
+            if (inodeTable[i] == inode) {
                 free_inode(inode);
                 inodeTable[i] = NULL;
+                return;
             }
         }
     }
@@ -204,6 +213,10 @@ int fs_set_permission(struct fs_Inode* inode, int perm) {
 
 int fs_mknod(struct fs_Inode* path, const char* name, int type) {
 
+    if (fs_findentry(path, name).inode != 0) {
+        return EEXIST;
+    }
+
     //TODO: This needs to check out the current user
     struct fs_Inode* nod = ext2_create_inode(fs, type, PERM_DEFAULT, 0, 0);
     int res = add_link(path, name, nod);
@@ -214,6 +227,9 @@ int fs_mknod(struct fs_Inode* path, const char* name, int type) {
 
 int fs_mkdir(struct fs_Inode* path, const char* name) {
 
+    if (fs_findentry(path, name).inode != 0) {
+        return EEXIST;
+    }
     //TODO: This needs to check out the current user
     struct fs_Inode* dir = ext2_dir_create(fs, PERM_DEFAULT, 0, 0);
 

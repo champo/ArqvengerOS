@@ -18,6 +18,7 @@ void cat(char* argv) {
     int fd = open(cmdEnd, O_RDWR);
     if (fd < 0) {
         printf("Cant open the file. Sorry dude.\n");
+        return;
     }
 
     char c;

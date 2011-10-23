@@ -19,10 +19,6 @@ inline static int bitmap_test(unsigned int* map, int bit) {
 
 inline static int bitmap_first_clear(unsigned int* map, size_t entries) {
 
-    if (entries == -1) {
-        return -1;
-    }
-
     size_t slots = entries / ENTRIES_PER_SLOT;
     for (size_t i = 0; i < slots; i++) {
 

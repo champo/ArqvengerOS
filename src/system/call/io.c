@@ -73,7 +73,7 @@ int _open(const char* path, int flags, int mode) {
     }
 
     for (int i = 0; index < len; index++) {
-        
+
         entry[i] = path[index];
         i++;
 
@@ -115,6 +115,7 @@ int _open(const char* path, int flags, int mode) {
        if (!(perms & S_IROTH) &&
             !(perms & S_IRGRP && file_gid == gid) &&
             !(perms & S_IRUSR && file_uid == uid)) {
+            fs_inode_close(curdir);
             return -1;
         }
     }
@@ -123,12 +124,14 @@ int _open(const char* path, int flags, int mode) {
        if(!(perms & S_IWOTH) &&
           !(perms & S_IWGRP && file_gid == gid) &&
           !(perms & S_IWUSR && file_uid == uid)) {
+            fs_inode_close(curdir);
             return -1;
         }
     }
 
     //Pasamos los permisos
     process->fdTable[fd] = fs_fd(curdir, flags);
+    fs_inode_close(curdir);
     return fd;
 }
 
@@ -148,7 +151,7 @@ int _creat(const char* path, int mode) {
     }
 
     for (int i = 0; index < len; index++) {
-        
+
         entry[i] = path[index];
         i++;
 
@@ -160,7 +163,7 @@ int _creat(const char* path, int mode) {
             i--;
             entry[i] = '\0';
             i = 0;
-            
+
             nextdir = fs_findentry(curdir, entry);
 
             if (nextdir.inode == 0) {
@@ -171,8 +174,9 @@ int _creat(const char* path, int mode) {
         }
 
     }
-    entry[i] = '\0' 
-    if (fs_mknod(nextdir.inode, entry, INODE_FILE) != 0) {
+   
+    entry[i] = '\0'; 
+    if (fs_mknod(curdir, entry, INODE_FILE) != 0) {
         return -1;
     }
     nextdir = fs_findentry(curdir, entry);
@@ -202,6 +206,7 @@ int _close(int fd) {
         fileDescriptor->ops->close(fileDescriptor);
     }
     fs_inode_close(fileDescriptor->inode);
+    process->fdTable[fd].inode = NULL;
     return 0;
 
 }
