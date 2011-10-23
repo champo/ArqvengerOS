@@ -40,6 +40,4 @@ struct FileDescriptor fs_dup(struct FileDescriptor fd);
 
 void fs_register_ops(int fileType, struct FileDescriptorOps ops);
 
-struct fs_Inode* get_inode_by_path(char* path);
-
 #endif
