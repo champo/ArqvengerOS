@@ -174,8 +174,8 @@ int _creat(const char* path, int mode) {
         }
 
     }
-   
-    entry[i] = '\0'; 
+
+    entry[i] = '\0';
     if (fs_mknod(curdir, entry, INODE_FILE) != 0) {
         return -1;
     }
@@ -221,5 +221,26 @@ int _ioctl(int fd, int cmd, void* argp) {
     }
 
     return fileDescriptor->ops->ioctl(fileDescriptor, cmd, argp);
+}
+
+int _mkdir(const char* path, int mode) {
+}
+
+int _rmdir(const char* path) {
+}
+
+int _unlink(const char* path) {
+}
+
+int _rename(const char* from, const char* to) {
+}
+
+int _readdir(int fd, struct fs_DirectoryEntry* entry) {
+}
+
+int _chdir(const char* path) {
+}
+
+int _getcwd(char* path, size_t len) {
 }
 

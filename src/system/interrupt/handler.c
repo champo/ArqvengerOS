@@ -173,6 +173,27 @@ void int80(registers* regs) {
         case _SYS_CREAT:
             regs->eax = _creat((char*)regs->ebx, regs->ecx);
             break;
+        case _SYS_MKDIR:
+            regs->eax = _mkdir((const char*)regs->ebx, regs->ecx);
+            break;
+        case _SYS_RMDIR:
+            regs->eax = _rmdir((const char*)regs->ebx);
+            break;
+        case _SYS_UNLINK:
+            regs->eax = _unlink((const char*)regs->ebx);
+            break;
+        case _SYS_RENAME:
+            regs->eax = _rename((const char*)regs->ebx, (const char*)regs->ecx);
+            break;
+        case _SYS_CHDIR:
+            regs->eax = _chdir((const char*)regs->ebx);
+            break;
+        case _SYS_GETCWD:
+            regs->eax = _getcwd((char*)regs->ebx, (size_t)regs->ecx);
+            break;
+        case _SYS_READDIR:
+            regs->eax = _readdir(regs->ebx, (struct fs_DirectoryEntry*)regs->ecx);
+            break;
 
     }
 }

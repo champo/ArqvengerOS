@@ -3,6 +3,7 @@
 
 #include "type.h"
 #include "system/pinfo.h"
+#include "system/fs/direntry.h"
 
 size_t _write(int fd, const void* buf, size_t length);
 
@@ -33,5 +34,19 @@ int _creat(const char* path, int mode);
 int _close(int fd);
 
 int _open(const char* filename, int flags, int mode);
+
+int _mkdir(const char* path, int mode);
+
+int _rmdir(const char* path);
+
+int _unlink(const char* path);
+
+int _rename(const char* from, const char* to);
+
+int _readdir(int fd, struct fs_DirectoryEntry* entry);
+
+int _chdir(const char* path);
+
+int _getcwd(char* path, size_t len);
 
 #endif

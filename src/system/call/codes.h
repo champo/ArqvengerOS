@@ -25,4 +25,12 @@
 
 #define _SYS_RUN 1
 
+#define _SYS_MKDIR 39
+#define _SYS_RMDIR 40
+#define _SYS_UNLINK 10
+#define _SYS_RENAME 38
+#define _SYS_CHDIR 12
+#define _SYS_READDIR 89
+#define _SYS_GETCWD 183
+
 #endif

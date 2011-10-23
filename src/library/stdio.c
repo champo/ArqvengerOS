@@ -511,23 +511,30 @@ int open(const char* filename, int flags, ...) {
 }
 
 int mkdir(const char* path, int mode) {
+    return system_call(_SYS_MKDIR, (int) path, mode, 0);
 }
 
 int rmdir(const char* path) {
+    return system_call(_SYS_RMDIR, (int) path, 0, 0);
 }
 
 int unlink(const char* path) {
+    return system_call(_SYS_UNLINK, (int) path, 0, 0);
 }
 
 int rename(const char* from, const char* to) {
+    return system_call(_SYS_RENAME, (int) from, (int) to, 0);
 }
 
 int readdir(int fd, struct fs_DirectoryEntry* entry) {
+    return system_call(_SYS_READDIR, fd, (int) entry, 0);
 }
 
 int chdir(const char* path) {
+    return system_call(_SYS_CHDIR, (int) path, 0, 0);
 }
 
 int getcwd(char* path, size_t len) {
+    return system_call(_SYS_GETCWD, (int) path, (int) len, 0);
 }
 
