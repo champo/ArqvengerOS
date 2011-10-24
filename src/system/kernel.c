@@ -8,6 +8,8 @@
 #include "system/gdt.h"
 #include "system/process/table.h"
 #include "system/scheduler.h"
+#include "system/accessControlList/users.h"
+#include "system/accessControlList/groups.h"
 #include "drivers/ata.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
@@ -41,6 +43,10 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     ata_init(info);
     fs_load();
     scheduler_init();
+    create_user("root", "root");
+    create_group("root");
+    add_group_member(0,0);
+    create_group("users");
 
     struct Process* idleProcess = process_table_new(idle, NULL, NULL, 1, NO_TERMINAL, 0);
     struct Process* shellProcess = process_table_new(tty_run, NULL, idleProcess, 1, NO_TERMINAL, 0);

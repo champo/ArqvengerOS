@@ -49,4 +49,6 @@ int _chdir(const char* path);
 
 int _getcwd(char* path, size_t len);
 
+void _setProcessPersona(int pid, int uid, int gid);
+
 #endif

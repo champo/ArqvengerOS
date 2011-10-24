@@ -1,6 +1,7 @@
 #include "shell/shell.h"
 #include "shell/info.h"
 #include "system/call/ioctl/keyboard.h"
+#include "system/accessControlList/users.h"
 #include "library/stdio.h"
 #include "library/string.h"
 #include "library/sys.h"
@@ -8,6 +9,8 @@
 #include "library/ctype.h"
 #include "shell/commands.h"
 #include "mcurses/mcurses.h"
+
+#define cleanbuffer() while(getchar()!='\n')
 
 #define BUFFER_SIZE 500
 #define HISTORY_SIZE 50
@@ -50,7 +53,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 18
+#define NUM_COMMANDS 20
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -70,12 +73,14 @@ static const Command commands[] = {
     { &command_rmdir, "rmdir", "Remove an empty directory.", NULL, 1},
     { &command_ls, "ls", "List entries in a directory.", NULL, 1},
     { &append, "append", "Append content to a file.", man_append, 0},
+    { &adduser, "adduser", "Add new user account.", &manAdduser},
+    { &users, "users", "Show users loggued.", &manUsers},
 };
 
 static termios shellStatus = { 0, 0 };
 
 /**
- * Shell entry poing.
+ * Shell entry point.
  */
 void shell(char* unused) {
 
@@ -89,6 +94,12 @@ void shell(char* unused) {
     //TODO: Get this from somewhere
     self->ttyNumber = 0;
 
+    char username[MAX_USERNAME_LEN];
+    do {
+        printf("login:");
+    } while (askForLogin(self, username));
+
+
     // We always need to set the status needed by the shell, and then reset
     // it to the default, to make sure the input behaviour is as expected.
     ioctl(0, TCGETS, (void*) &self->inputStatus);
@@ -96,7 +107,7 @@ void shell(char* unused) {
 
     while (1) {
 
-        cmd = nextCommand(self, "guest");
+        cmd = nextCommand(self, username);
         if (cmd != NULL) {
 
             ioctl(0, TCSETS, (void*) &self->inputStatus);
@@ -108,7 +119,42 @@ void shell(char* unused) {
     }
 }
 
-void run_command(struct Shell* self, const Command* cmd) {
+int askForLogin(struct Shell* self, char* username) {
+
+    int promptLen = strlen("login");
+    char passwd[MAX_PASSWD_LEN];
+    termios passwdTermios = {1 , 0};
+
+    scanf("%s", username);
+    cleanbuffer();
+
+    printf("Password:");
+
+    ioctl(0, TCGETS, (void*) &self->inputStatus);
+    ioctl(0, TCSETS, (void*) &passwdTermios);
+
+    scanf("%s", passwd);
+    cleanbuffer();
+
+    ioctl(0, TCSETS, (void*) &self->inputStatus);
+
+    printf("\n\n");
+
+    struct User* user = get_user_by_name(username);
+    if (user != NULL) {
+        if (strcmp(passwd, user->passwd) == 0) {
+            strcpy(username, user->name);
+            return 0;
+        }
+    }
+    memset(username, 0, MAX_USERNAME_LEN);
+    printf("Login incorrect\n");
+    return 1;
+
+}
+
+void run_command(struct Shell* self, Command* cmd) {
+    int fg = 1;
 
     if (cmd->internal) {
         cmd->func(self->buffer);

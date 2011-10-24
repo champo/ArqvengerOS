@@ -8,10 +8,11 @@
 #define     _SYS_CLOSE      6
 #define     _SYS_CREAT      8
 
-#define     _SYS_TIME       13
-#define     _SYS_TICKS      191
+#define     _SYS_TIME           13
+#define     _SYS_TICKS          191
 
-#define     _SYS_PINFO      999
+#define     _SYS_PINFO          999
+#define     _SYS_SETPPERSONA    998
 
 #define _SYS_EXIT 93
 #define _SYS_YIELD 124
