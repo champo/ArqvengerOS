@@ -35,24 +35,13 @@
 /* Tell the compiler to pack the following structs to 1 byte (No 4 byte padding) */
 #pragma pack (1)
 
-/* Segment Descriptor */
-typedef struct {
-    word limit;
-    word base_l;
-    byte base_m;
-    byte access;
-    byte attribs;
-    byte base_h;
-} SegmentDescriptor;
-
-
 /* Interrupt descriptor */
 typedef struct {
-    word offset_l;
-    word selector;
-    byte cero;
-    byte access;
-    word offset_h;
+    unsigned short offset_l;
+    unsigned short selector;
+    unsigned char cero;
+    unsigned char access;
+    unsigned short offset_h;
 } InterruptDescriptor;
 
 /* Interrupt Descriptor Table Register */
@@ -61,7 +50,7 @@ typedef struct {
     dword base;
 } InterruptDescriptorTableRegister;
 
-static void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dword offset, byte access);
+static void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, unsigned int offset, byte access);
 static void reMapPIC(int offset1,int offset2);
 
 /* These are all ASM functions used only here, so we just keep the def here */
@@ -161,7 +150,7 @@ void setupIDT(void) {
     idtr.base = (dword) idt;
     idtr.limit = sizeof(InterruptDescriptor) * 256 - 1;
 
-    _lidt(&idtr);
+    __asm__ volatile("lidt (%%eax)"::"A"(&idtr):);
 
     setInterruptHandlerTable();
 
@@ -180,12 +169,12 @@ void setupIDT(void) {
  * @param offset The offset to the exact location where the interrupt will be stored.
  * @param access The byte representing the type of access the segment has.
  */
-void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, dword offset, byte access) {
+void setIdtEntry(InterruptDescriptor* table, int entry, byte segmentSelector, unsigned int offset, byte access) {
     InterruptDescriptor* item = &table[entry];
 
     item->selector = segmentSelector;
-    item->offset_l = offset & 0xFFFF;
-    item->offset_h = (word) (offset >> 16);
+    item->offset_l = (unsigned short) (offset & 0xFFFF);
+    item->offset_h = (unsigned short) (offset >> 16);
     item->access = access;
     item->cero = 0x00;
 }
