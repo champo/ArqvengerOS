@@ -153,7 +153,7 @@ int askForLogin(struct Shell* self, char* username) {
 
 }
 
-void run_command(struct Shell* self, Command* cmd) {
+void run_command(struct Shell* self, const Command* cmd) {
     int fg = 1;
 
     if (cmd->internal) {
