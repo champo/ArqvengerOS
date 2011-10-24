@@ -133,7 +133,11 @@ int _open(const char* path, int flags, int mode) {
 
     //Pasamos los permisos
     process->fdTable[fd] = fs_fd(file, flags);
+    if (flags & O_APPEND) {
+        process->fdTable[fd].offset = file->data->size;
+    }
     fs_inode_close(file);
+
     return fd;
 }
 
