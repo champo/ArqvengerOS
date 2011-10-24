@@ -25,6 +25,8 @@ static void idle(char* unused) {
  */
 void kmain(struct multiboot_info* info, unsigned int magic) {
 
+    initMemoryMap(info);
+
     setupGDT();
     setupIDT();
 
@@ -39,7 +41,6 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     stdout = &files[1];
     stderr = &files[2];
 
-    initMemoryMap(info);
     ata_init(info);
     fs_load();
     scheduler_init();
