@@ -214,7 +214,7 @@ int load_buffer(struct fs_Inode* inode, size_t block) {
 
     if (bufferIndex == BLOCK_BUFFER_COUNT) {
 
-        // If we didnt find an entry, try to find one owned by no onw
+        // If we didnt find an entry, try to find one owned by no one
 
         for (bufferIndex = 0; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
             if (inode->fileSystem->blockBufferOwner[bufferIndex] == NULL) {
@@ -225,7 +225,10 @@ int load_buffer(struct fs_Inode* inode, size_t block) {
         if (bufferIndex == BLOCK_BUFFER_COUNT) {
 
             // Otherwise, evict one
-            bufferIndex = inode->fileSystem->evictBlockBuffer++;
+            inode->fileSystem->evictBlockBuffer++;
+            inode->fileSystem->evictBlockBuffer %= BLOCK_BUFFER_COUNT;
+
+            bufferIndex = inode->fileSystem->evictBlockBuffer;
         }
 
         // Reset the buffer, and mark it as ours
