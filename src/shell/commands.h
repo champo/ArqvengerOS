@@ -14,5 +14,6 @@
 #include "shell/cat/cat.h"
 #include "shell/roflcopter/roflcopter.h"
 #include "shell/wd/wd.h"
+#include "shell/append/append.h"
 
 #endif
