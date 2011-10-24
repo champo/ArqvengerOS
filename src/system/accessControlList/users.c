@@ -61,5 +61,5 @@ int create_user(char* name, char* passwd) {
     registered_users[registered_users_num] = new_user;
     registered_users_num++;
 
-    return 0;
+    return new_user->id;
 }
