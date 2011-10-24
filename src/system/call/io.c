@@ -211,9 +211,78 @@ int _ioctl(int fd, int cmd, void* argp) {
 }
 
 int _mkdir(const char* path, int mode) {
+
+    char* base = path_directory(path);
+    char* filename = path_file(path);
+
+    struct fs_Inode* parent = resolve_path(base);
+    if (parent == NULL) {
+        kfree(base);
+        kfree(filename);
+
+        return -1;
+    }
+
+    if (INODE_TYPE(parent->data) != INODE_DIR) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(parent);
+
+        return -1;
+    }
+
+    int res = fs_mkdir(parent, filename);
+    if (res != 0) {
+        fs_inode_close(parent);
+        kfree(base);
+        kfree(filename);
+
+        return res;
+    }
+
+    fs_inode_close(parent);
+    kfree(base);
+    kfree(filename);
+
+    struct fs_Inode* directory = resolve_path(path);
+    if (directory == NULL) {
+        return -1;
+    }
+
+    res = fs_set_permission(directory, mode);
+    fs_inode_close(directory);
+
+    return res;
 }
 
 int _rmdir(const char* path) {
+
+    char* base = path_directory(path);
+    char* filename = path_file(path);
+
+    struct fs_Inode* parent = resolve_path(base);
+    if (parent == NULL) {
+        kfree(base);
+        kfree(filename);
+
+        return -1;
+    }
+
+    if (INODE_TYPE(parent->data) != INODE_DIR) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(parent);
+
+        return -1;
+    }
+
+    int res = fs_rmdir(parent, filename);
+
+    kfree(base);
+    kfree(filename);
+    fs_inode_close(parent);
+
+    return res;
 }
 
 int _unlink(const char* path) {
@@ -223,12 +292,31 @@ int _rename(const char* from, const char* to) {
 }
 
 int _readdir(int fd, struct fs_DirectoryEntry* entry) {
+
+    struct Process* process = scheduler_current();
+    struct FileDescriptor* des = &(process->fdTable[fd]);
+
+    if (des->inode == NULL || des->ops->readdir == NULL) {
+        return -1;
+    }
+
+    struct fs_DirectoryEntry res = des->ops->readdir(des);
+    if (res.inode == 0) {
+        return 0;
+    } else {
+        *entry = res;
+        return 1;
+    }
 }
 
 int _chdir(const char* path) {
 
     struct fs_Inode* destination = resolve_path(path);
-    if (destination == NULL || INODE_TYPE(destination->data) != INODE_DIR) {
+    if (destination == NULL) {
+        return -1;
+    }
+
+    if (INODE_TYPE(destination->data) != INODE_DIR) {
         fs_inode_close(destination);
         return -1;
     }

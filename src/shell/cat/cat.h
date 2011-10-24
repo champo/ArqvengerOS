@@ -3,6 +3,6 @@
 
 void cat(char* argv);
 
-void manCat(void);
+void man_cat(void);
 
 #endif

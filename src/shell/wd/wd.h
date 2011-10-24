@@ -1,12 +1,14 @@
 #ifndef __SHELL_CD__
 #define __SHELL_CD__
 
-void cd(char* argv);
+void command_cd(char* argv);
 
-void manCd(void);
+void man_cd(void);
 
-void pwd(char* argv);
+void command_pwd(char* argv);
 
-void manPwd(void);
+void man_pwd(void);
+
+void command_mkdir(char* argv);
 
 #endif

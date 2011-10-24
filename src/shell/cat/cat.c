@@ -27,7 +27,7 @@ void cat(char* argv) {
     printf("\n");
 }
 
-void manCat(void) {
+void man_cat(void) {
     setBold(1);
     printf("Usage:\n\t cat");
     setBold(0);

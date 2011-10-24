@@ -207,7 +207,7 @@ int fs_permission(struct fs_Inode* inode) {
 }
 
 int fs_set_permission(struct fs_Inode* inode, int perm) {
-    inode->data->typesAndPermissions = (INODE_TYPE(inode->data) << 24) | perm;
+    inode->data->typesAndPermissions = (INODE_TYPE(inode->data) << 12) | perm;
     return ext2_write_inode(inode) == -1 ? EIO : 0;
 }
 
@@ -269,6 +269,6 @@ int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
     }
 
     inode->data->hardLinks++;
-    return 0;
+    return ext2_write_inode(inode);
 }
 

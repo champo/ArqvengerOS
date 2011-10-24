@@ -50,11 +50,11 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 14
-const Command commands[] = {
+#define NUM_COMMANDS 15
+static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
-    { &man, "man", "Display information about command execution.", &manMan, 0 },
-    { &help, "help", "This command.", &manHelp, 0 },
+    { &man, "man", "Display information about command execution.", &manMan, 1 },
+    { &help, "help", "This command.", &manHelp, 1 },
     { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku, 0 },
     { &calc, "calc", "Use a simple calculator", &manCalc, 0},
     { &getCPUSpeed, "getCPUSpeed", "Get the CPU speed", &manGetCPUSpeed, 0},
@@ -62,10 +62,11 @@ const Command commands[] = {
     { &date, "date", "Display current date.", &manDate, 0},
     { &killCmd, "kill", "Kill a running process.", &manKill, 0},
     { &top, "top", "Display information about running processes.", &manTop, 0},
-    { &cat, "cat", "Output the contents of a file.", &manCat, 0},
+    { &cat, "cat", "Output the contents of a file.", &man_cat, 0},
     { &roflcopter, "roflcopter", "We need a ROFLcopter.", &manRoflcopter, 0},
-    { &cd, "cd", "Change the current working directory.", &manCd, 1},
-    { &pwd, "pwd", "Print the current working directory.", &manPwd, 1},
+    { &command_cd, "cd", "Change the current working directory.", &man_cd, 1},
+    { &command_pwd, "pwd", "Print the current working directory.", &man_pwd, 1},
+    { &command_mkdir, "mkdir", "Create a new directory.", NULL, 1},
 };
 
 static termios shellStatus = { 0, 0 };

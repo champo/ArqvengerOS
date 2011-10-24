@@ -616,7 +616,7 @@ struct fs_Inode* ext2_create_inode(struct ext2* fs, int type, int permissions, i
 
     inode->data->uid = uid;
     inode->data->gid = gid;
-    inode->data->typesAndPermissions = (type << 12) | permissions;
+    inode->data->typesAndPermissions = ((unsigned int)type << 12) | (permissions & 0xFFF);
 
     ext2_write_inode(inode);
     return inode;
