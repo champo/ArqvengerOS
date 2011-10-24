@@ -226,9 +226,80 @@ int _readdir(int fd, struct fs_DirectoryEntry* entry) {
 }
 
 int _chdir(const char* path) {
+
+    struct fs_Inode* destination = resolve_path(path);
+    if (destination == NULL || INODE_TYPE(destination->data) != INODE_DIR) {
+        fs_inode_close(destination);
+        return -1;
+    }
+
+    struct Process* process = scheduler_current();
+    size_t pathLen = strlen(path);
+
+    if (path[0] == '/') {
+        // If the new path is absolute little work needs to be done
+        kfree(process->cwd);
+        process->cwd = kalloc(sizeof(char) * (pathLen + 1));
+        strcpy(process->cwd, path);
+
+        return 0;
+    }
+
+    char* cwd = scheduler_current()->cwd;
+    size_t cwdLen = strlen(cwd);
+
+    char* nwd = kalloc(sizeof(char) * (cwdLen + pathLen + 1));
+    strcpy(nwd, cwd);
+
+    int index = cwdLen;
+    if (nwd[cwdLen - 1] == '/') {
+        index--;
+    }
+
+    for (size_t pathIndex = 0; pathIndex < pathLen;) {
+
+        size_t start = pathIndex;
+        size_t componentLen = 0;
+
+        for (; pathIndex < pathLen && path[pathIndex] != '/'; pathIndex++, componentLen++);
+        // Make sure we skip any forward slashes
+        pathIndex++;
+
+        if (path[start] == '.') {
+
+            if (componentLen == 1) {
+                continue;
+            } else if (componentLen == 2 && path[start + 1] == '.') {
+                // Remove the last component of nwd
+                for (; index > 0 && nwd[index] != '/'; index--);
+                continue;
+            }
+
+        }
+
+        nwd[index++] = '/';
+        for (size_t i = 0; i < componentLen; i++, index++) {
+            nwd[index] = path[start + i];
+        }
+    }
+
+    if (index == 0) {
+        nwd[index++] = '/';
+    }
+
+    nwd[index] = 0;
+    kfree(process->cwd);
+    process->cwd = nwd;
+
+    return 0;
 }
 
 int _getcwd(char* path, size_t len) {
+
+    strncpy(path, scheduler_current()->cwd, len);
+    path[len - 1] = 0;
+
+    return 0;
 }
 
 struct fs_Inode* resolve_path(const char* path) {

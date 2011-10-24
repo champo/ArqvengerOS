@@ -10,6 +10,7 @@ typedef struct {
     const char* name;
     const char* desc;
     void (*man)(void);
+    int internal;
 } Command;
 
 const Command* getShellCommands(size_t* len);

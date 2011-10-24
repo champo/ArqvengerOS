@@ -50,20 +50,21 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, Command* cmd);
 
-#define NUM_COMMANDS 12
+#define NUM_COMMANDS 13
 const Command commands[] = {
-    { &echo, "echo", "Prints the arguments passed to screen.", &manEcho },
-    { &man, "man", "Display information about command execution.", &manMan },
-    { &help, "help", "This command.", &manHelp },
-    { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku },
-    { &calc, "calc", "Use a simple calculator", &manCalc},
-    { &getCPUSpeed, "getCPUSpeed", "Get the CPU speed", &manGetCPUSpeed},
-    { &fortune, "fortune", "Receive awesome knowledge.", &manFortune},
-    { &date, "date", "Display current date.", &manDate},
-    { &killCmd, "kill", "Kill a running process.", &manKill},
-    { &top, "top", "Display information about running processes.", &manTop},
-    { &cat, "cat", "Output the contents of a file.", &manCat},
-    { &roflcopter, "roflcopter", "We need a ROFLcopter.", &manRoflcopter},
+    { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
+    { &man, "man", "Display information about command execution.", &manMan, 0 },
+    { &help, "help", "This command.", &manHelp, 0 },
+    { &sudoku, "sudoku", "Play a game of Sudoku.", &manSudoku, 0 },
+    { &calc, "calc", "Use a simple calculator", &manCalc, 0},
+    { &getCPUSpeed, "getCPUSpeed", "Get the CPU speed", &manGetCPUSpeed, 0},
+    { &fortune, "fortune", "Receive awesome knowledge.", &manFortune, 0},
+    { &date, "date", "Display current date.", &manDate, 0},
+    { &killCmd, "kill", "Kill a running process.", &manKill, 0},
+    { &top, "top", "Display information about running processes.", &manTop, 0},
+    { &cat, "cat", "Output the contents of a file.", &manCat, 0},
+    { &roflcopter, "roflcopter", "We need a ROFLcopter.", &manRoflcopter, 0},
+    { &cd, "cd", "Change the current working directory.", &manCd, 1},
 };
 
 static termios shellStatus = { 0, 0 };
@@ -103,21 +104,22 @@ void shell(char* unused) {
 }
 
 void run_command(struct Shell* self, Command* cmd) {
-    int fg = 1;
 
-    int end = self->inputEnd - 1;
-    do {
+    if (cmd->internal) {
+        cmd->func(self->buffer);
+    } else {
+        int fg = 1, end = self->inputEnd - 1;
+        do {
+            if (self->buffer[end] == '&') {
+                fg = 0;
+                break;
+            }
+        } while (end > 0 && self->buffer[end--] == ' ');
 
-        if (self->buffer[end] == '&') {
-            fg = 0;
-            break;
+        pid_t child = run(cmd->func, self->buffer, fg);
+        if (fg) {
+            while (child != wait());
         }
-
-    } while (end > 0 && self->buffer[end--] == ' ');
-
-    pid_t child = run(cmd->func, self->buffer, fg);
-    if (fg) {
-        while (child != wait());
     }
 }
 

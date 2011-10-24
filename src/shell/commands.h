@@ -13,5 +13,6 @@
 #include "shell/top/top.h"
 #include "shell/cat/cat.h"
 #include "shell/roflcopter/roflcopter.h"
+#include "shell/cd/cd.h"
 
 #endif
