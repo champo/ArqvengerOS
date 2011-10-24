@@ -48,9 +48,9 @@ static void addToInput(struct Shell* self, size_t promptLen, const char* in, siz
 
 static void chooseCurrentEntry(struct Shell* self);
 
-static void run_command(struct Shell* self, Command* cmd);
+static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 13
+#define NUM_COMMANDS 14
 const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 0 },
@@ -65,6 +65,7 @@ const Command commands[] = {
     { &cat, "cat", "Output the contents of a file.", &manCat, 0},
     { &roflcopter, "roflcopter", "We need a ROFLcopter.", &manRoflcopter, 0},
     { &cd, "cd", "Change the current working directory.", &manCd, 1},
+    { &pwd, "pwd", "Print the current working directory.", &manPwd, 1},
 };
 
 static termios shellStatus = { 0, 0 };
@@ -103,7 +104,7 @@ void shell(char* unused) {
     }
 }
 
-void run_command(struct Shell* self, Command* cmd) {
+void run_command(struct Shell* self, const Command* cmd) {
 
     if (cmd->internal) {
         cmd->func(self->buffer);
