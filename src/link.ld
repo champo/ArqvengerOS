@@ -14,13 +14,14 @@ SECTIONS{
         _ebss = .;
     }
 
-    .data : {
+    .data ALIGN (0x1000) : {
         *(.data)
     }
 
-    .rodata : {
-        *(.rodata)
-    }
 
+    .rodata ALIGN (0x1000) : {
+        *(.rodata)
+        *(.comment)
+    }
 
 }
