@@ -59,8 +59,43 @@ void command_mkdir(char* argv) {
             printf("Cant create '%s': File already exists.\n", cmdEnd);
             break;
         case EIO:
-            printf("Cnat create '%s': Some wizardry went awry. Try again later.\n", cmdEnd);
+            printf("Cant create '%s': Some wizardry went awry. Try again later.\n", cmdEnd);
             break;
+    }
+}
+
+void command_rmdir(char* argv) {
+
+    char* cmdEnd = strchr(argv, ' ');
+    if (cmdEnd == NULL) {
+        printf("rmdir needs at least one parameter\n");
+        return;
+    }
+
+    cmdEnd++;
+    switch (rmdir(cmdEnd)) {
+        case -1:
+        case ENOENT:
+            printf("Cant remove '%s': No such file or directory.\n", cmdEnd);
+            break;
+        case EIO:
+            printf("Cant remove '%s': Some wizardry went awry. Try again later.\n", cmdEnd);
+            break;
+        case ENOTEMPTY:
+            printf("Cant remove '%s': The directory is not empty.\n", cmdEnd);
+            break;
+    }
+}
+
+void command_ls(char* argv) {
+
+    int fd = open(".", O_RDONLY);
+    struct fs_DirectoryEntry entry;
+
+    while (readdir(fd, &entry) == 1) {
+        if (entry.name[0] != '.') {
+            printf("%s\n", entry.name);
+        }
     }
 }
 

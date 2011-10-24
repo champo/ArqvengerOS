@@ -137,10 +137,13 @@ int fs_rmdir(struct fs_Inode* path, const char* name) {
     size_t offset = 0;
     struct DirectoryEntry child = ext2_dir_read(dir, offset);
     while (child.entryLength != 0) {
-        if (child.inode != path->number || child.inode != entry.inode) {
+        if (child.inode != path->number && child.inode != entry.inode) {
             fs_inode_close(dir);
             return ENOTEMPTY;
         }
+
+        offset += child.entryLength;
+        child = ext2_dir_read(dir, offset);
     }
 
     int res = remove_link(path, name, dir);

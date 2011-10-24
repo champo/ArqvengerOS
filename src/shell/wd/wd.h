@@ -11,4 +11,8 @@ void man_pwd(void);
 
 void command_mkdir(char* argv);
 
+void command_rmdir(char* argv);
+
+void command_ls(char* argv);
+
 #endif

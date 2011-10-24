@@ -50,7 +50,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 15
+#define NUM_COMMANDS 17
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -67,6 +67,8 @@ static const Command commands[] = {
     { &command_cd, "cd", "Change the current working directory.", &man_cd, 1},
     { &command_pwd, "pwd", "Print the current working directory.", &man_pwd, 1},
     { &command_mkdir, "mkdir", "Create a new directory.", NULL, 1},
+    { &command_rmdir, "rmdir", "Remove an empty directory.", NULL, 1},
+    { &command_ls, "ls", "List entries in a directory.", NULL, 1},
 };
 
 static termios shellStatus = { 0, 0 };
