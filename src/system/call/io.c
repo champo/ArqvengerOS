@@ -65,9 +65,7 @@ int _open(const char* path, int flags, int mode) {
     }
 
     char* base = path_directory(path);
-    kprintf("Trying to open %s", base);
     char* filename = path_file(path);
-    kprintf(" %s\n", filename);
 
     struct fs_Inode* directory = resolve_path(base);
     if (directory == NULL) {
@@ -144,7 +142,6 @@ int _creat(const char* path, int mode) {
     char* base = path_directory(path);
     char* filename = path_file(path);
 
-    kprintf("Trying to create %s %s\n", base, filename);
     struct fs_Inode* directory = resolve_path(base);
     if (directory == NULL) {
         kfree(base);
@@ -426,7 +423,6 @@ struct fs_Inode* resolve_path(const char* path) {
         curdir = fs_inode_open(nextdir.inode);
     }
 
-    kprintf("Giving dir with inode %u\n", curdir->number);
     return curdir;
 }
 
@@ -456,7 +452,6 @@ char* path_directory(const char* path) {
         result = kalloc(sizeof(char) * (lastSlash + 1));
         strncpy(result, path, lastSlash);
         result[lastSlash + 1] = 0;
-        kprintf("Path %s, lastSlash %d len %u res %s\n", path, lastSlash, len, result);
     }
 
     return result;
