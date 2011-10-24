@@ -1,5 +1,5 @@
-#ifndef __SHELL_CD__
-#define __SHELL_CD__
+#ifndef __SHELL_WD__
+#define __SHELL_WD__
 
 void command_cd(char* argv);
 

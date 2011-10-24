@@ -9,7 +9,7 @@ void command_cd(char* argv) {
 
     char* cmdEnd = strchr(argv, ' ');
     if (cmdEnd == NULL) {
-        printf("cd needs at least one parameter\n");
+        printf("Usage: cd path\n");
         return;
     }
 
@@ -46,7 +46,7 @@ void command_mkdir(char* argv) {
 
     char* cmdEnd = strchr(argv, ' ');
     if (cmdEnd == NULL) {
-        printf("mkdir needs at least one parameter\n");
+        printf("Usage: mkdir path\n");
         return;
     }
 
@@ -68,7 +68,7 @@ void command_rmdir(char* argv) {
 
     char* cmdEnd = strchr(argv, ' ');
     if (cmdEnd == NULL) {
-        printf("rmdir needs at least one parameter\n");
+        printf("Usage: rmdir path\n");
         return;
     }
 
