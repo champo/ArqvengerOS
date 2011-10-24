@@ -93,7 +93,7 @@ void addInput(const char* str, size_t len) {
     size_t i;
     for (i = 0; i < len && bufferEnd < BUFFER_SIZE; i++) {
 
-        if (tty_current()->termios.canon && str[i] == '\b') {
+        if (tty_active()->termios.canon && str[i] == '\b') {
             if (bufferEnd > 0) {
                 bufferEnd--;
             }
@@ -102,16 +102,16 @@ void addInput(const char* str, size_t len) {
         }
     }
 
-    if (tty_current()->termios.echo) {
+    if (tty_active()->termios.echo) {
 
         if (str[0] == ESCAPE_CHAR) {
             // A escape char is not printable, so we transform into something that is.
-            tty_write("^[", 2);
+            tty_write_active("^[", 2);
             if (i > 1) {
-                tty_write(str + 1, i - 1);
+                tty_write_active(str + 1, i - 1);
             }
         } else {
-            tty_write(str, i);
+            tty_write_active(str, i);
         }
     }
 

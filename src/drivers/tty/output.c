@@ -7,7 +7,7 @@
 /* Video attribute. White letters on black background. */
 #define WHITE_TXT 0x07
 
-#define readControlBuffer(def) parseControlBuffer(&mod1, &mod2, def)
+#define readControlBuffer(def) parseControlBuffer(term, &mod1, &mod2, def)
 #define endControlSequence() status->escaped = status->csi = status->controlBufferPos = 0
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')
@@ -21,37 +21,37 @@
 #define COLOR_BRIGHT_MAGENTA 0xD
 #define COLOR_BRIGHT_WHITE 0xF
 
-static void handleControlSequence(char cur);
+static void handleControlSequence(struct Terminal* term, char cur);
 
-static void setAttribute(int bg, int fg, int blink);
+static void setAttribute(struct Terminal* term, int bg, int fg, int blink);
 
-static void parseControlBuffer(int* a, int* b, int def);
+static void parseControlBuffer(struct Terminal* term, int* a, int* b, int def);
 
-static void clearScreen(int type);
+static void clearScreen(struct Terminal* term, int type);
 
-static void eraseLine(int type);
+static void eraseLine(struct Terminal* term, int type);
 
-static void setBlank(int start, int end);
+static void setBlank(struct Terminal* term, int start, int end);
 
-static void setCharacter(char c);
+static void setCharacter(struct Terminal* term, char c);
 
-static void scrollLine(int delta);
+static void scrollLine(struct Terminal* term, int delta);
 
-static void setForeground(int color);
+static void setForeground(struct Terminal* term, int color);
 
-static void setBackground(int color);
+static void setBackground(struct Terminal* term, int color);
 
-static void setBlink(int blink);
+static void setBlink(struct Terminal* term, int blink);
 
-static void changeColor(int mod1);
+static void changeColor(struct Terminal* term, int mod1);
 
-static void change_character(int pos, char value, char attribute);
+static void change_character(struct Terminal* term, int pos, char value, char attribute);
 
-static void flip_buffer(const char* buffer);
+static void flip_buffer(struct Terminal* term, const char* buffer);
 
-static void update_cursor(void);
+static void update_cursor(struct Terminal* term);
 
-static struct ScreenStatus* status;
+static size_t tty_write_to_screen(struct Terminal* term, const void* buf, size_t length);
 
 /**
  * Initialize the screen and all needed status for tty emulation.
@@ -59,38 +59,38 @@ static struct ScreenStatus* status;
 void tty_screen_init(void) {
 
     for (int i = NUM_TERMINALS - 1; i >= 0; i--) {
-        status = &tty_terminal(i)->screen;
+        struct ScreenStatus* status = &tty_terminal(i)->screen;
 
         status->cursorPosition = 0;
         status->escaped = 0;
         status->csi = 0;
 
-        setAttribute(COLOR_BLACK, COLOR_WHITE, 0);
+        setAttribute(tty_terminal(i), COLOR_BLACK, COLOR_WHITE, 0);
 
         status->controlBufferPos = 0;
 
-        clearScreen(CLEAR_ALL);
+        clearScreen(tty_terminal(i), CLEAR_ALL);
     }
 }
 
-void change_character(int pos, char value, char attribute) {
+void change_character(struct Terminal* term, int pos, char value, char attribute) {
 
-    if (tty_current()->active) {
+    if (term->active) {
         video_set_char(pos, value, attribute);
     }
 }
 
-void flip_buffer(const char* buffer) {
+void flip_buffer(struct Terminal* term, const char* buffer) {
 
-    if (tty_current()->active) {
+    if (term->active) {
         video_flip_buffer(buffer);
     }
 }
 
-void update_cursor(void) {
+void update_cursor(struct Terminal* term) {
 
-    if (tty_current()->active) {
-        video_update_cursor(status->cursorPosition);
+    if (term->active) {
+        video_update_cursor(term->screen.cursorPosition);
     }
 }
 
@@ -100,10 +100,11 @@ void update_cursor(void) {
  * @param screen the number of the screen to set.
  */
 void tty_screen_change(void) {
-    status = &tty_active()->screen;
 
-    video_flip_buffer(status->videoBuffer);
-    video_update_cursor(status->cursorPosition);
+    struct Terminal* term = tty_active();
+
+    video_flip_buffer(term->screen.videoBuffer);
+    video_update_cursor(term->screen.cursorPosition);
 }
 
 /**
@@ -113,16 +114,16 @@ void tty_screen_change(void) {
  * @param fg The foreground color.
  * @param blink Whether to blink or not.
  */
-void setAttribute(int bg, int fg, int blink) {
+void setAttribute(struct Terminal* term, int bg, int fg, int blink) {
 
     /*
      * The attribute byte is split into 3. The 4 least significant bits go to
      * the foreground color, the 3 bits following the background color and the
      * last bite to blink.
      */
-    status->attribute = (fg & 0xF) | ((bg & 0xF) << 4);
+    term->screen.attribute = (fg & 0xF) | ((bg & 0xF) << 4);
     if (blink) {
-        status->attribute |= BLINK_ATTR;
+        term->screen.attribute |= BLINK_ATTR;
     }
 }
 
@@ -131,8 +132,8 @@ void setAttribute(int bg, int fg, int blink) {
  *
  * @param color The color to set.
  */
-void setForeground(int color) {
-    setAttribute((status->attribute >> 4) & 0x7, color, status->attribute & BLINK_ATTR);
+void setForeground(struct Terminal* term, int color) {
+    setAttribute(term, (term->screen.attribute >> 4) & 0x7, color, term->screen.attribute & BLINK_ATTR);
 }
 
 /**
@@ -140,8 +141,8 @@ void setForeground(int color) {
  *
  * @param color The color to set.
  */
-void setBackground(int color) {
-    setAttribute(color, status->attribute & 0xF, status->attribute & BLINK_ATTR);
+void setBackground(struct Terminal* term, int color) {
+    setAttribute(term, color, term->screen.attribute & 0xF, term->screen.attribute & BLINK_ATTR);
 }
 
 /**
@@ -149,8 +150,8 @@ void setBackground(int color) {
  *
  * @param color Whether to blink or not.
  */
-void setBlink(int blink) {
-    setAttribute((status->attribute >> 4) & 0x7, status->attribute & 0xF, blink);
+void setBlink(struct Terminal* term, int blink) {
+    setAttribute(term, (term->screen.attribute >> 4) & 0x7, term->screen.attribute & 0xF, blink);
 }
 
 /**
@@ -161,11 +162,14 @@ void setBlink(int blink) {
  *
  * @param c The character to set.
  */
-void setCharacter(char c) {
+void setCharacter(struct Terminal* term, char c) {
+
+    struct ScreenStatus* status = &term->screen;
+
     status->videoBuffer[2*status->cursorPosition] = c;
     status->videoBuffer[2*status->cursorPosition + 1] = status->attribute;
 
-    change_character(status->cursorPosition, c, status->attribute);
+    change_character(term, status->cursorPosition, c, status->attribute);
 
     status->cursorPosition++;
 }
@@ -175,7 +179,9 @@ void setCharacter(char c) {
  *
  * @param delta A natural number indicating the number of lines to scroll.
  */
-void scrollLine(int delta) {
+void scrollLine(struct Terminal* term, int delta) {
+
+    struct ScreenStatus* status = &term->screen;
 
     if (delta > TOTAL_ROWS) {
         delta = TOTAL_ROWS;
@@ -196,7 +202,7 @@ void scrollLine(int delta) {
     }
 
     // Re-flect the changes to screen, if we're active
-    flip_buffer(status->videoBuffer);
+    flip_buffer(term, status->videoBuffer);
 }
 
 /**
@@ -209,9 +215,9 @@ void scrollLine(int delta) {
  *
  * @param type The type of erase to perform.
  */
-void eraseLine(int type) {
+void eraseLine(struct Terminal* term, int type) {
 
-    int start, end, line = status->cursorPosition / LINE_WIDTH;
+    int start, end, line = term->screen.cursorPosition / LINE_WIDTH;
     switch (type) {
         case ERASE_ALL:
             start = line * LINE_WIDTH;
@@ -219,16 +225,16 @@ void eraseLine(int type) {
             break;
         case ERASE_LEFT:
             start = line * LINE_WIDTH;
-            end = status->cursorPosition;
+            end = term->screen.cursorPosition;
             break;
         case ERASE_RIGHT:
         default:
-            start = status->cursorPosition + 1;
+            start = term->screen.cursorPosition + 1;
             end = (line + 1) * LINE_WIDTH;
             break;
     }
 
-    setBlank(start, end);
+    setBlank(term, start, end);
 }
 
 /**
@@ -241,7 +247,7 @@ void eraseLine(int type) {
  *
  *  @param type The part of the screen to clear.
  */
-void clearScreen(int type) {
+void clearScreen(struct Terminal* term, int type) {
 
     int start, end;
     switch (type) {
@@ -251,16 +257,16 @@ void clearScreen(int type) {
             break;
         case CLEAR_ABOVE:
             start = 0;
-            end = LINE_WIDTH * (status->cursorPosition / LINE_WIDTH);
+            end = LINE_WIDTH * (term->screen.cursorPosition / LINE_WIDTH);
             break;
         case CLEAR_BELOW:
         default:
-            start = (1 + status->cursorPosition / LINE_WIDTH) * LINE_WIDTH;
+            start = (1 + term->screen.cursorPosition / LINE_WIDTH) * LINE_WIDTH;
             end = TOTAL_ROWS * LINE_WIDTH;
             break;
     }
 
-    setBlank(start, end);
+    setBlank(term, start, end);
 }
 
 /**
@@ -269,10 +275,12 @@ void clearScreen(int type) {
  * @param start The start position.
  * @parma end The end position.
  */
-void setBlank(int start, int end) {
+void setBlank(struct Terminal* term, int start, int end) {
+
+    struct ScreenStatus* status = &term->screen;
 
     while (start < end) {
-        change_character(start, ' ', status->attribute);
+        change_character(term, start, ' ', status->attribute);
 
         status->videoBuffer[2*start] = ' ';
         status->videoBuffer[2*start + 1] = status->attribute;
@@ -287,7 +295,9 @@ void setBlank(int start, int end) {
  * @param b A pointer to the place where the 2nd int parsed will be stored.
  * @param def A default value to set if no value can be parsed.
  */
-void parseControlBuffer(int* a, int* b, int def) {
+void parseControlBuffer(struct Terminal* term, int* a, int* b, int def) {
+
+    struct ScreenStatus* status = &term->screen;
 
     // Set the null at the end, and then parse it
     if (status->controlBufferPos) {
@@ -334,9 +344,16 @@ void parseControlBuffer(int* a, int* b, int def) {
  * @return The number of bytes written to screen.
  */
 size_t tty_write(const void* buf, size_t length) {
+    return tty_write_to_screen(tty_current(), buf, length);
+}
 
-    status = &tty_current()->screen;
+size_t tty_write_active(const char* buf, size_t length) {
+    return tty_write_to_screen(tty_active(), buf, length);
+}
 
+size_t tty_write_to_screen(struct Terminal* term, const void* buf, size_t length) {
+
+    struct ScreenStatus* status = &term->screen;
     const char* str = (const char*) buf;
 
     size_t aux = 0;
@@ -364,7 +381,7 @@ size_t tty_write(const void* buf, size_t length) {
                         }
 
                         while (status->cursorPosition < end) {
-                            setCharacter(' ');
+                            setCharacter(term, ' ');
                         }
                         break;
                     case '\v':
@@ -373,17 +390,17 @@ size_t tty_write(const void* buf, size_t length) {
                     case '\b':
                         if (status->cursorPosition > 0) {
                             status->cursorPosition -= 1;
-                            setCharacter(' ');
+                            setCharacter(term, ' ');
                             status->cursorPosition -= 1;
                         }
                         break;
                     default:
-                        setCharacter(cur);
+                        setCharacter(term, cur);
                         break;
                 }
 
                 if (status->cursorPosition >= LINE_WIDTH * TOTAL_ROWS) {
-                    scrollLine(1);
+                    scrollLine(term, 1);
                     status->cursorPosition -= LINE_WIDTH;
                 } else if (status->cursorPosition < 0) {
                     status->cursorPosition = 0;
@@ -401,7 +418,7 @@ size_t tty_write(const void* buf, size_t length) {
                     // This is probably a modifier for a sequence, store!
                     status->controlBuffer[status->controlBufferPos++] = cur;
                 } else {
-                    handleControlSequence(cur);
+                    handleControlSequence(term, cur);
                 }
             } else if (cur == CSI) {
 
@@ -415,7 +432,7 @@ size_t tty_write(const void* buf, size_t length) {
         }
     }
 
-    update_cursor();
+    update_cursor(term);
 
     return length;
 }
@@ -446,7 +463,9 @@ size_t tty_write(const void* buf, size_t length) {
  *
  * @param cur An input character to the control sequence.
  */
-void handleControlSequence(char cur) {
+void handleControlSequence(struct Terminal* term, char cur) {
+
+    struct ScreenStatus* status = &term->screen;
 
     int mod1, mod2;
     switch (cur) {
@@ -549,14 +568,14 @@ void handleControlSequence(char cur) {
         case 'J':
             // Erase (above|below|all)
             readControlBuffer(0);
-            clearScreen(mod1);
+            clearScreen(term, mod1);
 
             endControlSequence();
             break;
         case 'K':
             // Erase to (left|right|all)
             readControlBuffer(0);
-            eraseLine(mod1);
+            eraseLine(term, mod1);
 
             endControlSequence();
             break;
@@ -575,14 +594,16 @@ void handleControlSequence(char cur) {
             mod1 = status->cursorPosition;
             status->cursorPosition = (TOTAL_ROWS - 1) * LINE_WIDTH;
             mod2 = 0;
-            while (status->controlBufferPos > mod2) setCharacter(status->controlBuffer[mod2++]);
+            while (status->controlBufferPos > mod2) {
+                setCharacter(term, status->controlBuffer[mod2++]);
+            }
             status->cursorPosition = mod1;
             endControlSequence();
             break;
         case 'm':
             // Change color!
             readControlBuffer(0);
-            changeColor(mod1);
+            changeColor(term, mod1);
             endControlSequence();
             break;
         default:
@@ -621,7 +642,9 @@ void handleControlSequence(char cur) {
  *
  * @param mod1 The numerical argument passed to the sequence.
  */
-void changeColor(int mod1) {
+void changeColor(struct Terminal* term, int mod1) {
+
+    struct ScreenStatus* status = &term->screen;
 
     int mod2;
     switch (mod1) {
@@ -630,7 +653,7 @@ void changeColor(int mod1) {
             // Isolate the foreground color to check for boldness
             mod2 = status->attribute & 0xF;
             if (mod2 != COLOR_BLACK && mod2 != COLOR_BROWN && mod2 < COLOR_GRAY) {
-                setForeground(mod2 + 0x8);
+                setForeground(term, mod2 + 0x8);
             }
             break;
         case 22:
@@ -638,85 +661,85 @@ void changeColor(int mod1) {
             // Isolate the foreground color to check for boldness
             mod2 = status->attribute & 0xF;
             if (mod2 >= COLOR_BRIGHT_BLUE && mod2 != COLOR_YELLOW) {
-                setForeground(mod2 - 0x8);
+                setForeground(term, mod2 - 0x8);
             }
             break;
         case 37:
             // White bg
-            setBackground(COLOR_WHITE);
+            setBackground(term, COLOR_WHITE);
             break;
         case 36:
             // Cyan bg
-            setBackground(COLOR_CYAN);
+            setBackground(term, COLOR_CYAN);
             break;
         case 35:
             // Magenta bg
-            setBackground(COLOR_MAGENTA);
+            setBackground(term, COLOR_MAGENTA);
             break;
         case 34:
             // Blue bg
-            setBackground(COLOR_BLUE);
+            setBackground(term, COLOR_BLUE);
             break;
         case 32:
             // Green bg
-            setBackground(COLOR_GREEN);
+            setBackground(term, COLOR_GREEN);
             break;
         case 31:
             // Red bg
-            setBackground(COLOR_RED);
+            setBackground(term, COLOR_RED);
             break;
         case 39:
         case 30:
             // Black bg
-            setBackground(COLOR_BLACK);
+            setBackground(term, COLOR_BLACK);
             break;
         case 49:
         case 47:
             // White fg
-            setForeground(COLOR_WHITE);
+            setForeground(term, COLOR_WHITE);
             break;
         case 46:
             // Cyan fg
-            setForeground(COLOR_CYAN);
+            setForeground(term, COLOR_CYAN);
             break;
         case 45:
             // Magenta fg
-            setForeground(COLOR_MAGENTA);
+            setForeground(term, COLOR_MAGENTA);
             break;
         case 44:
             // Blue fg
-            setForeground(COLOR_BLUE);
+            setForeground(term, COLOR_BLUE);
             break;
         case 43:
             // Yellow fg
-            setForeground(COLOR_YELLOW);
+            setForeground(term, COLOR_YELLOW);
             break;
         case 42:
             // Green fg
-            setForeground(COLOR_GREEN);
+            setForeground(term, COLOR_GREEN);
             break;
         case 41:
             // Red fg
-            setForeground(COLOR_RED);
+            setForeground(term, COLOR_RED);
             break;
         case 40:
             // Black fg
-            setForeground(COLOR_BLACK);
+            setForeground(term, COLOR_BLACK);
             break;
         case 25:
             // Time of the Angels
             // If you blink, you die
-            setBlink(0);
+            setBlink(term, 0);
             break;
         case 5:
             // Blink!
-            setBlink(1);
+            setBlink(term, 1);
             break;
         case 0:
             // Reset
-            setBlink(0);
-            setForeground(COLOR_BLACK);
-            setBackground(COLOR_WHITE);
+            setBlink(term, 0);
+            setForeground(term, COLOR_BLACK);
+            setBackground(term, COLOR_WHITE);
             break;
     }
 }

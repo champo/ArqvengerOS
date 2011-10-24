@@ -6,7 +6,7 @@
 #include "system/scheduler.h"
 #include "system/fs/fs.h"
 
-static int activeTerminal = -1;
+static int activeTerminal = 0;
 
 static struct Terminal terminals[NUM_TERMINALS];
 
