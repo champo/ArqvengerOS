@@ -279,7 +279,6 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
     for (size_t blockIndex = node->size / fs->blockSize; blockIndex < firstBlockIndex; blockIndex++) {
         size_t block = block_index_to_block(fs, node, blockIndex);
         if (block == 0) {
-            kprintf("Allocating block to fill empty area\n");
             block = allocate_data_block(inode, blockIndex);
             if (block == 0) {
                 break;
@@ -299,7 +298,6 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
 
         size_t block = block_index_to_block(fs, node, blockIndex);
         if (block == 0) {
-            kprintf("Allocating block\n");
             block = allocate_data_block(inode, blockIndex);
             if (block == 0) {
                 break;
@@ -317,7 +315,6 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
             if (startInBlock + remainingBytes < fs->blockSize) {
                 end = remainingBytes + startInBlock;
             }
-            kprintf("Writing to block %u (%u) - offset %u remaining %u, start %u, end %u\n", blockIndex, block, startInBlock, remainingBytes, startInBlock, end);
 
             for (size_t i = startInBlock; i < end; i++) {
                 to[i] = *from;

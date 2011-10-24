@@ -94,9 +94,6 @@ size_t allocate_in_group(struct ext2* fs, int blockGroup) {
 
     size_t bitmapLength = fs->sb->blocksPerBlockGroup;
 
-    kprintf("Looking for block in group %u, with bitmap len %u, block start %u\n", blockGroup, bitmapLength,
-            blockOffset + blockGroup * fs->sb->blocksPerBlockGroup);
-
     int block = bitmap_first_clear(fs->bitmapBuffer, bitmapLength);
     if (block == -1) {
         return 0;
@@ -144,8 +141,6 @@ int deallocate_block(struct ext2* fs, size_t block) {
 
     int blockGroup = (block - blockOffset) / fs->sb->blocksPerBlockGroup;
     int blockIndex = (block - blockOffset) % fs->sb->blocksPerBlockGroup;
-
-    kprintf("Deallocating block %u, on group %u\n", block, blockGroup);
 
     if (read_block_bitmap(fs, blockGroup) == -1) {
         return -1;

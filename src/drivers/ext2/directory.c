@@ -125,8 +125,6 @@ int ext2_dir_add(struct fs_Inode* directory, const char* name, size_t inodeNumbe
 
     if ((offset % fs->blockSize) + len >= fs->blockSize) {
 
-        kprintf("Crossing boundary, old values: %u, %u\n", offset, entry.entryLength);
-
         /*
          * The entry crosses a block boundary, which cant happen
          * This has to mean that this will be the last entry in the directory
@@ -143,7 +141,6 @@ int ext2_dir_add(struct fs_Inode* directory, const char* name, size_t inodeNumbe
         entry.entryLength = fs->blockSize;
     }
 
-    kprintf("settings offset to %u, len %u\n", offset, entry.entryLength);
     if (ext2_write_inode_content(directory, offset, len, &entry) == -1) {
         return -1;
     }
