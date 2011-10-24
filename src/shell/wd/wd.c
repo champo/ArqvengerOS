@@ -89,7 +89,14 @@ void command_rmdir(char* argv) {
 
 void command_ls(char* argv) {
 
-    int fd = open(".", O_RDONLY);
+    int fd;
+    char* cmdEnd = strchr(argv, ' ');
+    if (cmdEnd == NULL) {
+        fd = open(".", O_RDONLY);
+    } else {
+        fd = open(cmdEnd + 1, O_RDONLY);
+    }
+
     struct fs_DirectoryEntry entry;
 
     while (readdir(fd, &entry) == 1) {
