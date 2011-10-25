@@ -119,6 +119,5 @@ void destroyProcess(struct Process* process) {
         freePages(process->mm.stackStart, process->mm.pagesInStack);
         process->mm.stackStart = NULL;
     }
-    exitProcess(process);
 }
 
