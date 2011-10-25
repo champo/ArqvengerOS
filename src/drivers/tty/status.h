@@ -32,6 +32,8 @@ struct Terminal* tty_active(void);
 
 struct Terminal* tty_terminal(int number);
 
+size_t tty_write_active(const char* buf, size_t length);
+
 void tty_screen_init(void);
 
 void tty_screen_change(void);

@@ -49,14 +49,12 @@
  * Besides, we have an array of "bins", each with a list of free chunks of
  * a specific size (really a range of sizes)
  *
- * Modified by: Juan Civile
- *  - Remove parts that can't be used in ArqvengersOS
- *
  */
 
 #include "malloc.h"
 #include "library/string.h" /* for memset in calloc and memcpy in realloc */
 
+#define assert(x) if (!(x)) { kprintf("Failed assertion at %s:%u", __func__, __LINE__); while(1); }
 
 /**
  * If the requested size is smaller than this, and a perfect fit isn't found,
@@ -156,6 +154,8 @@ static struct free_header* find_bin ( size_t size ) {
 
     size_t min_bin = 0, max_bin = BIN_NUMBER, curr_bin;
 
+    assert( size < bin_sizes[ BIN_NUMBER - 1 ] );
+
     while ( min_bin + 1 != max_bin ) {
 
         curr_bin = ( min_bin + max_bin ) / 2;
@@ -231,6 +231,8 @@ static void add_free_chunk ( void* memory, size_t size ) {
 
     struct free_header* header;
     struct footer*      footer;
+
+    assert( size >= MIN_FREE_CHUNK_SIZE );
 
     header = memory;
 
@@ -345,6 +347,8 @@ void add_malloc_buffer ( void* memory, size_t size ) {
 void init_malloc ( void* memory, size_t size ) {
 
     struct free_header* bin;
+
+    assert( size >= sizeof( struct memory_context ) );
 
     context = memory;
     memory  = (struct memory_context*)memory + 1;
@@ -498,6 +502,16 @@ void free ( void* memory ) {
     footer = (struct footer*)( (char*)header + header->size ) - 1;
     size   = header->size;
 
+    /* Do not try to free the context */
+
+    assert( (char*)header + header->size <= (char*)context ||
+            (char*)header                >= (char*)( context + 1 ) );
+
+    /* Check chunk invariants */
+
+    assert( header->status == INUSE_STATUS );
+    assert( header->size   == footer->size );
+
     /* Update context */
 
     context->free_memory += size;
@@ -508,6 +522,8 @@ void free ( void* memory ) {
     cont_header = (struct free_header*)( (char*)header - cont_footer->size );
 
     if ( cont_header->status == FREE_STATUS ) {
+
+        assert( cont_header->size == cont_footer->size );
 
         cont_header->prev->next = cont_header->next;
         cont_header->next->prev = cont_header->prev;
@@ -523,6 +539,8 @@ void free ( void* memory ) {
     cont_footer = (struct footer*)( (char*)footer + cont_header->size );
 
     if ( cont_header->status == FREE_STATUS ) {
+
+        assert( cont_header->size == cont_footer->size );
 
         cont_header->prev->next = cont_header->next;
         cont_header->next->prev = cont_header->prev;
@@ -560,6 +578,9 @@ void* realloc ( void* memory, size_t size ) {
 
     header = (struct inuse_header*)memory - 1;
     footer = (struct footer*)( (char*)header + header->size ) - 1;
+
+    assert( header->status == INUSE_STATUS );
+    assert( header->size   == footer->size );
 
     size += MIN_INUSE_CHUNK_SIZE;
 
@@ -646,13 +667,13 @@ void* check_malloc ( void ) {
 
         if ( bin->status != FREE_STATUS ) {
 
-            /* printf( "Error in context, bin %d\n", bin - context->bins ); */
+            kprintf( "Error in context, bin %d\n", bin - context->bins );
             return bin;
         }
 
         if ( bin->size != sizeof( struct free_header ) ) {
 
-            /* printf( "Error in context, bin %d\n", bin - context->bins ); */
+            kprintf( "Error in context, bin %d\n", bin - context->bins );
             return bin;
         }
 
@@ -662,13 +683,13 @@ void* check_malloc ( void ) {
 
             if ( block->status != FREE_STATUS ) {
 
-                /* printf( "Error in block header\n" ); */
+                kprintf( "Error in block header\n" );
                 return block;
             }
 
             if ( block->prev != last ) {
 
-                /* printf( "Error in block header\n" ); */
+                kprintf( "Error in block header\n" );
                 return block;
             }
 
@@ -676,7 +697,7 @@ void* check_malloc ( void ) {
 
             if ( block->size != footer->size ) {
 
-                /* printf( "Error in block footer\n" ); */
+                kprintf( "Error in block footer\n" );
                 return footer;
             }
 
@@ -687,7 +708,7 @@ void* check_malloc ( void ) {
 
     if ( free_memory ) {
 
-        /* printf( "Error in context, free memory amount inconcistency\n" ); */
+        kprintf( "Error in context, free memory amount inconcistency\n" );
         return context;
     }
 
