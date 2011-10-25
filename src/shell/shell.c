@@ -73,8 +73,8 @@ static const Command commands[] = {
     { &command_rmdir, "rmdir", "Remove an empty directory.", NULL, 1},
     { &command_ls, "ls", "List entries in a directory.", NULL, 1},
     { &append, "append", "Append content to a file.", man_append, 0},
-    { &adduser, "adduser", "Add new user account.", &manAdduser},
-    { &users, "users", "Show users loggued.", &manUsers},
+    { &adduser, "adduser", "Add new user account.", &manAdduser, 0},
+    { &users, "users", "Show users loggued.", &manUsers, 0},
 };
 
 static termios shellStatus = { 0, 0 };

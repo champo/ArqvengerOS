@@ -207,7 +207,7 @@ int load_buffer(struct fs_Inode* inode, size_t block) {
 
     // Try to find an entry we own
     for (bufferIndex = 0 ; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
-        if (inode->fileSystem->blockBufferOwner[bufferIndex] == inode->data) {
+        if (inode->fileSystem->blockBufferOwner[bufferIndex] == inode->number) {
             break;
         }
     }
@@ -217,7 +217,7 @@ int load_buffer(struct fs_Inode* inode, size_t block) {
         // If we didnt find an entry, try to find one owned by no one
 
         for (bufferIndex = 0; bufferIndex < BLOCK_BUFFER_COUNT; bufferIndex++) {
-            if (inode->fileSystem->blockBufferOwner[bufferIndex] == NULL) {
+            if (inode->fileSystem->blockBufferOwner[bufferIndex] == 0) {
                 break;
             }
         }
@@ -233,7 +233,7 @@ int load_buffer(struct fs_Inode* inode, size_t block) {
 
         // Reset the buffer, and mark it as ours
 
-        inode->fileSystem->blockBufferOwner[bufferIndex] = inode->data;
+        inode->fileSystem->blockBufferOwner[bufferIndex] = inode->number;
         inode->fileSystem->blockBufferAddress[bufferIndex] = 0;
     }
 
@@ -264,7 +264,7 @@ int read_block_index(struct ext2* fs, int level, size_t block) {
     return 0;
 }
 
-int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer) {
+int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, const void* buffer) {
 
     struct ext2_Inode* node = inode->data;
     struct ext2* fs = inode->fileSystem;
@@ -273,7 +273,7 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
     size_t endBlockIndex = (offset + size) / fs->blockSize;
 
     size_t remainingBytes = size;
-    unsigned char* from = buffer;
+    const unsigned char* from = buffer;
 
     // If the offset is after the file end, let's make sure we fill in any blocks in the middle
     for (size_t blockIndex = node->size / fs->blockSize; blockIndex < firstBlockIndex; blockIndex++) {

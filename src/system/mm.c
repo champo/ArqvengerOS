@@ -145,13 +145,11 @@ int isPageSet(int page) {
 }
 
 void* kalloc(size_t size) {
-    size_t a;
-    return allocator(size, &a);
-    //return malloc(size);
+    return malloc(size);
 }
 
 void kfree(void* data) {
-    //free(data);
+    free(data);
 }
 
 void* allocPages(size_t pages) {

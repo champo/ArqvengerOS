@@ -98,6 +98,7 @@ void process_table_exit(struct Process* process) {
         }
 
     } else {
+        exitProcess(process);
         process_table_remove(process);
     }
 }
@@ -170,7 +171,7 @@ void process_table_kill(struct Process* process) {
 
         process_table_kill(c);
         process_table_remove(c);
-        
+
         c = next;
     }
 

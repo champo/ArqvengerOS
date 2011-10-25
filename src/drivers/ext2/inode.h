@@ -70,7 +70,7 @@ int ext2_read_inode_content(struct fs_Inode* inode, size_t offset, size_t size, 
  *
  * @return the number of written bytes, -1 on error
  */
-int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, void* buffer);
+int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size, const void* buffer);
 
 /**
  * Write an inode to the inode table.

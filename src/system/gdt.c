@@ -1,7 +1,6 @@
 #include "system/gdt.h"
+#include "system/mm.h"
 #include "system/common.h"
-
-extern _initGDT(void*);
 
 #pragma pack(1)
 
@@ -14,7 +13,7 @@ struct SegmentDescriptor {
     char base_h;
 };
 
-struct SegmentDescriptor gdt[5];
+struct SegmentDescriptor* gdt;
 
 struct GDTR {
     short limit;
@@ -35,6 +34,7 @@ void setupGDT(void) {
 
     struct GDTR gdtr;
 
+    gdt = kalloc(sizeof(struct SegmentDescriptor) * 5);
     setupGDTEntry(0, 0, 0, 0, 0);
     setupGDTEntry(1, 0, 0x000FFFFF, 0x9A, 0xC0);
     setupGDTEntry(2, 0, 0x000FFFFF, 0x92, 0xC0);
@@ -42,7 +42,7 @@ void setupGDT(void) {
     setupGDTEntry(4, 0, 0x000FFFFF, 0xF2, 0xC0);
 
     gdtr.limit = 5 * sizeof(struct SegmentDescriptor) - 1;
-    gdtr.base = (int)&gdt;
+    gdtr.base = (int) gdt;
 
     __asm__ volatile("lgdt (%%eax)"::"A"(&gdtr):);
 }
