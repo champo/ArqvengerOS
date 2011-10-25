@@ -83,7 +83,7 @@ struct ext2 {
      */
     unsigned int evictBlockBuffer;
     unsigned int blockBufferAddress[BLOCK_BUFFER_COUNT];
-    struct ext2_Inode* blockBufferOwner[BLOCK_BUFFER_COUNT];
+    unsigned int blockBufferOwner[BLOCK_BUFFER_COUNT];
     void* blockBuffer[BLOCK_BUFFER_COUNT];
 
 
