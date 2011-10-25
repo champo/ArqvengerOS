@@ -17,6 +17,7 @@ void adduser(char* argv) {
     char proceed[LINE_WIDTH];
     int uid;
     int first = 1;
+    
     termios oldTermios;
     termios passwdTermios = {1 , 0};
 
@@ -82,6 +83,6 @@ void adduser(char* argv) {
 
 void manAdduser(void) {
     setBold(1);
-    printf("Usage:\n\t adduser ");
+    printf("Usage:\n\t adduser");
     setBold(0);
 }

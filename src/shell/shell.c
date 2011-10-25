@@ -53,7 +53,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 20
+#define NUM_COMMANDS 26
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -75,6 +75,12 @@ static const Command commands[] = {
     { &append, "append", "Append content to a file.", man_append, 0},
     { &adduser, "adduser", "Add new user account.", &manAdduser, 0},
     { &users, "users", "Show users loggued.", &manUsers, 0},
+    { &userdel, "userdel", "Delete an user account and related files.", &manUserdel, 0},
+    { &passwd, "passwd", "Chanfe user password", &manPasswd, 0},
+    { &groupadd, "groupadd", "Create a new group.", &manGroupadd, 0},
+    { &groups, "groups", "Display current group names.", &manGroups, 0},
+    { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
+    { &groupaddmem, "groupaddmem", "Add a new member to a group.", &manGroupaddmem, 0}
 };
 
 static termios shellStatus = { 0, 0 };
@@ -94,10 +100,10 @@ void shell(char* unused) {
     //TODO: Get this from somewhere
     self->ttyNumber = 0;
 
-    char username[MAX_USERNAME_LEN];
-    do {
-        printf("login:");
-    } while (askForLogin(self, username));
+    //char username[MAX_USERNAME_LEN];
+    //do {
+    //    printf("login:");
+    //} while (askForLogin(self, username));
 
 
     // We always need to set the status needed by the shell, and then reset
@@ -107,7 +113,7 @@ void shell(char* unused) {
 
     while (1) {
 
-        cmd = nextCommand(self, username);
+        cmd = nextCommand(self, "guest");
         if (cmd != NULL) {
 
             ioctl(0, TCSETS, (void*) &self->inputStatus);

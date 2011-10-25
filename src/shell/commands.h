@@ -17,5 +17,11 @@
 #include "shell/roflcopter/roflcopter.h"
 #include "shell/wd/wd.h"
 #include "shell/append/append.h"
+#include "shell/userdel/userdel.h"
+#include "shell/groupadd/groupadd.h"
+#include "shell/groups/groups.h"
+#include "shell/groupdel/groupdel.h"
+#include "shell/groupaddmem/groupaddmem.h"
+#include "shell/passwd/passwd.h"
 
 #endif
