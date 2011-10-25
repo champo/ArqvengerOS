@@ -21,6 +21,8 @@ int change_passwd(int uid, char* old_passwd, char* new_passwd);
 
 int create_user(char* name, char* passwd);
 
+int delete_user(char* name);
+
 #endif
 
 

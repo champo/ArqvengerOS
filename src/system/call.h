@@ -51,4 +51,6 @@ int _getcwd(char* path, size_t len);
 
 void _setProcessPersona(int pid, int uid, int gid);
 
+void _getProcessPersona(int pid, int* uid, int* gid);
+
 #endif

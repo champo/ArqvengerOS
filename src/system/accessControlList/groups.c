@@ -50,6 +50,25 @@ int create_group(char* groupname) {
 }
 
 
+int delete_group(char* name) {
+    
+    struct Group* group = get_group_by_name(name);
+    if (group == NULL)  {
+        return -1;
+    }
+
+    int i = group->id;
+    while (groups[i] != NULL) {
+        groups[i] = groups[i+1];
+        i++;
+    }
+    groups[i] = NULL;
+    kfree(group);
+    groups_num--;
+
+    return 0;
+}
+
 void add_group_member(int gid, int uid) {
 
     struct Group* group = groups[gid];

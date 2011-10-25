@@ -63,3 +63,23 @@ int create_user(char* name, char* passwd) {
 
     return new_user->id;
 }
+
+int delete_user(char* name) {
+    
+    //TODO make this right!
+    struct User* user = get_user_by_name(name);
+    if (user == NULL) {
+        return -1;
+    }
+
+    int i = user->id;
+    while (registered_users[i] != NULL) {
+        registered_users[i] = registered_users[i+1];
+        i++;
+    }
+    registered_users[i] = NULL;
+    kfree(user);
+    registered_users_num--;
+
+    return 0;
+}

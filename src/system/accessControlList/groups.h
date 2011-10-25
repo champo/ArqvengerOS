@@ -20,6 +20,8 @@ char* get_groupname(int gid);
 
 int create_group(char* groupname);
 
+int delete_group(char* groupname);
+
 void add_group_member(int gid, int uid);
 
 #endif

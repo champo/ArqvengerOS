@@ -197,6 +197,9 @@ void int80(registers* regs) {
         case _SYS_SETPPERSONA:
             _setProcessPersona(regs->ebx, regs->ecx, regs->edx);
             break;
+        case _SYS_GETPPERSONA:
+            _getProcessPersona(regs->ebx, regs->ecx, regs->edx);
+            break;
     }
 }
 
