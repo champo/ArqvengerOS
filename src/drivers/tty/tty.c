@@ -35,7 +35,14 @@ void tty_run(char* unused) {
     });
 
     struct fs_Inode* root = fs_root();
-    fs_mknod(root, "tty", INODE_CHARDEV);
+    if (root == NULL) {
+        panic();
+    }
+
+    int res = fs_mknod(root, "tty", INODE_CHARDEV);
+    if (res != 0 && res != EEXIST) {
+        panic();
+    }
 
     open("/tty", O_RDONLY);
     open("/tty", O_WRONLY);
