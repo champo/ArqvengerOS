@@ -27,7 +27,7 @@ int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len
     if (fs->fragmentReadBlock != block) {
         fs->fragmentReadBlock = block;
         if (read_block(fs, block, fs->fragmentReadBuffer) == -1) {
-            fs->fragmentReadBuffer = 0;
+            fs->fragmentReadBlock = 0;
             return -1;
         }
     }
@@ -69,7 +69,7 @@ int write_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t le
     if (fs->fragmentReadBlock != block) {
         fs->fragmentReadBlock = block;
         if (read_block(fs, block, fs->fragmentReadBuffer) == -1) {
-            fs->fragmentReadBuffer = 0;
+            fs->fragmentReadBlock = 0;
             return -1;
         }
     }
