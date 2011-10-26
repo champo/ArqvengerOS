@@ -558,7 +558,7 @@ FILE* fopen(const char* filename, const char* mode) {
         if (hasPlus) {
             fd = open(filename, O_RDWR | O_CREAT | O_APPEND, 0666);
         } else {
-            fd = open(filename, O_RDONLY | O_CREAT | O_APPEND, 0666);
+            fd = open(filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
         }
     }
     
