@@ -538,3 +538,7 @@ int getcwd(char* path, size_t len) {
     return system_call(_SYS_GETCWD, (int) path, (int) len, 0);
 }
 
+int symlink(const char* path, const char* target) {
+    return system_call(_SYS_SYMLINK, (int) path, (int) target, 0);
+}
+

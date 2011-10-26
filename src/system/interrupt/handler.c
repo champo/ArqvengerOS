@@ -197,6 +197,8 @@ void int80(registers* regs) {
         case _SYS_SETPPERSONA:
             _setProcessPersona(regs->ebx, regs->ecx, regs->edx);
             break;
+        case _SYS_SYMLINK:
+            _symlink((const char *)regs->ebx, (const char *)regs->ecx);
     }
 }
 

@@ -65,6 +65,15 @@ int _open(const char* path, int flags, int mode) {
     if (fd == -1) {
         return -1;
     }
+    
+    if (mode == 0) {
+        mode = 00666;
+    }
+
+    if (flags & O_TRUNC) {
+        _unlink(path);
+        _creat(path, mode);
+    }
 
     char* base = path_directory(path);
     char* filename = path_file(path);
@@ -509,6 +518,10 @@ struct fs_Inode* resolve_sym_link(const char* path, struct fs_Inode* curdir) {
         return NULL;
     } 
     ans = resolve_path(buff);
-    free(buff);
+    kfree(buff);
     return ans;
+}
+
+int _symlink(const char* path, const char* target) {
+    return 0;
 }

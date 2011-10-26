@@ -60,4 +60,6 @@ int chdir(const char* path);
 
 int getcwd(char* path, size_t len);
 
+int symlink(const char* path, const char* target);
+
 #endif
