@@ -526,8 +526,8 @@ int rename(const char* from, const char* to) {
     return system_call(_SYS_RENAME, (int) from, (int) to, 0);
 }
 
-int readdir(int fd, struct fs_DirectoryEntry* entry) {
-    return system_call(_SYS_READDIR, fd, (int) entry, 0);
+int readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
+    return system_call(_SYS_READDIR, fd, (int) entry, hidden);
 }
 
 int chdir(const char* path) {

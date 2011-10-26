@@ -43,7 +43,7 @@ int _unlink(const char* path);
 
 int _rename(const char* from, const char* to);
 
-int _readdir(int fd, struct fs_DirectoryEntry* entry);
+int _readdir(int fd, struct fs_DirectoryEntry* entry, int hidden);
 
 int _chdir(const char* path);
 

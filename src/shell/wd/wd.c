@@ -90,7 +90,16 @@ void command_rmdir(char* argv) {
 void command_ls(char* argv) {
 
     int fd;
+    int hidden = 0;
     char* cmdEnd = strchr(argv, ' ');
+    
+    if (strlen(cmdEnd + 1) >= 2) {
+        if (strncmp(cmdEnd + 1, "-a", 2) == 0) {
+            hidden = 1;
+            cmdEnd = strchr(cmdEnd + 1, ' ');
+        }
+    } 
+    
     if (cmdEnd == NULL) {
         fd = open(".", O_RDONLY);
     } else {
@@ -99,10 +108,8 @@ void command_ls(char* argv) {
 
     struct fs_DirectoryEntry entry;
 
-    while (readdir(fd, &entry) == 1) {
-        if (entry.name[0] != '.') {
-            printf("%s\n", entry.name);
-        }
+    while (readdir(fd, &entry, hidden) == 1) {
+        printf("%s\n", entry.name);
     }
 }
 

@@ -192,7 +192,7 @@ void int80(registers* regs) {
             regs->eax = _getcwd((char*)regs->ebx, (size_t)regs->ecx);
             break;
         case _SYS_READDIR:
-            regs->eax = _readdir(regs->ebx, (struct fs_DirectoryEntry*)regs->ecx);
+            regs->eax = _readdir(regs->ebx, (struct fs_DirectoryEntry*)regs->ecx, regs->edx);
             break;
         case _SYS_SETPPERSONA:
             _setProcessPersona(regs->ebx, regs->ecx, regs->edx);
