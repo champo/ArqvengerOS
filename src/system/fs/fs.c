@@ -36,6 +36,7 @@ struct fs_Inode* fs_inode_open(size_t inode) {
     }
 
     struct fs_Inode* node = ext2_read_inode(fs, inode);
+    node->extra = NULL;
     if (node == NULL) {
         return NULL;
     }
@@ -90,12 +91,18 @@ void fs_register_ops(int fileType, struct FileDescriptorOps ops) {
 
 struct FileDescriptor fs_fd(struct fs_Inode* inode, int flags) {
     inode->refCount++;
-    return (struct FileDescriptor) {
+    struct FileDescriptor res = (struct FileDescriptor) {
         .inode = inode,
         .offset = 0,
         .flags = flags,
         .ops = &opsTable[INODE_TYPE(inode->data)]
     };
+
+    if (res.ops->open) {
+        res.ops->open(&res);
+    }
+
+    return res;
 }
 
 struct FileDescriptor fs_dup(struct FileDescriptor fd) {

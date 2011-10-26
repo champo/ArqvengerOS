@@ -48,6 +48,7 @@ struct ext2* ext2_load(unsigned long long startSector) {
     ext2_read_blockgroup_table(fs);
 
     fs_register_ops(INODE_DIR, (struct FileDescriptorOps) {
+            .open = NULL,
             .write = NULL,
             .read = NULL,
             .ioctl = NULL,
@@ -56,6 +57,7 @@ struct ext2* ext2_load(unsigned long long startSector) {
     });
 
     struct FileDescriptorOps fileOps = {
+        .open = NULL,
         .write = inode_write,
         .read = inode_read,
         .ioctl = NULL,
