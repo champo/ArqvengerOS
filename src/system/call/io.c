@@ -74,7 +74,6 @@ int _open(const char* path, int flags, int mode) {
         return -1;
     }
 
-
     struct fs_DirectoryEntry fileEntry = fs_findentry(directory, filename);
     if (fileEntry.inode == 0) {
 
@@ -453,7 +452,7 @@ char* path_directory(const char* path) {
         result = kalloc(sizeof(char) * 2);
         strcpy(result, "/");
     } else {
-        result = kalloc(sizeof(char) * (lastSlash + 1));
+        result = kalloc(sizeof(char) * (lastSlash + 2));
         strncpy(result, path, lastSlash);
         result[lastSlash + 1] = 0;
     }
@@ -474,7 +473,7 @@ char* path_file(const char* path) {
     int lastSlash;
     for (lastSlash = len - 1; lastSlash >= 0 && path[lastSlash] != '/'; lastSlash--);
 
-    char* result = kalloc(sizeof(char) * (len - lastSlash));
+    char* result = kalloc(sizeof(char) * (len - lastSlash + 1));
     strncpy(result, path + (lastSlash + 1), len - lastSlash - 1);
     result[len - lastSlash] = 0;
 
