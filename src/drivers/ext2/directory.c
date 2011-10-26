@@ -26,10 +26,13 @@ inline static unsigned int pad(unsigned int value, unsigned int align) {
 
 struct DirectoryEntry ext2_dir_read(struct fs_Inode* directory, size_t offset) {
 
-    struct DirectoryEntry entry;
+    struct DirectoryEntry entry = {
+        .entryLength = 0,
+        .nameLength = 0,
+        .inode = 0
+    };
 
     if (INODE_TYPE(directory->data) != INODE_DIR) {
-        entry.entryLength = 0;
         return entry;
     }
 
@@ -38,6 +41,7 @@ struct DirectoryEntry ext2_dir_read(struct fs_Inode* directory, size_t offset) {
     }
 
     if (entry.entryLength != 0) {
+        // It seems ext2 doesnt force a NULL at the end of strings, so we do
         entry.name[entry.nameLength] = 0;
     }
 
