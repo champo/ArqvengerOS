@@ -4,6 +4,7 @@
 
 #include "type.h"
 #include "system/fs/direntry.h"
+#include "constants.h"
 
 #define putchar(x) fputc((x),stdout)
 #define putc(x, stream) fputc((x), (stream))
@@ -25,6 +26,7 @@ extern FILE *stdin;
 extern FILE *stdout;
 extern FILE *stderr;
 
+
 int fputc(char c, FILE *stream);
 int fputs(const char *s, FILE *stream);
 int vfprintf(FILE *stream, const char *format, va_list arg);
@@ -41,6 +43,8 @@ int vscanf(const char *format, va_list arg);
 int fscanf(FILE *stream, const char *format, ...);
 int close(int fd);
 int open(const char* filename, int flags, ...);
+
+FILE * fopen(const char* filename, const char* mode);
 
 size_t write(int fd, const char *cs, size_t n);
 

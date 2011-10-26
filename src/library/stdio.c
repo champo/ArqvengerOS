@@ -10,6 +10,10 @@
 #include "library/call.h"
 #include "constants.h"
 
+//TODO remove this when changed
+#include "system/common.h"
+#include "system/mm.h"
+
 #define S_IRWXU 00700
 #define S_IRUSR 00400
 #define S_IWUSR 00200
@@ -495,7 +499,7 @@ int close(int fd) {
  * @param flags, the access mode.
  * @param mode, in case O_CREAT is specified in the flags, a third parameter,
  *              mode indicates the permissions of the new file.
- * @return 0 if succes, -1 if error.
+ * @return a number representing the file descriptor on succes, -1 on error.
  */
 int open(const char* filename, int flags, ...) {
     int mode;
@@ -508,6 +512,64 @@ int open(const char* filename, int flags, ...) {
         mode = 0;
     }
     return system_call(_SYS_OPEN, (int)filename, flags, mode);
+}
+
+/*
+ * Opens a file and returns FILE structure to be used by other funciotns of the stdio lib.
+ *  NOTE: currently we only handle the cases for text files, the 'b' character in the mode
+ *  string is not supported.
+ *
+ *  @param filename the string with the file's path.
+ *  @param mode a string containing a file access modes.
+ *
+ *  @return a FILE structure representing the file opened on success, NULL on error.
+ */
+FILE* fopen(const char* filename, const char* mode) {
+    int fd;
+    disableInterrupts();
+    FILE *fp = kalloc(sizeof(FILE));
+    enableInterrupts();
+
+    int  hasR = strchr(mode, 'r') != NULL;
+    int hasW = strchr(mode, 'w') != NULL; 
+    int hasA = strchr(mode, 'a') != NULL;
+    int hasPlus = strchr(mode, '+') != NULL;
+
+    if ( !hasR && !hasW && !hasA){
+        return NULL;
+    }
+   
+    if (hasR) {
+        if (hasPlus) {
+            fd = open(filename, O_RDWR, 0666);
+        } else {
+            fd = open(filename, O_RDONLY, 0666);
+        }
+    } else if (hasW) {
+        // the O_TRUNC flag does nothing now, it is left for future implementations, in 
+        // which the unlink should be blow away
+        unlink(filename);
+        if (hasPlus) {
+            fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0666);
+        } else {
+            fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        }
+    } else if (hasA) {
+        if (hasPlus) {
+            fd = open(filename, O_RDWR | O_CREAT | O_APPEND, 0666);
+        } else {
+            fd = open(filename, O_RDONLY | O_CREAT | O_APPEND, 0666);
+        }
+    }
+    
+    if (fd == -1) {        /* couldn't access name */
+        return NULL;
+    }
+
+    fp->fd = fd;
+    fp->flag = 0;
+    fp->unget = 0;
+    return fp; 
 }
 
 int mkdir(const char* path, int mode) {
