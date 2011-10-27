@@ -185,6 +185,32 @@ int fs_unlink(struct fs_Inode* path, const char* name) {
 }
 
 int fs_symlink(struct fs_Inode* path, const char* entry, const char* to) {
+    
+    fs_mknod(path, entry, INODE_LINK);
+
+    struct fs_DirectoryEntry direntry = fs_findentry(path, entry);
+    struct fs_Inode* file = fs_inode_open(direntry.inode);
+
+    fs_set_permission(file, 00666);
+
+    int length = strlen(to);
+
+    if (length != ext2_write_inode_content(file, 0, length, to)) {
+        //TODO hay que hacerle unlink al mknod?        
+        fs_inode_close(file);
+        return -1;
+    }
+    fs_inode_close(file);
+    return 0;
+}
+
+char* fs_symlink_read(struct fs_Inode* symlink, int size, char* buff) {
+    
+    if (size != ext2_read_inode_content(symlink, 0, size, buff)) {
+        return NULL;
+    }
+    return buff;
+
 }
 
 int fs_rename(struct fs_Inode* from, const char* original, struct fs_Inode* to, const char* new) {
@@ -275,3 +301,6 @@ int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
     return ext2_write_inode(inode);
 }
 
+int fs_get_inode_size(struct fs_Inode* inode) {
+    return inode->data->size;
+}

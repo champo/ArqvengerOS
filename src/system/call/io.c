@@ -12,7 +12,7 @@
 
 static struct fs_Inode* resolve_path(const char* path);
 
-static struct fs_Inode* resolve_sym_link(const char* path, struct fs_Inode* curdir);
+static struct fs_Inode* resolve_sym_link(struct fs_Inode* curdir);
 
 static char* path_directory(const char* path);
 
@@ -442,12 +442,12 @@ struct fs_Inode* resolve_path(const char* path) {
         }
         
         curdir = fs_inode_open(nextdir.inode);
-    }
-    
-    if (INODE_TYPE(curdir->data) == INODE_LINK) {
-        curdir = resolve_sym_link(path, curdir);        
-        if (curdir == NULL) {
-            return NULL;
+
+        if (INODE_TYPE(curdir->data) == INODE_LINK) {
+            curdir = resolve_sym_link(curdir);
+            if (curdir == NULL) {
+                return NULL;
+            }
         }
     }
     
@@ -505,23 +505,53 @@ char* path_file(const char* path) {
     return result;
 }
 
-struct fs_Inode* resolve_sym_link(const char* path, struct fs_Inode* curdir) {
-    int fd;
-    int size = curdir->data->size;
-    char* buff;
-    struct fs_Inode* ans;
-    buff = kalloc(size);
+struct fs_Inode* resolve_sym_link(struct fs_Inode* curdir) {
     
-    fd = open(path, O_RDONLY);
+    int size = fs_get_inode_size(curdir);
+    char* buff = kalloc(size);
    
-    if ( size =! read(fd, buff, size)) {
-        return NULL;
-    } 
-    ans = resolve_path(buff);
+    buff = fs_symlink_read(curdir, size, buff);
+
+    struct fs_Inode* ans = resolve_path(buff);
     kfree(buff);
     return ans;
 }
 
 int _symlink(const char* path, const char* target) {
-    return 0;
+ 
+    char* base = path_directory(target);
+    char* filename = path_file(target);
+
+    struct fs_Inode* directory = resolve_path(base);
+    if (directory == NULL) {
+        kfree(base);
+        kfree(filename);
+        return -1;
+    }
+
+    struct fs_DirectoryEntry fileEntry = fs_findentry(directory, filename);
+    
+    if (fileEntry.inode == 0) {
+        kfree(base);
+        kfree(filename);
+        return -1;
+    }
+    
+    base = path_directory(path);
+    filename = path_file(path);
+
+    directory = resolve_path(base);
+    
+    if (directory == NULL) {
+        kfree(base);
+        kfree(filename);
+        return -1;
+    }
+
+    int ans = fs_symlink(directory, filename, target);
+    kfree(base);
+    kfree(filename);
+    fs_inode_close(directory);
+    
+    return ans;
 }
