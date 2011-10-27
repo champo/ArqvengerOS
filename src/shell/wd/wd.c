@@ -92,14 +92,14 @@ void command_ls(char* argv) {
     int fd;
     int hidden = 0;
     char* cmdEnd = strchr(argv, ' ');
-    
+
     if (strlen(cmdEnd + 1) >= 2) {
         if (strncmp(cmdEnd + 1, "-a", 2) == 0) {
             hidden = 1;
             cmdEnd = strchr(cmdEnd + 1, ' ');
         }
-    } 
-    
+    }
+
     if (cmdEnd == NULL) {
         fd = open(".", O_RDONLY);
     } else {

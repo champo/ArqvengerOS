@@ -333,7 +333,7 @@ int _readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
     struct fs_DirectoryEntry res = des->ops->readdir(des);
 
     if (!hidden) {
-        while (res.name[0] == '.' && res.inode != 0) {
+        while (res.inode != 0 && res.name[0] == '.') {
             res = des->ops->readdir(des);
         }
     }
