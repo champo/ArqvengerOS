@@ -256,7 +256,7 @@ int fgetc(FILE *stream) {
         stream->flag = 0;
         return stream->unget;
     }
-    return read(getfd(stream), &c, 1) ? c : EOF;
+    return read(getfd(stream), &c, 1) == 1 ? c : EOF;
 }
 
 /**
@@ -285,7 +285,14 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
     char *tempstring;
 
     while (format[i] != '\0') {
-        if (!isspace(format[i])) {
+
+        if (isspace(format[i])) {
+            cur = fgetc(stream);
+            while (isspace(cur)) {
+                cur = fgetc(stream);
+            }
+            ungetc(cur, stream);
+        } else {
             if (format[i] != '%') {
                 cur = fgetc(stream);
                 while (isspace(cur) && cur != '\n') {
@@ -535,14 +542,14 @@ FILE* fopen(const char* filename, const char* mode) {
     enableInterrupts();
 
     int  hasR = strchr(mode, 'r') != NULL;
-    int hasW = strchr(mode, 'w') != NULL; 
+    int hasW = strchr(mode, 'w') != NULL;
     int hasA = strchr(mode, 'a') != NULL;
     int hasPlus = strchr(mode, '+') != NULL;
 
     if ( !hasR && !hasW && !hasA){
         return NULL;
     }
-   
+
     if (hasR) {
         if (hasPlus) {
             fd = open(filename, O_RDWR, 0666);
@@ -550,7 +557,7 @@ FILE* fopen(const char* filename, const char* mode) {
             fd = open(filename, O_RDONLY, 0666);
         }
     } else if (hasW) {
-        // the O_TRUNC flag does nothing now, it is left for future implementations, in 
+        // the O_TRUNC flag does nothing now, it is left for future implementations, in
         // which the unlink should be blow away
         unlink(filename);
         if (hasPlus) {
@@ -565,7 +572,7 @@ FILE* fopen(const char* filename, const char* mode) {
             fd = open(filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
         }
     }
-    
+
     if (fd == -1) {        /* couldn't access name */
         return NULL;
     }
@@ -573,7 +580,7 @@ FILE* fopen(const char* filename, const char* mode) {
     fp->fd = fd;
     fp->flag = 0;
     fp->unget = 0;
-    return fp; 
+    return fp;
 }
 
 int fclose(FILE* stream) {
