@@ -65,7 +65,7 @@ int _open(const char* path, int flags, int mode) {
     if (fd == -1) {
         return -1;
     }
-    
+
     if (mode == 0) {
         mode = 00666;
     }
@@ -297,6 +297,25 @@ int _rmdir(const char* path) {
 }
 
 int _unlink(const char* path) {
+
+    char* base = path_directory(path);
+    char* filename = path_file(path);
+
+    struct fs_Inode* parent = resolve_path(base);
+    if (parent == NULL) {
+        kfree(base);
+        kfree(filename);
+
+        return -1;
+    }
+
+    int res = fs_unlink(parent, filename);
+
+    kfree(base);
+    kfree(filename);
+    fs_inode_close(parent);
+
+    return res;
 }
 
 int _rename(const char* from, const char* to) {
@@ -440,17 +459,17 @@ struct fs_Inode* resolve_path(const char* path) {
         if (nextdir.inode == 0) {
             return NULL;
         }
-        
+
         curdir = fs_inode_open(nextdir.inode);
     }
-    
+
     if (INODE_TYPE(curdir->data) == INODE_LINK) {
-        curdir = resolve_sym_link(path, curdir);        
+        curdir = resolve_sym_link(path, curdir);
         if (curdir == NULL) {
             return NULL;
         }
     }
-    
+
     return curdir;
 }
 
@@ -511,12 +530,12 @@ struct fs_Inode* resolve_sym_link(const char* path, struct fs_Inode* curdir) {
     char* buff;
     struct fs_Inode* ans;
     buff = kalloc(size);
-    
+
     fd = open(path, O_RDONLY);
-   
+
     if ( size =! read(fd, buff, size)) {
         return NULL;
-    } 
+    }
     ans = resolve_path(buff);
     kfree(buff);
     return ans;

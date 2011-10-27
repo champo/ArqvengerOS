@@ -5,6 +5,7 @@
 #include "shell/man/man.h"
 #include "shell/help/help.h"
 #include "shell/sudoku/sudoku.h"
+#include "shell/unlink/unlink.h"
 #include "shell/calc/calc.h"
 #include "shell/getCPUSpeed/getCPUSpeed.h"
 #include "shell/fortune/fortune.h"

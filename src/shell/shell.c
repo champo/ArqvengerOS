@@ -53,7 +53,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 20
+#define NUM_COMMANDS 21
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -75,6 +75,7 @@ static const Command commands[] = {
     { &append, "append", "Append content to a file.", man_append, 0},
     { &adduser, "adduser", "Add new user account.", &manAdduser, 0},
     { &users, "users", "Show users loggued.", &manUsers, 0},
+    { &command_unlink, "unlink", "Remove an entry from the file system.", NULL, 1},
 };
 
 static termios shellStatus = { 0, 0 };
