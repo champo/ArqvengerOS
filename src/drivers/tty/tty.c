@@ -6,6 +6,9 @@
 #include "system/scheduler.h"
 #include "system/fs/fs.h"
 
+#include "library/stdio.h"
+#include "system/accessControlList/users.h"
+
 static int activeTerminal = 0;
 
 static struct Terminal terminals[NUM_TERMINALS];
@@ -47,6 +50,22 @@ void tty_run(char* unused) {
     open("/tty", O_RDONLY);
     open("/tty", O_WRONLY);
     open("/tty", O_WRONLY);
+   
+    //int ias = unlink("/users"); 
+    //printf("%d\n",ias);
+    FILE* fp = fopen("/users", "w");
+    fprintf(fp, "root:x:0:4:root:root\n");
+    fprintf(fp, "root1:x:1:5:root:root\n");
+    fprintf(fp, "root2:x:2:6:root:root\n");
+    fprintf(fp, "root3:x:3:7:root:root\n");
+
+    fclose(fp);
+    fp = fopen("/groups", "w");
+    fprintf(fp, "root:x:0:root\n");
+    fprintf(fp, "users:x:1:\n");
+    fclose(fp);
+
+    get_users_num();
 
     // Spawn the shells (this is a kernel process, so we can do this)
     for (int i = 0; i < NUM_TERMINALS; i++) {

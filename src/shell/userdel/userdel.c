@@ -10,10 +10,10 @@ void userdel(char* argv) {
 
     if (firstSpace == NULL) {
         printf("Usage: userdel LOGIN\n");
-    } else if (get_user_by_name(firstSpace) == NULL) {
-        printf("userdel: user '%s' does not exists.\n", firstSpace);
+    } else if (get_user_by_name(firstSpace + 1) == NULL) {
+        printf("userdel: user '%s' does not exists.\n", firstSpace + 1) ;
     } else {
-        delete_user(firstSpace);
+        delete_user(firstSpace + 1);
     }
 }
 

@@ -100,10 +100,10 @@ void shell(char* unused) {
     //TODO: Get this from somewhere
     self->ttyNumber = 0;
 
-    //char username[MAX_USERNAME_LEN];
-    //do {
-    //    printf("login:");
-    //} while (askForLogin(self, username));
+    char username[MAX_USERNAME_LEN];
+    do {
+        printf("login:");
+    } while (askForLogin(self, username));
 
 
     // We always need to set the status needed by the shell, and then reset
@@ -113,7 +113,7 @@ void shell(char* unused) {
 
     while (1) {
 
-        cmd = nextCommand(self, "guest");
+        cmd = nextCommand(self, username);
         if (cmd != NULL) {
 
             ioctl(0, TCSETS, (void*) &self->inputStatus);

@@ -69,11 +69,37 @@ int delete_group(char* name) {
     return 0;
 }
 
-void add_group_member(int gid, int uid) {
+int add_group_member(int gid, int uid) {
 
     struct Group* group = groups[gid];
+    struct User* user = get_user_by_id(uid);
 
     //TODO what happens if group is full
-    group->members[group->num_members] = get_user_by_id(uid);
+    user->gid = gid;
+    group->members[group->num_members] = user; 
+    
     group->num_members++;
+    return group->num_members;
 }
+
+int delete_group_member(int gid, int uid) {
+
+    struct Group* group = groups[gid];
+    struct User* user = get_user_by_id(uid);
+
+    if (group == NULL || user == NULL) {
+        return -1;
+    }
+    
+    for (int i = 0; i < group->num_members; i++) {
+        if (group->members[i]->id == user->id) {
+            group->members[i] = NULL;
+            group->num_members--;
+            return group->num_members;
+        }
+    }    
+
+    return -1;
+}
+
+

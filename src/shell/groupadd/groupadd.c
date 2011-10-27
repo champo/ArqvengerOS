@@ -8,7 +8,7 @@
 void groupadd(char* argv) {
     char* firstSpace = strchr(argv, ' ');
     if (firstSpace == NULL) {
-        printf("Usage: groupadd GROUP"); 
+        printf("Usage: groupadd GROUP\n"); 
         return;
     }
 

@@ -9,10 +9,10 @@ void groupdel(char* argv) {
     char* firstSpace = strchr(argv, ' ');
     if (firstSpace == NULL) {
         printf("Usage: groupdel GROUP\n");
-    } else if (get_group_by_name(firstSpace) == NULL) {
+    } else if (get_group_by_name(firstSpace + 1) == NULL) {
         printf("groupdel: group '%s' does not exists.\n", firstSpace);
     } else {
-        delete_group(firstSpace);
+        delete_group(firstSpace + 1);
     }
 }
 

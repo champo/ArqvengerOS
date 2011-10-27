@@ -11,6 +11,10 @@ struct User {
     char passwd[MAX_PASSWD_LEN];
 };
 
+void users_init(void);
+
+int get_users_num(void);
+
 struct User* get_user_by_id(int uid);
 
 struct User* get_user_by_name(char* name);

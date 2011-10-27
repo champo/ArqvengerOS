@@ -44,10 +44,11 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     ata_init(info);
     fs_load();
     scheduler_init();
-    //create_user("root", "root");
-    //create_group("root");
+
+    create_user("root", "root");
+    create_group("root");
     //add_group_member(0,0);
-    //create_group("users");
+    create_group("users");
 
     struct Process* idleProcess = process_table_new(idle, NULL, NULL, 1, NO_TERMINAL, 0);
     struct Process* shellProcess = process_table_new(tty_run, NULL, idleProcess, 1, NO_TERMINAL, 0);

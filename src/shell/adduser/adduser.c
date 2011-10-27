@@ -24,13 +24,19 @@ void adduser(char* argv) {
     printf("\n");
 
     do {
+        if (!first) {
+            printf("-Username invalid or already taken\n");
+            printf("-Please choose another\n");
+        }
         printf("Login name for new user []:");
         scanf("%s",username);
         cleanbuffer();
-    } while(strcmp(username,"") == 0);
+        first = 0;
+    } while(strcmp(username,"") == 0 || get_user_by_name(username) != NULL);
 
     printf("\n");
     
+    first = 1;
     do {
         if (!first) {
             printf("-Group '%s' does not exists\n", groupname);
@@ -76,8 +82,10 @@ void adduser(char* argv) {
     printf("\n");
 
     uid = create_user(username, passwd);
-    
-    add_group_member(uid,1);
+
+    struct Group* group = get_group_by_name(groupname);
+
+    add_group_member(group->id, uid);
 }
 
 

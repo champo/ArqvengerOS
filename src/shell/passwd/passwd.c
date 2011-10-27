@@ -11,7 +11,7 @@
 
 void passwd(char* argv) {
 
-    char* username = "acrespo";
+    char* username = "root";
     char old_passwd[MAX_PASSWD_LEN];
     char new_passwd1[MAX_PASSWD_LEN];
     char new_passwd2[MAX_PASSWD_LEN];
@@ -32,7 +32,8 @@ void passwd(char* argv) {
     cleanbuffer();
 
     ioctl(0, TCSETS, (void*) &oldTermios);
-    
+    printf("\n");
+
     getProcessPersona(getpid(), &uid, &gid);
     me = get_user_by_id(uid);
 
@@ -51,6 +52,7 @@ void passwd(char* argv) {
     cleanbuffer();
     
     ioctl(0, TCSETS, (void*) &oldTermios);
+    printf("\n");
 
     printf("Retype new password:");
 
@@ -61,6 +63,7 @@ void passwd(char* argv) {
     cleanbuffer();
     
     ioctl(0, TCSETS, (void*) &oldTermios);
+    printf("\n");
 
     if (strcmp(new_passwd1, new_passwd2) != 0) {
         printf("Sorry, passwords do not match\n");
