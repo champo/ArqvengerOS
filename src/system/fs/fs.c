@@ -175,16 +175,6 @@ int fs_unlink(struct fs_Inode* path, const char* name) {
         return EIO;
     }
 
-    if (INODE_TYPE(dir->data) != INODE_DIR) {
-        fs_inode_close(dir);
-        return ENOTDIR;
-    }
-
-    if (ext2_dir_read(dir, 0).entryLength == 0) {
-        fs_inode_close(dir);
-        return ENOTEMPTY;
-    }
-
     int res = remove_link(path, name, dir);
     fs_inode_close(dir);
 

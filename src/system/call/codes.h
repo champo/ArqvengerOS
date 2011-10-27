@@ -33,5 +33,6 @@
 #define _SYS_CHDIR 12
 #define _SYS_READDIR 89
 #define _SYS_GETCWD 183
+#define _SYS_SYMLINK 83
 
 #endif
