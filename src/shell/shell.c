@@ -53,6 +53,8 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
+struct User* askForLogin(struct Shell* self);
+
 #define NUM_COMMANDS 27
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
@@ -80,8 +82,8 @@ static const Command commands[] = {
     { &groupadd, "groupadd", "Create a new group.", &manGroupadd, 0},
     { &groups, "groups", "Display current group names.", &manGroups, 0},
     { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
-    { &groupaddmem, "groupaddmem", "Add a new member to a group.", &manGroupaddmem, 0}
-    { &command_unlink, "unlink", "Remove an entry from the file system.", NULL, 1},
+    { &groupaddmem, "groupaddmem", "Add a new member to a group.", &manGroupaddmem, 0},
+    { &command_unlink, "unlink", "Remove an entry from the file system.", NULL, 1}
 };
 
 static termios shellStatus = { 0, 0 };
@@ -101,10 +103,15 @@ void shell(char* unused) {
     //TODO: Get this from somewhere
     self->ttyNumber = 0;
 
-    char username[MAX_USERNAME_LEN];
+    struct User* user;
     do {
         printf("login:");
-    } while (askForLogin(self, username));
+    } while ((user = askForLogin(self)) == NULL);
+
+    setProcessPersona(getpid(), user->id, user->gid);
+    //int uid, gid;
+    //getProcessPersona(getpid(), &uid, &gid);
+    //printf("process uid: %d gid:%d\n", uid, gid);
 
 
     // We always need to set the status needed by the shell, and then reset
@@ -114,7 +121,7 @@ void shell(char* unused) {
 
     while (1) {
 
-        cmd = nextCommand(self, username);
+        cmd = nextCommand(self, user->name);
         if (cmd != NULL) {
 
             ioctl(0, TCSETS, (void*) &self->inputStatus);
@@ -126,10 +133,11 @@ void shell(char* unused) {
     }
 }
 
-int askForLogin(struct Shell* self, char* username) {
+struct User* askForLogin(struct Shell* self) {
 
     int promptLen = strlen("login");
     char passwd[MAX_PASSWD_LEN];
+    char username[MAX_USERNAME_LEN];
     termios passwdTermios = {1 , 0};
 
     scanf("%s", username);
@@ -150,13 +158,11 @@ int askForLogin(struct Shell* self, char* username) {
     struct User* user = get_user_by_name(username);
     if (user != NULL) {
         if (strcmp(passwd, user->passwd) == 0) {
-            strcpy(username, user->name);
-            return 0;
+            return user;
         }
     }
-    memset(username, 0, MAX_USERNAME_LEN);
     printf("Login incorrect\n");
-    return 1;
+    return NULL;
 
 }
 
