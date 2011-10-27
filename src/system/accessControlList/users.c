@@ -61,14 +61,14 @@ struct User* get_user_by_id(int id) {
         if (as == 0) {
             return NULL;
         }
-        printf("str %s\n",str);
-        printf("scanf devuelve %d\n",as);
+        //printf("str %s\n",str);
+        //printf("scanf devuelve %d\n",as);
         parseUserLine(str, user, def_group);
-        printf("uid %d\n", user->id);
-        printf("gid %d\n", user->gid);
-        printf("name %s\n", user->name);
-        printf("pass %s\n", user->passwd);
-        printf("group %s\n", def_group);
+        //printf("uid %d\n", user->id);
+        //printf("gid %d\n", user->gid);
+        //printf("name %s\n", user->name);
+        //printf("pass %s\n", user->passwd);
+        //printf("group %s\n", def_group);
         //if(!first) {
         //while(1);
         //}
@@ -172,6 +172,7 @@ int change_passwd(int uid, char* old_passwd, char* new_passwd) {
 
     if (strcmp(user->passwd, old_passwd) == 0) {
         strcpy(user->passwd, new_passwd);
+        printf("NEW password: %s\n",user->passwd);
         updateUserFile(user);
         return PASSWD_CHANGED;
     } else {
@@ -186,23 +187,25 @@ int updateUserFile(struct User* user) {
 
     do {
         ret = fscanf(fp, "%s\n", line[i++]);
-        printf("line %s\n", line[i-1]);
-        printf("%d\n",ret);
-        //printf("esto es lo q hay en elarchuivo %c as\n",fgetc(fp));
+        //printf("line %s  ret  %d\n", line[i-1], ret);
+        //line[i - 1][strlen(line[i - 1])] = '\n';
+        //line[i - 1][strlen(line[i - 1] + 1)] = '\0';
     } while(ret != EOF && ret != 0);
-
-    for (int j= 0; j < i; j++)
-        printf("%s\n",line[j]);
 
     fclose(fp);
     fp = fopen("/users", "w");
 
-
-    for (int j = 0;j < i; j++) {
-        if (strncmp(user->name, line[j], strlen(user->name)) == 0) {
+    for (int j = 0; j < i; j++) {
+        
+        char aux[100];
+        int length = strchr(line[j], ':') - line[j];
+        strncpy(aux, line[j], length);
+        aux[length] = '\0';
+        //printf("aux is %s and length is %d\n",aux,length);
+        if (strcmp(user->name, aux) == 0) {
             fprintf(fp, "%s:x:%d:%d:%s:%s\n", user->name, user->id, user->gid, user->passwd, "users");
         } else {
-            fprintf(fp, line[j]);
+            fprintf(fp, "%s\n", line[j]);
         }
     }
 

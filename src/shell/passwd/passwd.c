@@ -37,6 +37,8 @@ void passwd(char* argv) {
     getProcessPersona(getpid(), &uid, &gid);
     me = get_user_by_id(uid);
 
+    printf("I AM %s uid: %d gid: %d\n",me->name, me->id, me->gid);
+
     if (strcmp(old_passwd, me->passwd) != 0) {
         printf("passwd: Authentication failure\n");
         printf("passwd: password unchanged\n");

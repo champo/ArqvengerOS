@@ -92,11 +92,12 @@ size_t inode_read(struct FileDescriptor* fd, void* buffer, size_t len) {
 }
 
 struct fs_DirectoryEntry readdir(struct FileDescriptor* fd) {
+
     struct DirectoryEntry entry;
     do {
         entry = ext2_dir_read(fd->inode, fd->offset);
         fd->offset += entry.entryLength;
-    } while (entry.inode == 0);
+    } while (entry.entryLength != 0 && entry.inode == 0);
 
     if (entry.entryLength == 0) {
         return (struct fs_DirectoryEntry) {
