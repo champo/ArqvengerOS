@@ -326,6 +326,10 @@ int vfscanf(FILE *stream, const char *format, va_list arg) {
                         while (isspace(cur) && cur != '\n') {
                             cur = fgetc(stream);
                         }
+
+                        if ( cur == EOF) {
+                            return converted;
+                        }
                         j = 0;
                         while (!isspace(cur) && cur != EOF && cur != '\n') {
                             tempstring[j] = cur;
@@ -571,6 +575,11 @@ FILE* fopen(const char* filename, const char* mode) {
     fp->unget = 0;
     return fp; 
 }
+
+int fclose(FILE* stream) {
+    return close(stream->fd);
+}
+
 
 int mkdir(const char* path, int mode) {
     return system_call(_SYS_MKDIR, (int) path, mode, 0);

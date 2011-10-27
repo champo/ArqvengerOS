@@ -45,6 +45,7 @@ int close(int fd);
 int open(const char* filename, int flags, ...);
 
 FILE * fopen(const char* filename, const char* mode);
+int fclose(FILE* stream);
 
 size_t write(int fd, const char *cs, size_t n);
 
