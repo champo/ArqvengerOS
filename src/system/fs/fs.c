@@ -264,6 +264,10 @@ int remove_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode)
 
 int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
 
+    if (ext2_dir_find(path, name).entryLength != 0) {
+        return EEXIST;
+    }
+
     if (ext2_dir_add(path, name, inode->number) == -1) {
         return EIO;
     }
