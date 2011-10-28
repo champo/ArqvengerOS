@@ -68,35 +68,56 @@ void fifo_open(struct FileDescriptor* fd) {
 
     int modeFlags = fd->flags & 0x3;
     if (modeFlags == O_RDONLY) {
+
         fifo->readers++;
+        if (fifo->writers == 0) {
+            wait(&fifo->readWait, scheduler_current());
+        }
     } else if (modeFlags == O_WRONLY) {
+
         fifo->writers++;
+        if (fifo->readers == 0) {
+            wait(&fifo->writeWait, scheduler_current());
+        }
     } else {
         fifo->readers++;
         fifo->writers++;
     }
+
+    wake_all(&fifo->writeWait);
+    wake_all(&fifo->readWait);
 }
 
 size_t fifo_write(struct FileDescriptor* fd, const void* buffer, size_t len) {
 
     struct FIFO* fifo = fd->inode->extra;
+    kprintf("FIRST");
     while (fifo->size - fifo->used < len) {
 
         if (fifo->readers == 0) {
             scheduler_current()->schedule.ioWait = 0;
+            kprintf("WTF");
             return 0;
         }
 
+        kprintf("WTT");
         wait(&fifo->writeWait, scheduler_current());
     }
 
     scheduler_current()->schedule.ioWait = 0;
+    kprintf("HeY");
+    if (fifo->readers == 0) {
+        kprintf("Hey");
+        return 0;
+    }
 
     char* buf = (char*) fifo->buffer + fifo->used;
     memcpy(buf, buffer, len);
     fifo->used += len;
 
+    kprintf("before");
     wake_all(&fifo->readWait);
+    kprintf("afteR");
 
     return len;
 }
@@ -114,8 +135,10 @@ size_t fifo_read(struct FileDescriptor* fd, void* buffer, size_t len) {
         wait(&fifo->readWait, scheduler_current());
     }
 
-    // If we're here, only we can be holding the ioWait flag, so we release it
     scheduler_current()->schedule.ioWait = 0;
+    if (fifo->writers == 0) {
+        return 0;
+    }
 
     size_t length = len;
     if (length > fifo->used) {
@@ -137,6 +160,7 @@ size_t fifo_read(struct FileDescriptor* fd, void* buffer, size_t len) {
 int fifo_close(struct FileDescriptor* fd) {
 
     if (fd->inode->extra == NULL) {
+        kprintf("This be wrong.\n");
         return 0;
     }
 
@@ -151,7 +175,9 @@ int fifo_close(struct FileDescriptor* fd) {
         fifo->writers--;
     }
 
+    kprintf("%u %u\n", fifo->readers, fifo->writers);
     if ((fifo->readers | fifo->writers) == 0) {
+        kprintf("Closing");
         // We be dead!
         kfree(fifo->buffer);
         kfree(fifo);
@@ -162,6 +188,7 @@ int fifo_close(struct FileDescriptor* fd) {
         // process are woken up. This might be the last reader, or last writer.
         // Also, it avoids having to ask for any process specific data when doing this.
 
+        kprintf("WAKE!");
         wake_all(&fifo->writeWait);
         wake_all(&fifo->readWait);
     }
