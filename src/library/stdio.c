@@ -542,3 +542,7 @@ int symlink(const char* path, const char* target) {
     return system_call(_SYS_SYMLINK, (int) path, (int) target, 0);
 }
 
+int mkfifo(const char* path) {
+    return system_call(_SYS_MKFIFO, (int) path, 0, 0);
+}
+

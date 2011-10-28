@@ -62,4 +62,6 @@ int getcwd(char* path, size_t len);
 
 int symlink(const char* path, const char* target);
 
+int mkfifo(const char* path);
+
 #endif

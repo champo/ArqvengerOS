@@ -65,7 +65,7 @@ int _open(const char* path, int flags, int mode) {
     if (fd == -1) {
         return -1;
     }
-    
+
     if (mode == 0) {
         mode = 00666;
     }
@@ -200,13 +200,8 @@ int _close(int fd) {
     if (fileDescriptor->inode == NULL) {
         return -1;
     }
-    if (fileDescriptor->ops->close != NULL) {
-        fileDescriptor->ops->close(fileDescriptor);
-    }
-    fs_inode_close(fileDescriptor->inode);
-    process->fdTable[fd].inode = NULL;
-    return 0;
 
+    return fs_fd_close(fileDescriptor);
 }
 
 int _ioctl(int fd, int cmd, void* argp) {
@@ -297,6 +292,25 @@ int _rmdir(const char* path) {
 }
 
 int _unlink(const char* path) {
+
+    char* base = path_directory(path);
+    char* filename = path_file(path);
+
+    struct fs_Inode* parent = resolve_path(base);
+    if (parent == NULL) {
+        kfree(base);
+        kfree(filename);
+
+        return -1;
+    }
+
+    int res = fs_unlink(parent, filename);
+
+    kfree(base);
+    kfree(filename);
+    fs_inode_close(parent);
+
+    return res;
 }
 
 int _rename(const char* from, const char* to) {
@@ -314,7 +328,7 @@ int _readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
     struct fs_DirectoryEntry res = des->ops->readdir(des);
 
     if (!hidden) {
-        while (res.name[0] == '.' && res.inode != 0) {
+        while (res.inode != 0 && res.name[0] == '.') {
             res = des->ops->readdir(des);
         }
     }
@@ -440,7 +454,7 @@ struct fs_Inode* resolve_path(const char* path) {
         if (nextdir.inode == 0) {
             return NULL;
         }
-        
+
         curdir = fs_inode_open(nextdir.inode);
 
         if (INODE_TYPE(curdir->data) == INODE_LINK) {
@@ -452,7 +466,7 @@ struct fs_Inode* resolve_path(const char* path) {
             }
         }
     }
-    
+
     return curdir;
 }
 
@@ -563,3 +577,25 @@ int _symlink(const char* path, const char* target) {
     
     return ans;
 }
+
+int _mkfifo(const char* path) {
+
+    char* base = path_directory(path);
+    char* filename = path_file(path);
+
+    struct fs_Inode* directory = resolve_path(base);
+    if (directory == NULL) {
+        kfree(base);
+        kfree(filename);
+        return -1;
+    }
+
+    int res = fs_mknod(directory, filename, INODE_FIFO);
+
+    kfree(base);
+    kfree(filename);
+
+    fs_inode_close(directory);
+    return res;
+}
+

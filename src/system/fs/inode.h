@@ -11,6 +11,8 @@ struct fs_Inode {
     struct ext2* fileSystem;
 
     size_t refCount;
+
+    void* extra;
 };
 
 #endif

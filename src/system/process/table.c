@@ -62,6 +62,8 @@ void process_table_remove(struct Process* process) {
 
 void process_table_exit(struct Process* process) {
 
+    process->schedule.done = 1;
+
     if (process->firstChild) {
 
         struct Process* c = process->firstChild;
