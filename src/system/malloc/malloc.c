@@ -510,6 +510,7 @@ void free ( void* memory ) {
     /* Check chunk invariants */
 
     assert( header->status == INUSE_STATUS );
+    if (header->size != footer->size) kprintf("%u %u\n", header->size, footer->size);
     assert( header->size   == footer->size );
 
     /* Update context */

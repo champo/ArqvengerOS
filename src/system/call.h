@@ -52,4 +52,7 @@ int _getcwd(char* path, size_t len);
 void _setProcessPersona(int pid, int uid, int gid);
 
 int _symlink(const char* path, const char* target);
+
+int _mkfifo(const char* path);
+
 #endif
