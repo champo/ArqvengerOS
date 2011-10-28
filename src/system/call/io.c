@@ -357,8 +357,6 @@ int _chdir(const char* path) {
         return -1;
     }
     
-    //char* realpath = get_real_path(path, realpath);
-
     if (INODE_TYPE(destination->data) != INODE_DIR) {
         fs_inode_close(destination);
         return -1;
