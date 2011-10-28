@@ -21,6 +21,9 @@ void command_unlink(char* argv) {
         case EIO:
             printf("Cant remove '%s': Some wizardry went awry. Try again later.\n", cmdEnd);
             break;
+        case EISDIR:
+            printf("Cant remove '%s': It's a directory. Try rmdir.\n", cmdEnd);
+            break;
     }
 }
 
