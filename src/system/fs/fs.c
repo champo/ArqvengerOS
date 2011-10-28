@@ -186,9 +186,17 @@ int fs_unlink(struct fs_Inode* path, const char* name) {
 
 int fs_symlink(struct fs_Inode* path, const char* entry, const char* to) {
     
-    fs_mknod(path, entry, INODE_LINK);
+    if (fs_mknod(path, entry, INODE_LINK) != 0) {
+        return -1;
+    }
 
     struct fs_DirectoryEntry direntry = fs_findentry(path, entry);
+
+    if (direntry.inode == 0) {
+        //TODO should the new node be unlinked?
+        return -1;
+    }
+
     struct fs_Inode* file = fs_inode_open(direntry.inode);
 
     fs_set_permission(file, 00666);
@@ -209,6 +217,7 @@ char* fs_symlink_read(struct fs_Inode* symlink, int size, char* buff) {
     if (size != ext2_read_inode_content(symlink, 0, size, buff)) {
         return NULL;
     }
+    buff[size] = '\0';
     return buff;
 
 }

@@ -444,7 +444,9 @@ struct fs_Inode* resolve_path(const char* path) {
         curdir = fs_inode_open(nextdir.inode);
 
         if (INODE_TYPE(curdir->data) == INODE_LINK) {
-            curdir = resolve_sym_link(curdir);
+            struct fs_Inode* auxdir = resolve_sym_link(curdir);
+            fs_inode_close(curdir);
+            curdir = auxdir;
             if (curdir == NULL) {
                 return NULL;
             }
@@ -508,9 +510,13 @@ char* path_file(const char* path) {
 struct fs_Inode* resolve_sym_link(struct fs_Inode* curdir) {
     
     int size = fs_get_inode_size(curdir);
-    char* buff = kalloc(size);
+    char* buff = kalloc(size + 1);
    
     buff = fs_symlink_read(curdir, size, buff);
+    
+    if (buff == NULL) {
+        return NULL;
+    }
 
     struct fs_Inode* ans = resolve_path(buff);
     kfree(buff);
@@ -530,13 +536,15 @@ int _symlink(const char* path, const char* target) {
     }
 
     struct fs_DirectoryEntry fileEntry = fs_findentry(directory, filename);
-    
+   
+    kfree(base);
+    kfree(filename);
+
     if (fileEntry.inode == 0) {
-        kfree(base);
-        kfree(filename);
         return -1;
     }
     
+
     base = path_directory(path);
     filename = path_file(path);
 
