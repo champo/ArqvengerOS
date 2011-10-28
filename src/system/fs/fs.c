@@ -272,3 +272,15 @@ int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
     return ext2_write_inode(inode);
 }
 
+int fs_fd_close(struct FileDescriptor* fd) {
+
+    int res = 0;
+    if (fd->ops->close != NULL) {
+        res = fd->ops->close(fd);
+    }
+    fs_inode_close(fd->inode);
+    fd->inode = NULL;
+
+    return res;
+}
+

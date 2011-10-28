@@ -200,13 +200,8 @@ int _close(int fd) {
     if (fileDescriptor->inode == NULL) {
         return -1;
     }
-    if (fileDescriptor->ops->close != NULL) {
-        fileDescriptor->ops->close(fileDescriptor);
-    }
-    fs_inode_close(fileDescriptor->inode);
-    process->fdTable[fd].inode = NULL;
-    return 0;
 
+    return fs_fd_close(fileDescriptor);
 }
 
 int _ioctl(int fd, int cmd, void* argp) {

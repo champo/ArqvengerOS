@@ -107,8 +107,7 @@ void exitProcess(struct Process* process) {
     for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
 
         if (process->fdTable[i].inode != NULL) {
-            fs_inode_close(process->fdTable[i].inode);
-            process->fdTable[i].inode = NULL;
+            fs_fd_close(&process->fdTable[i]);
         }
     }
 }
