@@ -200,13 +200,8 @@ int _close(int fd) {
     if (fileDescriptor->inode == NULL) {
         return -1;
     }
-    if (fileDescriptor->ops->close != NULL) {
-        fileDescriptor->ops->close(fileDescriptor);
-    }
-    fs_inode_close(fileDescriptor->inode);
-    process->fdTable[fd].inode = NULL;
-    return 0;
 
+    return fs_fd_close(fileDescriptor);
 }
 
 int _ioctl(int fd, int cmd, void* argp) {
@@ -544,3 +539,25 @@ struct fs_Inode* resolve_sym_link(const char* path, struct fs_Inode* curdir) {
 int _symlink(const char* path, const char* target) {
     return 0;
 }
+
+int _mkfifo(const char* path) {
+
+    char* base = path_directory(path);
+    char* filename = path_file(path);
+
+    struct fs_Inode* directory = resolve_path(base);
+    if (directory == NULL) {
+        kfree(base);
+        kfree(filename);
+        return -1;
+    }
+
+    int res = fs_mknod(directory, filename, INODE_FIFO);
+
+    kfree(base);
+    kfree(filename);
+
+    fs_inode_close(directory);
+    return res;
+}
+

@@ -35,7 +35,7 @@ void scheduler_do(void) {
 
     if (scheduler_curr != NULL) {
         __asm__ __volatile ("mov %%ebp, %0":"=r"(scheduler_curr->mm.esp)::);
-        
+
         update_cycles();
     }
 
@@ -58,7 +58,9 @@ void scheduler_remove(struct Process* process) {
 }
 
 void scheduler_unblock(struct Process* process) {
-    process_queue_push(&scheduler_queue, process);
+    if (!process->schedule.done) {
+        process_queue_push(&scheduler_queue, process);
+    }
 }
 
 void scheduler_block(struct Process* process) {

@@ -100,15 +100,12 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
 }
 
 void exitProcess(struct Process* process) {
-    process->schedule.done = 1;
-
     kfree(process->cwd);
 
     for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
 
         if (process->fdTable[i].inode != NULL) {
-            fs_inode_close(process->fdTable[i].inode);
-            process->fdTable[i].inode = NULL;
+            fs_fd_close(&process->fdTable[i]);
         }
     }
 }

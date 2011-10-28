@@ -6,6 +6,7 @@
 struct FileDescriptor;
 
 struct FileDescriptorOps {
+    void (*open)(struct FileDescriptor*);
     size_t (*write)(struct FileDescriptor*, const void*, size_t);
     size_t (*read)(struct FileDescriptor*, void*, size_t);
     int (*ioctl)(struct FileDescriptor*, int, void*);
