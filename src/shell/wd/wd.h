@@ -15,4 +15,8 @@ void command_rmdir(char* argv);
 
 void command_ls(char* argv);
 
+void command_ln(char* argv);
+
+void man_ln(void);
+
 #endif

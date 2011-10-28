@@ -9,10 +9,13 @@
 #include "system/fs/direntry.h"
 #include "library/string.h"
 #include "constants.h"
+#include "library/stdio.h"
 
 static struct fs_Inode* resolve_path(const char* path);
 
 static struct fs_Inode* resolve_sym_link(struct fs_Inode* curdir);
+
+static int open_sym_link(struct fs_Inode* curdir, int flags, int mode);
 
 static char* path_directory(const char* path);
 
@@ -142,12 +145,17 @@ int _open(const char* path, int flags, int mode) {
     }
 
     //Pasamos los permisos
-    process->fdTable[fd] = fs_fd(file, flags);
-    if (flags & O_APPEND) {
-        process->fdTable[fd].offset = file->data->size;
+    
+    if (INODE_TYPE(file->data) == INODE_LINK) {
+        fd = open_sym_link(file, flags, mode);
+        fs_inode_close(file);
+    } else {
+        process->fdTable[fd] = fs_fd(file, flags);
+        if (flags & O_APPEND) {
+            process->fdTable[fd].offset = file->data->size;
+        }
+        fs_inode_close(file);
     }
-    fs_inode_close(file);
-
     return fd;
 }
 
@@ -344,9 +352,12 @@ int _readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
 int _chdir(const char* path) {
 
     struct fs_Inode* destination = resolve_path(path);
+    
     if (destination == NULL) {
         return -1;
     }
+    
+    //char* realpath = get_real_path(path, realpath);
 
     if (INODE_TYPE(destination->data) != INODE_DIR) {
         fs_inode_close(destination);
@@ -447,6 +458,7 @@ struct fs_Inode* resolve_path(const char* path) {
         }
         index++;
         entry[i] = '\0';
+        
 
         struct fs_DirectoryEntry nextdir = fs_findentry(curdir, entry);
         fs_inode_close(curdir);
@@ -523,6 +535,7 @@ char* path_file(const char* path) {
 
 struct fs_Inode* resolve_sym_link(struct fs_Inode* curdir) {
     
+
     int size = fs_get_inode_size(curdir);
     char* buff = kalloc(size + 1);
    
@@ -531,8 +544,22 @@ struct fs_Inode* resolve_sym_link(struct fs_Inode* curdir) {
     if (buff == NULL) {
         return NULL;
     }
-
+    
     struct fs_Inode* ans = resolve_path(buff);
+    kfree(buff);
+    return ans;
+}
+
+int open_sym_link(struct fs_Inode* curdir, int flags, int mode) {
+
+    int size = fs_get_inode_size(curdir);
+    char* buff = kalloc(size + 1);
+
+    buff = fs_symlink_read(curdir, size, buff);
+    if (buff == NULL) {
+        return -1;
+    } 
+    int ans = open(buff, flags, mode);
     kfree(buff);
     return ans;
 }
@@ -558,6 +585,26 @@ int _symlink(const char* path, const char* target) {
         return -1;
     }
     
+    char* fulltarget;
+
+    if (target[0] != '/') {
+    
+        int lencwd = strlen(scheduler_current()->cwd);
+        if (lencwd != 1) {
+            fulltarget = kalloc(lencwd + strlen(target) + 1);
+
+            strcpy(fulltarget, scheduler_current()->cwd);
+            fulltarget[lencwd] = '/';
+            strcpy(fulltarget + lencwd + 1, target);
+        } else {
+            fulltarget = kalloc(strlen(target) + 1);
+            fulltarget[0] = '/';
+            strcpy(fulltarget + 1, target);
+        }
+    } else {
+        fulltarget = kalloc(strlen(target));
+        strcpy(fulltarget,target);
+    }
 
     base = path_directory(path);
     filename = path_file(path);
@@ -570,11 +617,13 @@ int _symlink(const char* path, const char* target) {
         return -1;
     }
 
-    int ans = fs_symlink(directory, filename, target);
+    int ans = fs_symlink(directory, filename, fulltarget);
     kfree(base);
     kfree(filename);
     fs_inode_close(directory);
-    
+    if (ans != 0) {
+    }
+
     return ans;
 }
 
@@ -589,7 +638,6 @@ int _mkfifo(const char* path) {
         kfree(filename);
         return -1;
     }
-
     int res = fs_mknod(directory, filename, INODE_FIFO);
 
     kfree(base);
