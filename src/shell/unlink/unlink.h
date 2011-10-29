@@ -3,4 +3,6 @@
 
 void command_unlink(char* argv);
 
+void manUnlink(void);
+
 #endif

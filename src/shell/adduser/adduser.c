@@ -82,6 +82,6 @@ void adduser(char* argv) {
 
 void manAdduser(void) {
     setBold(1);
-    printf("Usage:\n\t adduser ");
+    printf("Usage:\n\t adduser\n");
     setBold(0);
 }
