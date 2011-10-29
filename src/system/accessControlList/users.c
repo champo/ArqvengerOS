@@ -11,16 +11,11 @@
 static void parseUserLine(char* str, struct User* user, char* def_group);
 static int updateUsersFile(struct User* user, int delete);
 
-static struct User* registered_users[MAX_USERS];
-static int registered_users_num = 0;
-
 void users_init(void) {
 
 }
 
 int get_users_num(void) {
-
-    //return registered_users_num;
 
     FILE* fp = fopen("/users", "r");
     int users = 0;
@@ -37,8 +32,6 @@ int get_users_num(void) {
 
 struct User* get_user_by_id(int id) {
 
-    //return registered_users_[id];
-
     FILE* fp = fopen("/users", "r");
     disableInterrupts();
     struct User* user = kalloc(sizeof(struct User));
@@ -52,14 +45,9 @@ struct User* get_user_by_id(int id) {
             //kfree(user);
             return NULL;
         }
-        //printf("str %s\n",str);
-        //printf("scanf devuelve %d\n",as);
+        
         parseUserLine(str, user, def_group);
-        //printf("uid %d\n", user->id);
-        //printf("gid %d\n", user->gid[0]);
-        //printf("name %s\n", user->name);
-        //printf("pass %s\n", user->passwd);
-        //printf("group %s\n", def_group);
+    
     } while(user->id != id);
 
     fclose(fp);
@@ -76,11 +64,8 @@ void parseUserLine(char* str, struct User* user, char* def_group) {
         user->name[nextColumn - buf] = '\0';
         buf = nextColumn + 1;
 
-        //printf("%s\n",str);
-
         nextColumn = strchr(buf, ':');
         buf = nextColumn + 1;
-        //printf("%s\n",str);
 
         nextColumn = strchr(buf, ':');
         strncpy(aux, buf, nextColumn - buf);
@@ -89,7 +74,6 @@ void parseUserLine(char* str, struct User* user, char* def_group) {
         buf = nextColumn + 1;
 
         user->id = atoi(aux);
-        //printf("uid %d\n",atoi(aux));
 
         nextColumn = strchr(buf, ':');
         strncpy(aux, buf, nextColumn - buf);
@@ -98,14 +82,12 @@ void parseUserLine(char* str, struct User* user, char* def_group) {
         buf = nextColumn + 1;
 
         user->gid[0] = atoi(aux);
-        //printf("gid %d\n", atoi(aux));
 
         nextColumn = strchr(buf, ':');
         strncpy(aux, buf, nextColumn - buf);
         aux[nextColumn - buf] = '\0';
 
         strcpy(user->passwd, aux);
-        //printf("%s\n",aux);
 
         buf = nextColumn + 1;
 
@@ -113,15 +95,6 @@ void parseUserLine(char* str, struct User* user, char* def_group) {
 }
 
 struct User* get_user_by_name(char* name) {
-
-    //for (int i = 0; i < registered_users_num; i++) {
-
-        //if (strcmp(registered_users[i]->name, name) == 0) {
-            //return registered_users[i];
-        //}
-    //}
-    //return NULL;
-
 
     FILE* fp = fopen("/users", "r");
     disableInterrupts();
@@ -137,14 +110,7 @@ struct User* get_user_by_name(char* name) {
             return NULL;
         }
 
-        //printf("str %s\n",str);
-        //printf("scanf devuelve %d\n",as);
         parseUserLine(str, user, def_group);
-        //printf("uid %d\n", user->id);
-        //printf("gid %d\n", user->gid[0]);
-        //printf("name %s\n", user->name);
-        //printf("pass %s\n", user->passwd);
-        //printf("group %s\n", def_group);
     
     } while(strcmp(user->name, name) != 0);
 
@@ -154,7 +120,6 @@ struct User* get_user_by_name(char* name) {
 
 char* get_username(int id) {
 
-    //return registered_users[id]->name;
     return get_user_by_id(id)->name;
 }
 
@@ -164,7 +129,9 @@ int change_passwd(int uid, char* old_passwd, char* new_passwd) {
 
     if (strcmp(user->passwd, old_passwd) == 0) {
         strcpy(user->passwd, new_passwd);
+
         updateUsersFile(user, 0);
+        
         return PASSWD_CHANGED;
     } else {
         return INVALID_PASSWD;
@@ -208,21 +175,6 @@ int updateUsersFile(struct User* user, int delete) {
 
 int create_user(char* name, char* passwd, char* groupname) {
 
-    //if (registered_users_num == MAX_USERS) {
-        //return -1;
-    //}
-
-    //struct User* new_user = kalloc(sizeof(struct User));
-
-    //new_user->id = registered_users_num;
-    //strcpy(new_user->name, name);
-    //strcpy(new_user->passwd, passwd);
-
-    //registered_users[registered_users_num] = new_user;
-    //registered_users_num++;
-
-    //return new_user->id;
-    
     FILE* fp = fopen("/users", "r+");
     char line[200];
     char buf[100];
@@ -267,25 +219,13 @@ int create_user(char* name, char* passwd, char* groupname) {
 
 int delete_user(char* name) {
 
-    //TODO make this right!
-    //struct User* user = get_user_by_name(name);
-    //if (user == NULL) {
-        //return -1;
-    //}
-
-    //registered_users[user->id] = NULL;
-    //registered_users_num--;
-
-    //delete_group_member(user->gid[0], user->id);
-    //kfree(user);
-    //return 0;
-    
     struct User* user = get_user_by_name(name);
     if (user == NULL) {
         return -1;
     }
 
     updateUsersFile(user, 1);
+
     return 0;
 }
 

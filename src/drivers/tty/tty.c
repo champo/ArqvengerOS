@@ -52,23 +52,26 @@ void tty_run(char* unused) {
     open("/tty", O_WRONLY);
     open("/tty", O_WRONLY);
    
-    int ias = unlink("/users"); 
-    printf("%d\n",ias);
-    FILE* fp = fopen("/users", "w");
-    fprintf(fp, "root:x:0:4:root:root\n");
-    fprintf(fp, "root1:x:1:5:root:root\n");
-    fprintf(fp, "root2:x:2:6:root:root\n");
-    fprintf(fp, "root3:x:3:7:root:root\n");
-    fprintf(fp, "root4:x:4:7:root:root\n");
+    int fd;
+    FILE* fp;
+    if ((fd = open("/users", O_RDONLY)) != -1) {
+        fp = fopen("/users", "w");
+        fprintf(fp, "root:x:0:4:root:root\n");
+        fprintf(fp, "acrespo:x:5:1:alv:users\n");
+        
+        fclose(fp);
+        close(fd);
+    }
 
-    fclose(fp);
-    fp = fopen("/groups", "w");
-    fprintf(fp, "root:x:0:root\n");
-    fprintf(fp, "users:x:1:\n");
-    fclose(fp);
-
-    get_users_num();
-
+    if ((fd = open("/groups", O_RDONLY)) != -1) {
+        fp = fopen("/groups", "w");
+        fprintf(fp, "root:x:0:root\n");
+        fprintf(fp, "users:x:1:acrespo\n");
+        
+        fclose(fp);
+        close(fd);
+    }
+     
     // Spawn the shells (this is a kernel process, so we can do this)
     for (int i = 0; i < NUM_TERMINALS; i++) {
         terminals[i].termios.canon = 1;
