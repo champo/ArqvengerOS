@@ -11,6 +11,7 @@ struct Group {
     int num_members;
 };
 
+int get_groups_num(void);
 
 struct Group* get_group_by_id(int gid);
 

@@ -7,12 +7,12 @@
 
 void groupadd(char* argv) {
     char* firstSpace = strchr(argv, ' ');
-    if (firstSpace == NULL) {
+    if (firstSpace == NULL || strchr(firstSpace + 1, ' ') != NULL) {
         printf("Usage: groupadd GROUP\n"); 
         return;
     }
 
-    create_group(firstSpace);
+    create_group(firstSpace + 1);
 }
 
 void manGroupadd(void) {

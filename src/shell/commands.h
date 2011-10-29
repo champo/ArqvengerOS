@@ -23,6 +23,7 @@
 #include "shell/groups/groups.h"
 #include "shell/groupdel/groupdel.h"
 #include "shell/groupaddmem/groupaddmem.h"
+#include "shell/groupdelmem/groupdelmem.h"
 #include "shell/passwd/passwd.h"
 
 #endif

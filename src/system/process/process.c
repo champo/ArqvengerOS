@@ -31,8 +31,13 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->curr_cycles = 0;
     process->prev_cycles = 0;
     process->timeStart = _time(NULL);
+    
     process->uid = 0;
     process->gid = 0;
+    if (parent != NULL) {
+        process->uid = parent->uid;
+        process->gid = parent->gid;
+    }
 
     process->prev = NULL;
     if (parent == NULL) {

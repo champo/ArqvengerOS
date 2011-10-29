@@ -7,7 +7,7 @@ void users(char* argv) {
    
     int i = 0, users = 0;
     int total = get_users_num();
-    printf("total ----- %d\n",total);
+    printf("total users ---- %d\n",total);
     struct User* user;
     while(users < total) {
         user = get_user_by_id(i++);

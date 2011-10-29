@@ -11,7 +11,6 @@
 
 void passwd(char* argv) {
 
-    char* username = "root";
     char old_passwd[MAX_PASSWD_LEN];
     char new_passwd1[MAX_PASSWD_LEN];
     char new_passwd2[MAX_PASSWD_LEN];
@@ -20,8 +19,10 @@ void passwd(char* argv) {
     termios oldTermios;
     termios passwdTermios = {1 , 0};
 
+    getProcessPersona(getpid(), &uid, &gid);
+    me = get_user_by_id(uid);
 
-    printf("Changing password for %s\n", username);
+    printf("Changing password for %s\n", me->name);
 
     printf("(current) password:");
 
@@ -34,10 +35,8 @@ void passwd(char* argv) {
     ioctl(0, TCSETS, (void*) &oldTermios);
     printf("\n");
 
-    getProcessPersona(getpid(), &uid, &gid);
-    me = get_user_by_id(uid);
 
-    printf("I AM %s uid: %d gid: %d\n",me->name, me->id, me->gid);
+    //printf("I AM %s uid: %d gid: %d\n",me->name, me->id, me->gid);
 
     if (strcmp(old_passwd, me->passwd) != 0) {
         printf("passwd: Authentication failure\n");

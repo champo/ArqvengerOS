@@ -55,7 +55,7 @@ static void run_command(struct Shell* self, const Command* cmd);
 
 struct User* askForLogin(struct Shell* self);
 
-#define NUM_COMMANDS 27
+#define NUM_COMMANDS 28
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -83,7 +83,8 @@ static const Command commands[] = {
     { &groups, "groups", "Display current group names.", &manGroups, 0},
     { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
     { &groupaddmem, "groupaddmem", "Add a new member to a group.", &manGroupaddmem, 0},
-    { &command_unlink, "unlink", "Remove an entry from the file system.", NULL, 1}
+    { &groupdelmem, "groupdelmem", "Delete a member to a group.", &manGroupdelmem, 0},
+    { &command_unlink, "unlink", "Remove an entry from the file system.", NULL, 1},
 };
 
 static termios shellStatus = { 0, 0 };
@@ -109,10 +110,6 @@ void shell(char* unused) {
     } while ((user = askForLogin(self)) == NULL);
 
     setProcessPersona(getpid(), user->id, user->gid);
-    //int uid, gid;
-    //getProcessPersona(getpid(), &uid, &gid);
-    //printf("process uid: %d gid:%d\n", uid, gid);
-
 
     // We always need to set the status needed by the shell, and then reset
     // it to the default, to make sure the input behaviour is as expected.
@@ -156,6 +153,7 @@ struct User* askForLogin(struct Shell* self) {
     printf("\n\n");
 
     struct User* user = get_user_by_name(username);
+    
     if (user != NULL) {
         if (strcmp(passwd, user->passwd) == 0) {
             return user;

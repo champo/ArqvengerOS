@@ -1,13 +1,12 @@
-#include "shell/groupaddmem/groupaddmem.h"
+#include "shell/groupdelmem/groupdelmem.h" 
 #include "system/accessControlList/groups.h"
 #include "system/accessControlList/users.h"
 #include "mcurses/mcurses.h"
 #include "library/stdio.h"
-#include "library/string.h"
+#include "library/stdlib.h"
 
 
-
-void groupaddmem(char* argv) {
+void groupdelmem(char* argv) {
 
     char* firstSpace = strchr(argv,' ');
     char* secondSpace = strchr(firstSpace + 1, ' ');
@@ -36,15 +35,17 @@ void groupaddmem(char* argv) {
         printf("-Please choose another\n");
     }
 
-    add_group_member(group->id, user->id);  
+    delete_group_member(group->id, user->id);
+
 }
 
 
-void manGroupaddmem(void) {
+void manGroupdelmem(void) {
     setBold(1);
-    printf("Usage:\n\t groupaddmem ");
+    printf("Usage:\n\t groupdelmem ");
     setBold(0);
 
     printf("GROUP MEMBER\n");
 }
+
 
