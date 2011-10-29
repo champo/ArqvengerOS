@@ -2,6 +2,7 @@
 #include "library/stdio.h"
 #include "system/common.h"
 #include "system/panic.h"
+#include "system/scheduler.h"
 #include "system/malloc/malloc.h"
 
 struct MemoryMapEntry {
@@ -24,7 +25,9 @@ struct MemoryMapEntry {
 #define PAGES_PER_ENTRY ((unsigned int) sizeof(int) * 8)
 #define ENTRIES_IN_MAP ((USABLE_PAGES / PAGES_PER_ENTRY) + 1)
 
-int* pageMap;
+static int* pageMap;
+
+static void* mallocContext;
 
 inline static void setPage(int page);
 
@@ -47,6 +50,8 @@ void initMemoryMap(struct multiboot_info* info) {
 
         init_malloc(allocPages(1), PAGE_SIZE);
         set_external_alloc(allocator);
+
+        mallocContext = get_malloc_context();
 
     } else {
         panic();
@@ -225,5 +230,25 @@ void* allocator(size_t size, size_t* allocatedSize) {
     }
 
     return memory;
+}
+
+void mm_set_kernel_context(void) {
+    set_malloc_context(mallocContext);
+}
+
+void mm_set_process_context(void) {
+    struct Process* p = scheduler_current();
+    if (p != NULL && p->mm.mallocContext) {
+        set_malloc_context(p->mm.mallocContext);
+    } else {
+        mm_set_kernel_context();
+    }
+}
+
+void* mm_create_context(void* heap, size_t size) {
+    init_malloc(heap, size);
+    void* ctx = get_malloc_context();
+    mm_set_kernel_context();
+    return ctx;
 }
 
