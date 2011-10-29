@@ -55,7 +55,7 @@ static void run_command(struct Shell* self, const Command* cmd);
 
 struct User* askForLogin(struct Shell* self);
 
-#define NUM_COMMANDS 29
+#define NUM_COMMANDS 27
 
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
@@ -77,14 +77,12 @@ static const Command commands[] = {
     { &command_ls, "ls", "List entries in a directory.", &manLs, 0},
     { &append, "append", "Append content to a file.", &man_append, 0},
     { &adduser, "adduser", "Add new user account.", &manAdduser, 0},
-    { &users, "users", "Show users loggued.", &manUsers, 0},
+    { &users, "users", "Show users logged.", &manUsers, 0},
     { &userdel, "userdel", "Delete an user account and related files.", &manUserdel, 0},
     { &passwd, "passwd", "Chanfe user password", &manPasswd, 0},
     { &groupadd, "groupadd", "Create a new group.", &manGroupadd, 0},
     { &groups, "groups", "Display current group names.", &manGroups, 0},
     { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
-    { &groupaddmem, "groupaddmem", "Add a new member to a group.", &manGroupaddmem, 0},
-    { &groupdelmem, "groupdelmem", "Delete a member to a group.", &manGroupdelmem, 0},
     { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
     { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
 };
@@ -111,7 +109,7 @@ void shell(char* unused) {
         printf("login:");
     } while ((user = askForLogin(self)) == NULL);
 
-    setProcessPersona(getpid(), user->id, user->gid);
+    setProcessPersona(getpid(), user->id, user->gid[0]);
 
     // We always need to set the status needed by the shell, and then reset
     // it to the default, to make sure the input behaviour is as expected.

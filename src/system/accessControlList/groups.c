@@ -6,13 +6,9 @@
 #include "library/stdio.h"
 #include "library/stdlib.h"
 
-#define MAX_GROUPS  128
 
 static void parseGroupLine(char* line,struct Group* group);
 static int updateGroupsFile(struct Group* group, int delete);
-
-//static struct Group* groups[MAX_GROUPS];
-//static int groups_num = 0;
 
 int get_groups_num(void) {
     
@@ -31,8 +27,6 @@ int get_groups_num(void) {
 }
 
 struct Group* get_group_by_id(int gid) {
-
-    //return groups[gid];
 
     FILE* fp = fopen("/groups", "r");
     disableInterrupts();
@@ -101,15 +95,6 @@ void parseGroupLine(char* line, struct Group* group) {
 
 struct Group* get_group_by_name(char* groupname) {
     
-    //for (int i = 0; i < groups_num; i++) {
-
-        //if (strcmp(groups[i]->name, groupname) == 0) {
-            //return groups[i];
-        //}
-    //}
-
-    //return NULL;
-
     FILE* fp = fopen("/groups", "r");
     disableInterrupts();
     struct Group* group = kalloc(sizeof(struct Group));
@@ -133,27 +118,11 @@ struct Group* get_group_by_name(char* groupname) {
 
 char* get_groupname(int gid) {
     
-    //return groups[gid]->name;
-
     return get_group_by_id(gid)->name;
 }
 
 int create_group(char* groupname) {
    
-    //if (groups_num == MAX_GROUPS) {
-        //return -1;
-    //}
-    //struct Group* new_group = kalloc(sizeof(struct Group));
-
-    //new_group->id = groups_num;
-    //strcpy(new_group->name, groupname);
-    //new_group->num_members = 0;
-
-    //groups[groups_num] = new_group;
-    //groups_num++;
-
-    //return 0;
-
     FILE* fp = fopen("/groups", "r+");
     char line[200];
     struct Group* groups[MAX_GROUPS];
@@ -227,39 +196,26 @@ int updateGroupsFile(struct Group* group, int delete) {
 
 void writeGroupLine(FILE* fp, struct Group* group) {
     int count = 0;
-
+    int i = 0;
     fprintf(fp, "%s:x:%d:", group->name, group->id);
                 
     while(count != group->num_members) {
-        fprintf(fp, "%s",group->members[count]->name);
-        if (count != group->num_members - 1) {
-            fprintf(fp, ",");
+        if (group->members[i] != NULL) {
+            fprintf(fp, "%s",group->members[i]->name);
+            if (count != group->num_members - 1) {
+                fprintf(fp, ",");
+            }
+            count++;
         }
-        count++;
+        i++;
     }
     fprintf(fp, "\n");
 }
 
 int delete_group(char* name) {
     
-    //struct Group* group = get_group_by_name(name);
-    //if (group == NULL)  {
-        //return -1;
-    //}
-
-    //int i = group->id;
-    //while (groups[i] != NULL) {
-        //groups[i] = groups[i+1];
-        //i++;
-    //}
-    //groups[i] = NULL;
-    //kfree(group);
-    //groups_num--;
-
-    //return 0;
-
     struct Group* group = get_group_by_name(name);
-    if (group == NULL) {
+    if (group == NULL || group->num_members > 0) {
         return -1;
     }
 
@@ -277,7 +233,7 @@ int add_group_member(int gid, int uid) {
     }
 
     //TODO what happens if group is full
-    user->gid = gid; 
+    user->gid[0] = gid; 
     group->members[group->num_members] = user;
     group->num_members++;
 

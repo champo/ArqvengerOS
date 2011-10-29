@@ -12,7 +12,13 @@ void groupdel(char* argv) {
     } else if (get_group_by_name(firstSpace + 1) == NULL) {
         printf("groupdel: group '%s' does not exists.\n", firstSpace);
     } else {
-        delete_group(firstSpace + 1);
+        if(delete_group(firstSpace + 1) == -1) {
+            printf("Couldn't delete group\n");
+            printf("Only empty groups may be deleted\n");
+            printf("Please choose another\n");
+        } else {
+            printf("Group succesfully deleted\n");
+        }
     }
 }
 

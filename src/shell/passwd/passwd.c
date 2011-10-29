@@ -36,7 +36,7 @@ void passwd(char* argv) {
     printf("\n");
 
 
-    //printf("I AM %s uid: %d gid: %d\n",me->name, me->id, me->gid);
+    //printf("I AM %s uid: %d gid: %d\n",me->name, me->id, me->gid[0]);
 
     if (strcmp(old_passwd, me->passwd) != 0) {
         printf("passwd: Authentication failure\n");

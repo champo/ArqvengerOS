@@ -81,10 +81,10 @@ void adduser(char* argv) {
     ioctl(0, TCSETS, (void*) &oldTermios);
     printf("\n");
 
-    uid = create_user(username, passwd);
+    uid = create_user(username, passwd, groupname);
 
     struct Group* group = get_group_by_name(groupname);
-
+    
     add_group_member(group->id, uid);
 }
 

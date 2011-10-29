@@ -7,7 +7,6 @@
 
 #define INVALID_PASSWD  1
 #define PASSWD_CHANGED  0
-#define MAX_USERS       128
 
 static void parseUserLine(char* str, struct User* user, char* def_group);
 static int updateUsersFile(struct User* user, int delete);
@@ -57,7 +56,7 @@ struct User* get_user_by_id(int id) {
         //printf("scanf devuelve %d\n",as);
         parseUserLine(str, user, def_group);
         //printf("uid %d\n", user->id);
-        //printf("gid %d\n", user->gid);
+        //printf("gid %d\n", user->gid[0]);
         //printf("name %s\n", user->name);
         //printf("pass %s\n", user->passwd);
         //printf("group %s\n", def_group);
@@ -98,7 +97,7 @@ void parseUserLine(char* str, struct User* user, char* def_group) {
 
         buf = nextColumn + 1;
 
-        user->gid = atoi(aux);
+        user->gid[0] = atoi(aux);
         //printf("gid %d\n", atoi(aux));
 
         nextColumn = strchr(buf, ':');
@@ -142,7 +141,7 @@ struct User* get_user_by_name(char* name) {
         //printf("scanf devuelve %d\n",as);
         parseUserLine(str, user, def_group);
         //printf("uid %d\n", user->id);
-        //printf("gid %d\n", user->gid);
+        //printf("gid %d\n", user->gid[0]);
         //printf("name %s\n", user->name);
         //printf("pass %s\n", user->passwd);
         //printf("group %s\n", def_group);
@@ -191,7 +190,7 @@ int updateUsersFile(struct User* user, int delete) {
 
         if (strcmp(user->name, aux) == 0) {
             if (!delete) { 
-                fprintf(fp, "%s:x:%d:%d:%s:%s\n", user->name, user->id, user->gid, user->passwd, "users");
+                fprintf(fp, "%s:x:%d:%d:%s:%s\n", user->name, user->id, user->gid[0], user->passwd, get_groupname(user->gid[0]));
                 found = 1;
             }
         } else {
@@ -200,14 +199,14 @@ int updateUsersFile(struct User* user, int delete) {
     }
     
     if (!found && !delete) {
-        fprintf(fp, "%s:x:%d:%d:%s:%s\n", user->name, user->id, user->gid, user->passwd, "users");
+        fprintf(fp, "%s:x:%d:%d:%s:%s\n", user->name, user->id, user->gid[0], user->passwd, get_groupname(user->gid[0]));
     }
 
     fclose(fp);
     return 0;
 }
 
-int create_user(char* name, char* passwd) {
+int create_user(char* name, char* passwd, char* groupname) {
 
     //if (registered_users_num == MAX_USERS) {
         //return -1;
@@ -226,8 +225,9 @@ int create_user(char* name, char* passwd) {
     
     FILE* fp = fopen("/users", "r+");
     char line[200];
-    char group[100];
+    char buf[100];
     struct User* users[MAX_USERS];
+    struct Group* group;
     int ids[MAX_USERS] = {0};
     int i = 0, id;
 
@@ -236,7 +236,7 @@ int create_user(char* name, char* passwd) {
         users[i] = kalloc(sizeof(struct User));
         enableInterrupts();
 
-        parseUserLine(line, users[i], group);
+        parseUserLine(line, users[i], buf);
         ids[users[i]->id] = 1;
         i++;
     }
@@ -255,7 +255,9 @@ int create_user(char* name, char* passwd) {
 
     strcpy(users[i]->name, name);
     strcpy(users[i]->passwd, passwd);
-    users[i]->gid = 1;
+
+    group = get_group_by_name(groupname);
+    users[i]->gid[0] = group->id;
     users[i]->id = id;
  
     updateUsersFile(users[i], 0);
@@ -274,7 +276,7 @@ int delete_user(char* name) {
     //registered_users[user->id] = NULL;
     //registered_users_num--;
 
-    //delete_group_member(user->gid, user->id);
+    //delete_group_member(user->gid[0], user->id);
     //kfree(user);
     //return 0;
     
