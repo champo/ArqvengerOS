@@ -30,6 +30,7 @@ void tty_run(char* unused) {
     tty_write("\033[1;1H\033[2J", 10);
 
     fs_register_ops(INODE_CHARDEV, (struct FileDescriptorOps) {
+            .open = NULL,
             .write = op_write,
             .read = op_read,
             .ioctl = op_ioctl,

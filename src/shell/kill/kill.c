@@ -29,7 +29,6 @@ void manKill(void) {
     setBold(1);
     printf("Usage:\n\tkill");
     setBold(0);
-
-    printf(" pid\n\n");
+    printf(" PID\n");
 }
 

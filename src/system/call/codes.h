@@ -35,5 +35,6 @@
 #define _SYS_READDIR 89
 #define _SYS_GETCWD 183
 #define _SYS_SYMLINK 83
+#define _SYS_MKFIFO 0xFA
 
 #endif

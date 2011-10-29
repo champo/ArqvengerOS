@@ -243,7 +243,7 @@ size_t tty_read(void* buffer, size_t count) {
         return 0;
     }
 
-    if (!caller->active) {
+    while (!caller->active) {
         wait_for_input(caller);
     }
 

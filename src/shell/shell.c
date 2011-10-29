@@ -55,7 +55,8 @@ static void run_command(struct Shell* self, const Command* cmd);
 
 struct User* askForLogin(struct Shell* self);
 
-#define NUM_COMMANDS 28
+#define NUM_COMMANDS 29
+
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -71,10 +72,10 @@ static const Command commands[] = {
     { &roflcopter, "roflcopter", "We need a ROFLcopter.", &manRoflcopter, 0},
     { &command_cd, "cd", "Change the current working directory.", &man_cd, 1},
     { &command_pwd, "pwd", "Print the current working directory.", &man_pwd, 1},
-    { &command_mkdir, "mkdir", "Create a new directory.", NULL, 1},
-    { &command_rmdir, "rmdir", "Remove an empty directory.", NULL, 1},
-    { &command_ls, "ls", "List entries in a directory.", NULL, 1},
-    { &append, "append", "Append content to a file.", man_append, 0},
+    { &command_mkdir, "mkdir", "Create a new directory.", &manMkdir, 0},
+    { &command_rmdir, "rmdir", "Remove an empty directory.", &manRmdir, 0},
+    { &command_ls, "ls", "List entries in a directory.", &manLs, 0},
+    { &append, "append", "Append content to a file.", &man_append, 0},
     { &adduser, "adduser", "Add new user account.", &manAdduser, 0},
     { &users, "users", "Show users loggued.", &manUsers, 0},
     { &userdel, "userdel", "Delete an user account and related files.", &manUserdel, 0},
@@ -84,7 +85,8 @@ static const Command commands[] = {
     { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
     { &groupaddmem, "groupaddmem", "Add a new member to a group.", &manGroupaddmem, 0},
     { &groupdelmem, "groupdelmem", "Delete a member to a group.", &manGroupdelmem, 0},
-    { &command_unlink, "unlink", "Remove an entry from the file system.", NULL, 1},
+    { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
+    { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
 };
 
 static termios shellStatus = { 0, 0 };
@@ -165,7 +167,6 @@ struct User* askForLogin(struct Shell* self) {
 }
 
 void run_command(struct Shell* self, const Command* cmd) {
-    int fg = 1;
 
     if (cmd->internal) {
         cmd->func(self->buffer);

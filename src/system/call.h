@@ -55,4 +55,6 @@ void _getProcessPersona(int pid, int* uid, int* gid);
 
 int _symlink(const char* path, const char* target);
 
+int _mkfifo(const char* path);
+
 #endif

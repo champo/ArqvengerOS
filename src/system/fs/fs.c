@@ -36,6 +36,7 @@ struct fs_Inode* fs_inode_open(size_t inode) {
     }
 
     struct fs_Inode* node = ext2_read_inode(fs, inode);
+    node->extra = NULL;
     if (node == NULL) {
         return NULL;
     }
@@ -90,12 +91,18 @@ void fs_register_ops(int fileType, struct FileDescriptorOps ops) {
 
 struct FileDescriptor fs_fd(struct fs_Inode* inode, int flags) {
     inode->refCount++;
-    return (struct FileDescriptor) {
+    struct FileDescriptor res = (struct FileDescriptor) {
         .inode = inode,
         .offset = 0,
         .flags = flags,
         .ops = &opsTable[INODE_TYPE(inode->data)]
     };
+
+    if (res.ops->open) {
+        res.ops->open(&res);
+    }
+
+    return res;
 }
 
 struct FileDescriptor fs_dup(struct FileDescriptor fd) {
@@ -261,11 +268,27 @@ int remove_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode)
 
 int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
 
+    if (ext2_dir_find(path, name).entryLength != 0) {
+        return EEXIST;
+    }
+
     if (ext2_dir_add(path, name, inode->number) == -1) {
         return EIO;
     }
 
     inode->data->hardLinks++;
     return ext2_write_inode(inode);
+}
+
+int fs_fd_close(struct FileDescriptor* fd) {
+
+    int res = 0;
+    if (fd->ops->close != NULL) {
+        res = fd->ops->close(fd);
+    }
+    fs_inode_close(fd->inode);
+    fd->inode = NULL;
+
+    return res;
 }
 

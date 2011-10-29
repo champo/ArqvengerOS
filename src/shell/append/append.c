@@ -24,7 +24,11 @@ void append(char* argv) {
     int fd = open(cmdEnd, O_APPEND | O_WRONLY | O_CREAT, 0777);
     char c;
     while ((c = getchar()) != '\033') {
-        write(fd, &c, 1);
+
+        if (write(fd, &c, 1) != 1) {
+            printf("\nCant write to the file. Sorry!");
+            break;
+        }
     }
     printf("\n");
 
@@ -36,7 +40,7 @@ void man_append(void) {
     printf("Usage:\n\t append");
     setBold(0);
 
-    printf(" file\n");
+    printf(" FILE\n");
 
-    printf("Write the contents of stdin until the ESC key is pressed.\n");
+    printf("Write the contents of stdin in FILE until the ESC key is pressed.\n");
 }

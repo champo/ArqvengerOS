@@ -2,6 +2,9 @@
 #include "mcurses/mcurses.h"
 #include "library/stdio.h"
 #include "shell/info.h"
+#include "system/call/ioctl/keyboard.h"
+
+static termios shellStatus = { 0, 0 };
 
 /**
  * Command that shows the commands supported by the shell, as well as a brief description.
@@ -15,19 +18,42 @@ void help(char* argv) {
 
     commands = getShellCommands(&numCommands);
 
+    termios inputStatus;
+    ioctl(0, TCGETS, (void*) &inputStatus);
+    ioctl(0, TCSETS, (void*) &shellStatus);
+
+    printf("ProTip: You can use functions keys 1 through 4 to switch between shells.\n");
+
     setBold(1);
     printf("Commands:\n");
     setBold(0);
 
+    size_t usableLines = TOTAL_ROWS - 2;
+
     for (i = 0; i < numCommands; i++) {
+
+        if (i >= usableLines) {
+            printf(" -- Press enter to see more (or q to quit) -- ");
+            int c;
+            while ((c = getchar()) != '\n') {
+                if (c == 'q') {
+                    printf("\n");
+                    ioctl(0, TCSETS, (void*) &inputStatus);
+                    return;
+                }
+            }
+
+            moveCursorInRow(1);
+            clearLine(ERASE_ALL);
+        }
+
         setBold(1);
         printf("\t%s", commands[i].name);
         setBold(0);
         printf(": %s\n", commands[i].desc);
     }
 
-    putchar('\n');
-    printf("You can use functions keys 1 through 4 to switch between shells.\n");
+    ioctl(0, TCSETS, (void*) &inputStatus);
 }
 
 /**

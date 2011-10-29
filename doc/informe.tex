@@ -87,11 +87,15 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
 \section{Procesos}
     Al comenzar el nuevo trabajo práctico, uno de los primeros desafios era el de implementar un sistema multitarea.
      En un principio, se diseñaron estructuras adecuadas para poder contener toda la información que formaba a un proceso,
-      así como los datos necesarios para poder recuperar los estados de un proceso a la hora de ser el proceso ejecutado
+      así como los datos necesarios para poder recuperar los estados de un proceso a la hora de ser ejecutados
       por el procesador. En esta instancia fue aprovechado el diseño de estas estructuras para agregarle ciertas
       funcionalidades a los procesos, como por ejemplo usuarios y grupos.
-     La jerarquía de los procesos fue modelada de forme similar a la de \textit{Linux} y una vez preparados los datos
-      necesarios se utilizó el uso de llamadas como ???? para la creación de estos procesos.
+     La jerarquía de los procesos fue modelada de forma similar a la de \textit{UNIX} y una vez preparados los datos
+      necesarios se utilizó el uso de llamadas como \textit{run()} (función análoga a lo que era \textit{fork()} y
+      \textit{exec()} en un entorno \texit{UNIX}) para la creación de estos procesos.
+
+    \subsection{Estructura de un proceso}
+
     \subsection{Scheduling}
 
     \subsection{Multiples Terminales}
@@ -114,12 +118,12 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
 
     Las unidades minimas de lectura y escritura en nuestra implementación son de a sectores, pudiendo ser de a
     varios a la vez. Es un paso escencial poner los datos correctos en los puertos necesarios previo a los accesos, pero
-    es un aún más interesante la lectura del estado del disco. Esto es necesario para detectar errores en el disco
+    es aún más interesante la lectura del estado del disco. Esto es necesario para detectar errores en el disco
     y para saber si el disco esta listo para recibir o enviar datos. Es posible que haya que esperar a que el disco
     este listo antes de realizar alguna operación. Hay dos maneras de realizar esta espera, se puede esperar a que una IRQ
     indique que el disco esta listo o se puede consultar el estado del disco hasta que este este listo (\textit{polling}).
     Hacer \textit{polling} puede hacer que se pierda tiempo en un sistema multitareas, pero por otro lado una sola
-    consulta de \{polling} es más rápido que esperar a una IRQ e implementar \textit{polling} es mucho más sencillo.
+    consulta de \{polling} es más rápida que esperar a una IRQ e implementar \textit{polling} es mucho más sencillo.
     Por esta última razón fue elegida la técnica de \textit{polling}.
 \newpage
 \section{File System}
@@ -132,7 +136,15 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     que era más seguro seguir este estandar.
     
     Por otro lado, habia que realizar una lógica interna para la representación del \textit{file system}
-    incluyendo nuevas prestaciones en las llamadas a sistema y en nuestra libreria estandar.
+    incluyendo nuevas prestaciones en las llamadas a sistema y en nuestra libreria estandar. Esta parte de la 
+    implementación también es conocida como el \textit{virtual file system} (vfs).
+
+    Una vez terminado el esqueleto que significaba el \textit{file system} se pudo profundizar en el mismo agregando
+    nuevas funcionalidades, particularmente vamos a hacer hincapie en las consecuencias de aperturas y manejo de
+    archivos, directorios, FIFO's, links simbolicos, \textit{current working
+    directory}, permisos del sistema y usuarios y grupos.
+
+    A continuación se presentan secciones detalladas sobre estos puntos.
 
     \subsection{Sistema Ext2}
     El sistema Ext2 provee un estandar de como guardar la información en el disco. Utiliza conceptos como super bloque, 
@@ -149,12 +161,65 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     Hay ciertos detalles interesantes a tener en cuenta sobre la implementación. Sobre el sistema Ext2 se implementaron
     ciertos \textit{buffers} para así disminuir los accesos a disco.
     
-    \subsection{Lógica interna}
-    En una primera instancia nos enrcagamos de adaptar nuevamente nuestras llamadas a sistema y nuestra librería estandar
+    \subsection{Virtual file system}
+    
+    \subsection{Apertura y manejo de archivos}
+    En una primera instancia nos encargamos de adaptar nuestras llamadas a sistema y nuestra librería estandar
     para que puedan desarrollar las nuevas funcionalidades de nuestro sistema operativo. Las llamadas a \textit{read} y
     \textit{write} podían ahora escribir en archivos, así como las llamadas a \textit{open} y \textit{close} se hicieron
     necesarias cuando antes no lo fueron.
-    Por otra parte, fue necesarios modificar nuestros procesos para que soporten el manejo de archivos.
+    Al hacer una llamada a \textit{open()}, esta actualizaba tanto a nivel kernel como a nivel proceso que cierto
+    archivo habia sido abierto. El proceso contaba con una tabla de \textit{file descriptors}. Estos, apuntan al 
+    \textit{inode} siendo manipulado y además cuentan con punteros a función que indican como deben comportarse lecturas
+    y escrituras (entre otras cosas) dependiendo el tipo de archivo (podría bien ser un archivo regular o un link 
+    simbolico por ejemplo). Esto permitió que las implementaciones a \textit{read()}, \textit{write()} y \textit{close()}
+    sean bastante sencillas. 
+    
+    Estas llamadas a sistema fueron siendo extendidas a medida que la funcionalidad del sistema operativo crecía. Como
+    será visto en las proximas secciones, se escribieron funciones adecuadas para la manipulación de cada tipo de archivo.
+    
+    Para realizar todas estas llamadas a sistema se explotó en su máximo potencial las prestaciones del vfs.
+    
+    Por último, es interesante destacar que dado que el usuario se maneja con cadenas de texto que representan 
+    \textit{inodes}, fueron armadas funciones que permiten resolver estas cadenas, dividiendo directorios y archivos,
+    proveyendo finalmente el \textit{inode} deseado. 
+
+    \subsection{Directorios}
+
+    \subsection{FIFO's}
+
+    \subsection{Links simbolicos}
+    
+    La implementación de links simbolicos implicaba la creación de nodos que inclusive en el sistema Ext2 eran marcados
+    como links simbolicos. El contenido de los mismos simplemente indicaba el \textit{path} del archivo al que este
+    hacia referencia.
+    Luego, a la hora de leer un archivo que sea un link simbolico (o al tratar de resolver un \textit{path} cuyo alguno
+    de sus directorios era un link simbolico) bastaba con reemplazar el este archivo con el link al que realmente
+    apuntaba.
+
+    En esta implementación (al igual que en el resto) tratamos de ser lo más fieles al entorno \textit{UNIX} como 
+    era posible.
+
+    \subsection{Current working directory}
+
+    \subsection{Usuarios y grupos}
+    
+    \subsection{Permisos del sistema}
+
+    Una vez implementados usuarios y grupos era fácil saber el gid y el uid de un proceso. Dada la forma en que estaba
+    implementado nuestro \textit{file system}, Ext2 contaba con lugares especificos para guardar tanto los permisos y el
+    uid y gid del archivo. Además, las prestaciones del vfs hacían que estos datos también fuesen fáciles de obtener.
+
+    Una vez conseguidos estos datos, era trivial evaluar en que casos se permitía abrir un archivo, teniendo en cuenta
+    que tanto el archivo tenga los permisos adecuados así como el \textit{path} que lo contiene.
+
+\newpage
+\section{Comandos provistos}
+    Para poder probar y mostrar las nuevas funcionalidades del trabajo hubo que agregar ciertos comandos y
+    funcionalidades ejecutables desde la consola. A continuación se presentan algunos casos interesantes.
+
+\newpage
+\section{Problemas encontrados}
 
 \newpage     
 \section{Referencias}

@@ -10,6 +10,7 @@
 #include "shell/getCPUSpeed/getCPUSpeed.h"
 #include "shell/fortune/fortune.h"
 #include "shell/date/date.h"
+#include "shell/mkfifo/mkfifo.h"
 #include "shell/kill/kill.h"
 #include "shell/top/top.h"
 #include "shell/cat/cat.h"

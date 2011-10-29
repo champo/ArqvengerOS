@@ -43,6 +43,7 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
 
     ata_init(info);
     fs_load();
+    fifo_init();
     scheduler_init();
 
     create_user("root", "root");

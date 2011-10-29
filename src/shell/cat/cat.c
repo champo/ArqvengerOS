@@ -14,7 +14,7 @@ void cat(char* argv) {
     }
 
     cmdEnd++;
-    int fd = open(cmdEnd, O_RDWR);
+    int fd = open(cmdEnd, O_RDONLY);
     if (fd < 0) {
         printf("Cant open the file. Sorry dude.\n");
         return;
@@ -32,6 +32,6 @@ void man_cat(void) {
     printf("Usage:\n\t cat");
     setBold(0);
 
-    printf(" file\n");
+    printf(" FILE\n");
 }
 
