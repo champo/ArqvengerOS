@@ -546,6 +546,10 @@ int can_read(struct fs_Inode* inode) {
 
     gid = process->gid;
     uid = process->uid;
+    
+    if (uid == 0) {
+        return 0;
+    }
 
     file_uid = inode->data->uid;
     file_gid = inode->data->gid;
@@ -568,6 +572,10 @@ int can_write(struct fs_Inode* inode) {
 
     gid = process->gid;
     uid = process->uid;
+
+    if (uid == 0) {
+        return 0;
+    }    
 
     file_uid = inode->data->uid;
     file_gid = inode->data->gid;
@@ -740,3 +748,16 @@ int _mkfifo(const char* path) {
     return res;
 }
 
+int _chmod(int mode, const char* file) {
+    
+    struct fs_Inode* inode = resolve_path(file);
+    if (inode == NULL) {
+        return -1;
+    }
+
+    if (can_write(inode) != 0) {
+        return -1;
+    }
+
+    return fs_set_permission(inode, mode);
+}

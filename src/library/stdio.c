@@ -546,3 +546,6 @@ int mkfifo(const char* path) {
     return system_call(_SYS_MKFIFO, (int) path, 0, 0);
 }
 
+int chmod(int mode, char* file) {
+    return system_call(_SYS_CHMOD, mode, (int)file, 0);
+}

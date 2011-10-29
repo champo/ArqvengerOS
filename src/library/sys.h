@@ -26,5 +26,4 @@ int pinfo(struct ProcessInfo* data, size_t size);
 
 void setProcessPersona(int pid, int uid, int gid);
 
-
 #endif

@@ -20,6 +20,7 @@
 #define _SYS_GETPPID 173
 #define _SYS_WAIT 1072
 #define _SYS_KILL 129
+#define _SYS_CHMOD 15
 
 #define _SYS_SLEEP 162
 #define _SYS_NICE 62

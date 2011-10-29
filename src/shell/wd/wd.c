@@ -119,6 +119,11 @@ void command_ls(char* argv) {
     } else {
         fd = open(cmdEnd + 1, O_RDONLY);
     }
+    
+    if (fd == -1) {
+        printf("The directory specified could not be opened\n");
+        return;
+    }
 
     struct fs_DirectoryEntry entry;
     while (readdir(fd, &entry, hidden) == 1) {
