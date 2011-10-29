@@ -24,7 +24,7 @@ void man_cd(void) {
     printf("Usage:\n\t cd");
     setBold(0);
 
-    printf(" directory\n");
+    printf(" DIRECTORY.\n");
 }
 
 void command_pwd(char* argv) {
@@ -38,7 +38,7 @@ void command_pwd(char* argv) {
 
 void man_pwd(void) {
     setBold(1);
-    printf("Usage:\n\t pwd");
+    printf("Usage:\n\t pwd\n");
     setBold(0);
 }
 
@@ -64,6 +64,13 @@ void command_mkdir(char* argv) {
     }
 }
 
+void manMkdir(void) {
+    setBold(1);
+    printf("Usage:\n\tmkdir ");
+    setBold(0);
+    printf("DIRECTORY.\n");
+}
+
 void command_rmdir(char* argv) {
 
     char* cmdEnd = strchr(argv, ' ');
@@ -85,6 +92,13 @@ void command_rmdir(char* argv) {
             printf("Cant remove '%s': The directory is not empty.\n", cmdEnd);
             break;
     }
+}
+
+void manRmdir(void) {
+    setBold(1);
+    printf("Usage:\n\trmdir ");
+    setBold(0);
+    printf("DIRECTORY.\n");
 }
 
 void command_ls(char* argv) {
@@ -114,11 +128,11 @@ void command_ls(char* argv) {
 
 void command_ln(char* argv) {
     char* target = strchr(argv, ' ');
-    
+
     if (target == NULL) {
-        printf("Arguments invalid.\n");        
+        printf("Arguments invalid.\n");
     }
-    
+
     char* link = strchr(target + 1, ' ');
 
     if (link == NULL) {
@@ -126,15 +140,15 @@ void command_ln(char* argv) {
     }
 
     int i;
-    
+
     for (i = 1; target[i] != ' '; i++){
 
     }
-    
+
     target[i] = '\0';
-    
+
     i = symlink(link + 1, target + 1);
-    
+
     if (i != 0) {
         printf("Operation unsuccesful.\n");
     }
@@ -147,5 +161,14 @@ void man_ln(void) {
 
     printf(" target link_name\n");
 
+}
+
+void manLs(void) {
+    setBold(1);
+    printf("Usage:\n\tls ");
+    setBold(0);
+    printf("[-a] [DIRECTORY].\n");
+    printf("The -a options indicates that hidden files should be shown.\n");
+    printf("The default DIRECTORY is the cwd.\n");
 }
 

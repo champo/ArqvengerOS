@@ -69,15 +69,15 @@ static const Command commands[] = {
     { &roflcopter, "roflcopter", "We need a ROFLcopter.", &manRoflcopter, 0},
     { &command_cd, "cd", "Change the current working directory.", &man_cd, 1},
     { &command_pwd, "pwd", "Print the current working directory.", &man_pwd, 1},
-    { &command_mkdir, "mkdir", "Create a new directory.", NULL, 0},
-    { &command_rmdir, "rmdir", "Remove an empty directory.", NULL, 0},
-    { &command_ls, "ls", "List entries in a directory.", NULL, 0},
-    { &append, "append", "Append content to a file.", man_append, 0},
+    { &command_mkdir, "mkdir", "Create a new directory.", &manMkdir, 0},
+    { &command_rmdir, "rmdir", "Remove an empty directory.", &manRmdir, 0},
+    { &command_ls, "ls", "List entries in a directory.", &manLs, 0},
+    { &append, "append", "Append content to a file.", &man_append, 0},
     { &adduser, "adduser", "Add new user account.", &manAdduser, 0},
     { &users, "users", "Show users loggued.", &manUsers, 0},
-    { &command_unlink, "unlink", "Remove an entry from the file system.", NULL, 0},
-    { &command_mkfifo, "mkfifo", "Create a named pipe.", NULL, 0},
     { &command_ln, "ln", "Create a symbolic link.", &man_ln, 0},
+    { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
+    { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
 };
 
 static termios shellStatus = { 0, 0 };
