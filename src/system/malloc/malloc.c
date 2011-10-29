@@ -53,8 +53,7 @@
 
 #include "malloc.h"
 #include "library/string.h" /* for memset in calloc and memcpy in realloc */
-
-#define assert(x) if (!(x)) { kprintf("Failed assertion at %s:%u", __func__, __LINE__); while(1); }
+#include "debug.h"
 
 /**
  * If the requested size is smaller than this, and a perfect fit isn't found,

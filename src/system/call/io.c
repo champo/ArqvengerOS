@@ -10,6 +10,7 @@
 #include "library/string.h"
 #include "constants.h"
 #include "library/stdio.h"
+#include "debug.h"
 
 static struct fs_Inode* resolve_path(const char* path);
 
@@ -147,7 +148,7 @@ int _open(const char* path, int flags, int mode) {
     }
 
     //Pasamos los permisos
-    
+
     if (INODE_TYPE(file->data) == INODE_LINK) {
         fd = open_sym_link(file, flags, mode);
         fs_inode_close(file);
@@ -352,25 +353,25 @@ int _readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
 }
 
 int _chdir(const char* path) {
-    
+
     struct Process* process = scheduler_current();
-    
+
     char* nwd = join_paths(process->cwd, path);
 
     struct fs_Inode* destination = resolve_path(nwd);
-    
+
     if (destination == NULL) {
         kfree(nwd);
         return -1;
     }
-    
+
     if (INODE_TYPE(destination->data) != INODE_DIR) {
-        kfree(nwd); 
+        kfree(nwd);
         fs_inode_close(destination);
         return -1;
     }
 
-    
+
     kfree(process->cwd);
     process->cwd = nwd;
 
@@ -392,7 +393,7 @@ char* join_paths(const char* cwd, const char* path) {
 
     size_t cwdLen = strlen(cwd);
 
-    nwd = kalloc(sizeof(char) * (cwdLen + pathLen + 1));
+    nwd = kalloc(sizeof(char) * (cwdLen + pathLen + 2));
     strcpy(nwd, cwd);
 
     int index = cwdLen;
@@ -469,7 +470,7 @@ struct fs_Inode* resolve_path(const char* path) {
         }
         index++;
         entry[i] = '\0';
-        
+
 
         struct fs_DirectoryEntry nextdir = fs_findentry(curdir, entry);
         fs_inode_close(curdir);
@@ -539,7 +540,7 @@ char* path_file(const char* path) {
         result[1] = '\0';
         return result;
     }
-    
+
     size_t len = strlen(path);
 
     // If we have a trailing slash, we ignore it
@@ -559,17 +560,17 @@ char* path_file(const char* path) {
 }
 
 struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink) {
-    
+
 
     int size = fs_get_inode_size(symlink);
     char* buff = kalloc(size + 1);
-   
+
     buff = fs_symlink_read(symlink, size, buff);
-    
+
     if (buff == NULL) {
         return NULL;
     }
-    
+
     struct fs_Inode* ans = resolve_path(buff);
     kfree(buff);
     return ans;
@@ -583,14 +584,14 @@ int open_sym_link(struct fs_Inode* symlink, int flags, int mode) {
     buff = fs_symlink_read(symlink, size, buff);
     if (buff == NULL) {
         return -1;
-    } 
+    }
     int ans = _open(buff, flags, mode);
     kfree(buff);
     return ans;
 }
 
 int _symlink(const char* path, const char* target) {
-    
+
     char* base = path_directory(target);
     char* filename = path_file(target);
 
@@ -601,7 +602,7 @@ int _symlink(const char* path, const char* target) {
         return -1;
     }
     struct fs_DirectoryEntry fileEntry = fs_findentry(directory, filename);
-   
+
     kfree(base);
     kfree(filename);
     fs_inode_close(directory);
@@ -609,14 +610,14 @@ int _symlink(const char* path, const char* target) {
     if (fileEntry.inode == 0) {
         return -1;
     }
-    
+
     char* fulltarget = join_paths(scheduler_current()->cwd, target);
 
     base = path_directory(path);
     filename = path_file(path);
 
     directory = resolve_path(base);
-    
+
     if (directory == NULL) {
         kfree(base);
         kfree(filename);
