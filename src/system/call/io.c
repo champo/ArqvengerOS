@@ -24,6 +24,10 @@ static char* path_file(const char* path);
 
 static char* join_paths(const char* cwd, const char* path);
 
+static int can_read(struct fs_Inode* inode);
+
+static int can_write(struct fs_Inode* inode);
+
 size_t _read(int fd, void* buf, size_t length) {
 
     struct Process* process = scheduler_current();
@@ -130,18 +134,14 @@ int _open(const char* path, int flags, int mode) {
     unsigned short perms = fs_permission(file);
 
     if ((flags & 3) == O_RDONLY || (flags & 3) == O_RDWR) {
-       if (!(perms & S_IROTH) &&
-            !(perms & S_IRGRP && file_gid == gid) &&
-            !(perms & S_IRUSR && file_uid == uid)) {
+        if  (can_read(file) != 0) {
             fs_inode_close(file);
             return -1;
         }
     }
 
     if ((flags & 3) == O_WRONLY || (flags & 3) == O_RDWR) {
-       if(!(perms & S_IWOTH) &&
-          !(perms & S_IWGRP && file_gid == gid) &&
-          !(perms & S_IWUSR && file_uid == uid)) {
+        if (can_write(file) != 0) {
             fs_inode_close(file);
             return -1;
         }
@@ -292,7 +292,24 @@ int _rmdir(const char* path) {
 
         return -1;
     }
+    
+    struct fs_DirectoryEntry nextdir = fs_findentry(parent, filename);
+    
+    if (nextdir.inode == 0) {
+        fs_inode_close(parent);
+        return -1;
+    }
 
+    struct fs_Inode* curdir = fs_inode_open(nextdir.inode);
+
+    if (can_write(curdir) != 0) {
+        fs_inode_close(parent);
+        fs_inode_close(curdir);
+        return -1;
+    }
+
+    fs_inode_close(curdir);
+    
     int res = fs_rmdir(parent, filename);
 
     kfree(base);
@@ -315,6 +332,24 @@ int _unlink(const char* path) {
         return -1;
     }
 
+    struct fs_DirectoryEntry nextdir = fs_findentry(parent, filename);
+    
+    if (nextdir.inode == 0) {
+        fs_inode_close(parent);
+        return -1;
+    }
+
+
+    struct fs_Inode* file = fs_inode_open(nextdir.inode);
+
+    if (can_write(file) != 0) {
+        fs_inode_close(parent);
+        fs_inode_close(file);
+        return -1;
+    }
+
+    fs_inode_close(file);
+ 
     int res = fs_unlink(parent, filename);
 
     kfree(base);
@@ -452,13 +487,6 @@ struct fs_Inode* resolve_path(const char* path) {
     char entry[ENTRY_NAME_MAX_LEN];
     struct fs_Inode* curdir;
 
-    int gid, uid, file_gid, file_uid;
-
-    struct Process* process = scheduler_current();
-
-    gid = process->gid;
-    uid = process->uid;
-
     if (path[index] == '/') {
         curdir = fs_root();
         index++;
@@ -469,14 +497,7 @@ struct fs_Inode* resolve_path(const char* path) {
         }
     }
 
-    file_uid = curdir->data->uid;
-    file_gid = curdir->data->gid;
- 
-    unsigned short perms = fs_permission(curdir);
-
-    if (!(perms & S_IROTH) &&
-        !(perms & S_IRGRP && file_gid == gid) &&
-        !(perms & S_IRUSR && file_uid == uid)) {
+    if (can_read(curdir) != 0) {
         fs_inode_close(curdir);
         return NULL;
     }
@@ -499,15 +520,8 @@ struct fs_Inode* resolve_path(const char* path) {
         }
 
         curdir = fs_inode_open(nextdir.inode);
-
-        file_uid = curdir->data->uid;
-        file_gid = curdir->data->gid;
-    
-        perms = fs_permission(curdir);
-
-        if (!(perms & S_IROTH) &&
-            !(perms & S_IRGRP && file_gid == gid) &&
-            !(perms & S_IRUSR && file_uid == uid)) {
+        
+        if (can_read(curdir) != 0) {
             fs_inode_close(curdir);
             return NULL;
         }
@@ -525,6 +539,49 @@ struct fs_Inode* resolve_path(const char* path) {
     return curdir;
 }
 
+int can_read(struct fs_Inode* inode) {
+    int gid, uid, file_gid, file_uid;
+
+    struct Process* process = scheduler_current();
+
+    gid = process->gid;
+    uid = process->uid;
+
+    file_uid = inode->data->uid;
+    file_gid = inode->data->gid;
+ 
+    unsigned short perms = fs_permission(inode);
+
+    if (!(perms & S_IROTH) &&
+        !(perms & S_IRGRP && file_gid == gid) &&
+        !(perms & S_IRUSR && file_uid == uid)) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int can_write(struct fs_Inode* inode) {
+    int gid, uid, file_gid, file_uid;
+
+    struct Process* process = scheduler_current();
+
+    gid = process->gid;
+    uid = process->uid;
+
+    file_uid = inode->data->uid;
+    file_gid = inode->data->gid;
+ 
+    unsigned short perms = fs_permission(inode);
+
+    if (!(perms & S_IWOTH) &&
+        !(perms & S_IWGRP && file_gid == gid) &&
+        !(perms & S_IWUSR && file_uid == uid)) {
+        return -1;
+    }
+
+    return 0;
+}
 char* path_directory(const char* path) {
 
     if (strcmp(path, "/") == 0) {
