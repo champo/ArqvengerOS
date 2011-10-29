@@ -27,3 +27,11 @@ void command_unlink(char* argv) {
     }
 }
 
+void manUnlink(void) {
+    setBold(1);
+    printf("Usage:\n\tunlink ");
+    setBold(0);
+    printf("FILE\n");
+
+
+}

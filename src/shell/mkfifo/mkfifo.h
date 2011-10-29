@@ -3,4 +3,6 @@
 
 void command_mkfifo(char* argv);
 
+void manFifo(void);
+
 #endif

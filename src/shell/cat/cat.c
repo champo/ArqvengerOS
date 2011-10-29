@@ -32,6 +32,6 @@ void man_cat(void) {
     printf("Usage:\n\t cat");
     setBold(0);
 
-    printf(" file\n");
+    printf(" FILE\n");
 }
 

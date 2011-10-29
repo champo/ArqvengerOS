@@ -27,3 +27,10 @@ void command_mkfifo(char* argv) {
     }
 }
 
+void manFifo(void) {
+    setBold(1);
+    printf("Usage:\n\tmkfifo ");
+    setBold(0);
+    printf("NAME\n");
+}
+

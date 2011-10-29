@@ -79,7 +79,7 @@ void manMan(void) {
     setBold(0);
 
     printf(" commandname\n\n");
-
+    
     setBold(1);
     printf("Also see:\n\thelp");
     setBold(0);

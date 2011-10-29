@@ -40,7 +40,7 @@ void man_append(void) {
     printf("Usage:\n\t append");
     setBold(0);
 
-    printf(" file\n");
+    printf(" FILE\n");
 
-    printf("Write the contents of stdin until the ESC key is pressed.\n");
+    printf("Write the contents of stdin in FILE until the ESC key is pressed.\n");
 }
