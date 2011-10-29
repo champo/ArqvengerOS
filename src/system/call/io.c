@@ -455,7 +455,7 @@ struct fs_Inode* resolve_path(const char* path) {
         !(perms & S_IRGRP && file_gid == gid) &&
         !(perms & S_IRUSR && file_uid == uid)) {
         fs_inode_close(curdir);
-        return -1;
+        return NULL;
     }
 
     while (index < len) {
@@ -486,7 +486,7 @@ struct fs_Inode* resolve_path(const char* path) {
         !(perms & S_IRGRP && file_gid == gid) &&
         !(perms & S_IRUSR && file_uid == uid)) {
         fs_inode_close(curdir);
-        return -1;
+        return NULL;
     }
 
     if (INODE_TYPE(curdir->data) == INODE_LINK) {
