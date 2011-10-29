@@ -166,7 +166,7 @@ int ext2_dir_remove(struct fs_Inode* directory, const char* name) {
 
     while (entry.entryLength != 0) {
 
-        if (strncmp(entry.name, name, entry.nameLength) == 0) {
+        if (strcmp(entry.name, name) == 0) {
 
             if ((offset % fs->blockSize) == 0) {
 
