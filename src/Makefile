@@ -1,5 +1,5 @@
 ifndef SCHEDULER
-SCHEDULER=scheduler
+SCHEDULER=priorityScheduler
 endif
 
 SRCDIR=../src
