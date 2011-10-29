@@ -34,7 +34,7 @@ struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Proc
     }
 
     processTable[i] = p;
-    createProcess(p, entryPoint, parent, args, terminal);
+    createProcess(p, entryPoint, parent, args, terminal, kernel);
 
     p->active = active;
     if (parent && active) {

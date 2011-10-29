@@ -374,6 +374,7 @@ int _chdir(const char* path) {
 
     kfree(process->cwd);
     process->cwd = nwd;
+    fs_inode_close(destination);
 
     return 0;
 }

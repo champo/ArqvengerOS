@@ -6,6 +6,7 @@
 #include "system/call.h"
 #include "library/sys.h"
 #include "system/fs/fs.h"
+#include "debug.h"
 
 static int pid = 0;
 
@@ -18,7 +19,7 @@ inline static void push(int** esp, int val) {
     **esp = val;
 }
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal) {
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal, int kernel) {
 
     process->pid = ++pid;
     process->terminal = terminal;
@@ -84,6 +85,18 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->mm.pagesInStack = 256;
     process->mm.stackStart = allocPages(process->mm.pagesInStack);
 
+    if (kernel) {
+        process->mm.pagesInHeap = 0;
+        process->mm.heap = NULL;
+        process->mm.mallocContext = NULL;
+    } else {
+        process->mm.pagesInHeap = 256;
+        process->mm.heap = allocPages(process->mm.pagesInHeap);
+        process->mm.mallocContext = mm_create_context(process->mm.heap, process->mm.pagesInHeap * PAGE_SIZE);
+
+        mem_check();
+    }
+
     if (process->mm.stackStart == NULL) {
         panic();
     }
@@ -115,6 +128,17 @@ void destroyProcess(struct Process* process) {
     if (process->mm.stackStart) {
         freePages(process->mm.stackStart, process->mm.pagesInStack);
         process->mm.stackStart = NULL;
+
+        if (process->mm.heap) {
+            mm_set_process_context();
+            mem_check();
+            mm_set_kernel_context();
+            mem_check();
+
+            freePages(process->mm.heap, process->mm.pagesInHeap);
+            process->mm.heap = NULL;
+            process->mm.mallocContext = NULL;
+        }
     }
 }
 

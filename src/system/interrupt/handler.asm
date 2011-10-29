@@ -1,5 +1,5 @@
-EXTERN  int08, int09, interruptDispatcher, writeScreen
-GLOBAL _interruptEnd, _l
+EXTERN  int08, int09, interruptDispatcher, mm_set_kernel_context, mm_set_process_context
+GLOBAL _interruptEnd
 
 ; Defines a macro that takes as an argument the interrupt number.
 ; Calls that interrupt.
@@ -15,7 +15,11 @@ GLOBAL _interruptEnd, _l
     mov gs, ax
     mov ss, ax
 
+    call mm_set_kernel_context
+
     call %1
+
+    call mm_set_process_context
     
     mov ax, 0x10
     mov ds, ax 
@@ -34,6 +38,9 @@ GLOBAL _interruptEnd, _l
 %endmacro
 
 _interruptEnd:
+
+    call mm_set_process_context
+
     mov ax, 0x10
     mov ds, ax
     mov es, ax
@@ -42,8 +49,6 @@ _interruptEnd:
     mov ss, ax
 
     iret
-_l:
-    jmp _l
 
 
 ; Defines a macro that takes as an argument the interrupt number.
