@@ -199,3 +199,20 @@ void process_table_reset_cycles(void) {
     }
 }
 
+struct Process* process_table_entry(size_t number) {
+
+    struct Process* c;
+    for (size_t i = 0, entry = 0; i < PTABLE_SIZE; i++) {
+
+        c = processTable[i];
+        if (c != NULL) {
+            if (number == entry) {
+                return c;
+            }
+            entry++;
+        }
+    }
+
+    return NULL;
+}
+

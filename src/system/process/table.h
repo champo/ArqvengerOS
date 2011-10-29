@@ -18,4 +18,7 @@ void process_table_unblock(struct Process* process);
 void process_table_kill(struct Process* process);
 
 void process_table_reset_cycles(void);
+
+struct Process* process_table_entry(size_t number);
+
 #endif
