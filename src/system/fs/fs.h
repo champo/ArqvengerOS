@@ -26,6 +26,10 @@ int fs_unlink(struct fs_Inode* path, const char* name);
 
 int fs_symlink(struct fs_Inode* path, const char* entry, const char* to);
 
+char* fs_symlink_read(struct fs_Inode* symlink, int size, char* buff);
+
+int fs_get_inode_size(struct fs_Inode* inode);
+
 int fs_rename(struct fs_Inode* from, const char* original, struct fs_Inode* to, const char* new);
 
 int fs_permission(struct fs_Inode* inode);
