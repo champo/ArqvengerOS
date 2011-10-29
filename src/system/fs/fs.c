@@ -170,13 +170,17 @@ int fs_unlink(struct fs_Inode* path, const char* name) {
         return ENOENT;
     }
 
-    struct fs_Inode* dir = fs_inode_open(entry.inode);
-    if (dir == NULL) {
+    struct fs_Inode* inode = fs_inode_open(entry.inode);
+    if (inode == NULL) {
         return EIO;
     }
+    if (INODE_TYPE(inode->data) == INODE_DIR) {
+        fs_inode_close(inode);
+        return EISDIR;
+    }
 
-    int res = remove_link(path, name, dir);
-    fs_inode_close(dir);
+    int res = remove_link(path, name, inode);
+    fs_inode_close(inode);
 
     return res;
 }
