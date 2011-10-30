@@ -584,7 +584,9 @@ FILE* fopen(const char* filename, const char* mode) {
 }
 
 int fclose(FILE* stream) {
-    return close(stream->fd);
+    int fd = stream->fd;
+    free(stream);
+    return close(fd);
 }
 
 

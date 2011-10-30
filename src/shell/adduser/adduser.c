@@ -83,9 +83,24 @@ void adduser(char* argv) {
 
     uid = create_user(username, passwd, groupname);
 
+    if (uid == -1) {
+        printf("adduser: unable to create new user\n");
+        printf("adduser: out of space\n");
+        printf("adduser: try deleting another user and trying again\n");
+        return;
+    }
+
     struct Group* group = get_group_by_name(groupname);
     
-    add_group_member(group->id, uid);
+    if (add_group_member(group->id, uid) == -1) {
+        printf("adduser: could not add user to the group\n");
+        printf("adduser: it is very likely that the maximum capacity has been reached\n");
+        printf("adduser: try deleting other users to make room\n");
+        delete_user(username);
+        return;
+    }
+    
+    printf("Successfully created user account.\n");
 }
 
 

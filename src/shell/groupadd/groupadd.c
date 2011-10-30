@@ -7,12 +7,19 @@
 
 void groupadd(char* argv) {
     char* firstSpace = strchr(argv, ' ');
-    if (firstSpace == NULL || strchr(firstSpace + 1, ' ') != NULL) {
+    if (firstSpace == NULL || strchr(firstSpace + 1, ' ') != NULL || strcmp(firstSpace + 1, "") == 0) {
         printf("Usage: groupadd GROUP\n"); 
         return;
     }
+    
+    if (create_group(firstSpace + 1) == -1) {
+        printf("groupadd: could not create group\n");
+        printf("groupadd: it seems as if maximum amount of groups have reached\n");
+        printf("groupadd: try deleting some groups to make some room\n");
+        return;
+    }
 
-    create_group(firstSpace + 1);
+    printf("Successfully created group.\n");
 }
 
 void manGroupadd(void) {

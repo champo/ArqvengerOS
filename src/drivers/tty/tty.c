@@ -56,7 +56,7 @@ void tty_run(char* unused) {
     FILE* fp;
     if ((fd = open("/users", O_RDONLY)) != -1) {
         fp = fopen("/users", "w");
-        fprintf(fp, "root:x:0:4:root:root\n");
+        fprintf(fp, "root:x:0:0:root:root\n");
         fprintf(fp, "acrespo:x:5:1:alv:users\n");
         
         fclose(fp);

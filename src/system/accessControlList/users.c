@@ -26,6 +26,7 @@ int get_users_num(void) {
             users++;
         }
     }
+
     fclose(fp);
     return users;
 }
@@ -33,16 +34,14 @@ int get_users_num(void) {
 struct User* get_user_by_id(int id) {
 
     FILE* fp = fopen("/users", "r");
-    disableInterrupts();
-    struct User* user = kalloc(sizeof(struct User));
-    enableInterrupts();
-
+    struct User* user = malloc(sizeof(struct User));
     char str[200];
     char def_group[100];
+
     do {
         if (fscanf(fp, "%s\n", str) == 0) {
             fclose(fp);
-            //kfree(user);
+            free(user);
             return NULL;
         }
         
@@ -97,16 +96,14 @@ void parseUserLine(char* str, struct User* user, char* def_group) {
 struct User* get_user_by_name(char* name) {
 
     FILE* fp = fopen("/users", "r");
-    disableInterrupts();
-    struct User* user = kalloc(sizeof(struct User));
-    enableInterrupts();
+    struct User* user = malloc(sizeof(struct User));
 
     char str[200];
     char def_group[100];
     do {
         if (fscanf(fp, "%s\n", str) == 0) {
             fclose(fp);
-            //kfree(user);
+            free(user);
             return NULL;
         }
 
@@ -157,7 +154,7 @@ int updateUsersFile(struct User* user, int delete) {
 
         if (strcmp(user->name, aux) == 0) {
             if (!delete) { 
-                fprintf(fp, "%s:x:%d:%d:%s:%s\n", user->name, user->id, user->gid[0], user->passwd, get_groupname(user->gid[0]));
+                writeUserLine(fp, user);
                 found = 1;
             }
         } else {
@@ -166,11 +163,17 @@ int updateUsersFile(struct User* user, int delete) {
     }
     
     if (!found && !delete) {
-        fprintf(fp, "%s:x:%d:%d:%s:%s\n", user->name, user->id, user->gid[0], user->passwd, get_groupname(user->gid[0]));
+        writeUserLine(fp, user);
     }
 
     fclose(fp);
     return 0;
+}
+
+void writeUserLine(FILE* fp, struct User* user) {
+
+    fprintf(fp, "%s:x:%d:%d:", user->name, user->id, user->gid[0]);
+    fprintf(fp, "%s:%s\n", user->passwd, get_groupname(user->gid[0]));
 }
 
 int create_user(char* name, char* passwd, char* groupname) {
@@ -183,20 +186,25 @@ int create_user(char* name, char* passwd, char* groupname) {
     int ids[MAX_USERS] = {0};
     int i = 0, id;
 
-    while(fscanf(fp, "%s\n", line) != 0) {
-        disableInterrupts();
-        users[i] = kalloc(sizeof(struct User));
-        enableInterrupts();
+    while(fscanf(fp, "%s\n", line) != 0 && i < MAX_USERS) {
+        users[i] = malloc(sizeof(struct User));
 
         parseUserLine(line, users[i], buf);
         ids[users[i]->id] = 1;
         i++;
-    }
-    
-    disableInterrupts();
-    users[i] = kalloc(sizeof(struct User));
-    enableInterrupts();
+   }
 
+    if (i >= MAX_USERS) {
+        
+        for (int j = 0; j < i; j++) {
+            free(users[j]);        
+        }
+
+        return -1;
+    }
+
+    users[i] = malloc(sizeof(struct User));
+    i++;
 
     for (int j = 0; j < MAX_USERS; j++) {
         if (ids[j] != 1) {
@@ -213,6 +221,10 @@ int create_user(char* name, char* passwd, char* groupname) {
     users[i]->id = id;
  
     updateUsersFile(users[i], 0);
+    
+    for (int j = 0; j < i; j++) {
+        free(users[j]);        
+    }
 
     return id;
 }
@@ -225,7 +237,8 @@ int delete_user(char* name) {
     }
 
     updateUsersFile(user, 1);
-
+    
+    free(user);
     return 0;
 }
 

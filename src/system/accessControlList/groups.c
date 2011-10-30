@@ -1,7 +1,7 @@
 #include "system/accessControlList/groups.h"
 #include "system/accessControlList/users.h"
 #include "system/common.h"
-#include "system/mm.h"
+#include "system/malloc/malloc.h"
 #include "library/string.h"
 #include "library/stdio.h"
 #include "library/stdlib.h"
@@ -9,6 +9,7 @@
 
 static void parseGroupLine(char* line,struct Group* group);
 static int updateGroupsFile(struct Group* group, int delete);
+static void writeGroupLine(FILE* fp, struct Group* group);
 
 int get_groups_num(void) {
     
@@ -21,6 +22,7 @@ int get_groups_num(void) {
             groups++;
         }
     }
+
     fclose(fp);
     return groups;
 
@@ -29,18 +31,16 @@ int get_groups_num(void) {
 struct Group* get_group_by_id(int gid) {
 
     FILE* fp = fopen("/groups", "r");
-    disableInterrupts();
-    struct Group* group = kalloc(sizeof(struct Group));
-    enableInterrupts();
-
+    struct Group* group = malloc(sizeof(struct Group));
     char line[200];
 
     do {
         if (fscanf(fp, "%s\n", line) == 0) {
             fclose(fp);
-            //kfree(group);
+            free(group);
             return NULL;
         }
+
         parseGroupLine(line, group);
 
     } while(group->id != gid);
@@ -96,18 +96,17 @@ void parseGroupLine(char* line, struct Group* group) {
 struct Group* get_group_by_name(char* groupname) {
     
     FILE* fp = fopen("/groups", "r");
-    disableInterrupts();
-    struct Group* group = kalloc(sizeof(struct Group));
-    enableInterrupts();
+    struct Group* group = malloc(sizeof(struct Group));
 
     char line[200];
 
     do {
         if (fscanf(fp, "%s\n", line) == 0) {
             fclose(fp);
-            //kfree(group);
+            free(group);
             return NULL;
         }
+
         parseGroupLine(line, group);
 
     } while(strcmp(group->name, groupname) != 0);
@@ -129,20 +128,26 @@ int create_group(char* groupname) {
     int ids[MAX_GROUPS] = {0};
     int i = 0, id;
 
-    while (fscanf(fp, "%s\n", line) != 0) {
-        disableInterrupts();
-        groups[i] = kalloc(sizeof(struct Group));
-        enableInterrupts();
+    while (fscanf(fp, "%s\n", line) != 0 && i < MAX_GROUPS) {
+        groups[i] = malloc(sizeof(struct Group));
 
         parseGroupLine(line, groups[i]);
         ids[groups[i]->id] = 1;
         i++;
     }
 
-    disableInterrupts();
-    groups[i] = kalloc(sizeof(struct Group));
-    enableInterrupts();
+    if (i >= MAX_GROUPS) {
+
+        for (int j = 0; j < i; j++) {
+            free(groups[j]);
+        }
+
+        return -1;
+    }
     
+    groups[i] = malloc(sizeof(struct Group));
+    i++;
+
     for(int j = 0; j < MAX_GROUPS; j++) {
         if (ids[j] != 1) {
             id = j;
@@ -152,9 +157,14 @@ int create_group(char* groupname) {
     
     strcpy(groups[i]->name, groupname);
     groups[i]->id = id;
+    groups[i]->num_members = 0;
 
     updateGroupsFile(groups[i], 0);
     
+    for (int j = 0; j < i; j++) {
+        free(groups[j]);
+    }
+
     return id;
 }
 
@@ -177,10 +187,12 @@ int updateGroupsFile(struct Group* group, int delete) {
         aux[length] = '\0';
 
         if (strcmp(aux, group->name) == 0) {
+
             if (!delete) {
                 writeGroupLine(fp, group);            
                 found = 1;
             }
+
         } else {
             fprintf(fp, "%s\n" ,line[j]);
         }
@@ -197,10 +209,12 @@ int updateGroupsFile(struct Group* group, int delete) {
 void writeGroupLine(FILE* fp, struct Group* group) {
     int count = 0;
     int i = 0;
+
     fprintf(fp, "%s:x:%d:", group->name, group->id);
-                
+     
     while(count != group->num_members) {
         if (group->members[i] != NULL) {
+
             fprintf(fp, "%s",group->members[i]->name);
             if (count != group->num_members - 1) {
                 fprintf(fp, ",");
@@ -220,6 +234,8 @@ int delete_group(char* name) {
     }
 
     updateGroupsFile(group, 1);
+
+    free(group);
     return 0;
 }
 
@@ -232,14 +248,21 @@ int add_group_member(int gid, int uid) {
         return -1;
     }
 
-    //TODO what happens if group is full
+    //what happens if group is full
+    if (group->num_members >= MAX_GROUP_MEMBERS) {
+        return -1;
+    }
+
+    printf("group vale %d\n",group);
+    printf("group->members vale %d\n",group->members);
+    printf("num-members vale %d\n",group->num_members);
     user->gid[0] = gid; 
     group->members[group->num_members] = user;
     group->num_members++;
 
     updateGroupsFile(group, 0);
-
-    return group->members;
+    printf("asasa");
+    return group->num_members;
 }
 
 int delete_group_member(int gid, int uid) {
@@ -257,11 +280,12 @@ int delete_group_member(int gid, int uid) {
             group->num_members--;
             
             updateGroupsFile(group, 0);
-
+            
             return group->num_members;
             
         }
     }
+
     return -1;
 }
 

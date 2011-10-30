@@ -20,6 +20,8 @@ void userdel(char* argv) {
         struct User* user = get_user_by_name(firstSpace + 1);
         delete_group_member(user->gid[0], user->id);
         delete_user(firstSpace + 1);
+
+        printf("Successfully deleted user account.\n");
     }
 }
 
