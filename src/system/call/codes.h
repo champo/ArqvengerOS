@@ -24,6 +24,7 @@
 
 #define _SYS_SLEEP 162
 #define _SYS_NICE 62
+#define _SYS_RENICE 662
 
 #define _SYS_RUN 1
 

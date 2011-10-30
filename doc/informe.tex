@@ -95,8 +95,25 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
       \textit{exec()} en un entorno \texit{UNIX}) para la creación de estos procesos.
 
     \subsection{Estructura de un proceso}
+    
+    La estructura de un proceso necesitaba tener la información justa y necesaria para que una vez creado pueda ser 
+    ejecutado en un ambiente multitarea, con un \textit{file system} y con manejo de archivos. La llamada a 
+    \textit{run()} también debía ser soportada por estos procesos.
+
+    Finalmente la estructura de un proceso conto con su identificador de proceso, datos sobre el proceso padre, datos
+    sobre el punto de entrada del proceso junto con sus argumentos y datos en memoria, datos sobre el estado de ejecución
+    del proceso junto con otros datos de \textit{scheduling}, información sobre el tiempo de ejecución, una tabla de
+    los archivos abiertos por el proceso, datos sobre el grupo y usuario que ejecutó el proceso y el 
+    \textit{current working directory}.
 
     \subsection{Scheduling}
+    Como primera estrategia de \textit{scheduling} se decidió implementar una simple estrategia de \textit{Round Robin}.
+    Esto es, los períodos de tiempo de uso de CPU (\textit{time slices}) son asignados a los procesos en porciones 
+    equivalentes y en orden circular, sin hacer uso de un sistema de prioridades. Este estrategia, además de ser muy 
+    fácil de implementar, asegura la provisión de tiempo de CPU a todos los procesos (\textit{starvation free}).
+
+    Para nuestra segunda estrategia, y siguiendo con la consigna del trabajo, implementamos un sistema basado en 
+    prioridades. 
 
     \subsection{Multiples Terminales}
 \newpage
@@ -160,8 +177,34 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
 
     Hay ciertos detalles interesantes a tener en cuenta sobre la implementación. Sobre el sistema Ext2 se implementaron
     ciertos \textit{buffers} para así disminuir los accesos a disco.
+
+    Ahora veremos la estructura de Ext2 en mayor detalle:
+
+        \subsubsection{Bloques}
+
+        Un \textit{file system} de tipo Ext2 divide el disco en bloques lógicos de sectores contiguos. Esto permite
+        tener la información más organizada y provee un sistema especificando como acceder finalmente a cada nodo
+        generado.
+
+        \subsubsection{Superbloque}
+
+        Lo primero a realizarse un sistema Ext2 es encontrar y analizar el superbloque. Este contiene toda la información
+        necesaria para acceder al sistema. Hay especificaciones sobre como analizar el mismo, que finalmente provee
+        toda la información necesaria sobre los grupos de bloques, bloques y nodos.
+
+        \subsubsection{Grupos de bloques}
+        
+        Para poder tener un acceso más sencillo a la información los bloques se agrupan de a grupos de bloques.
+        El superbloque contiene una referencia a la tabla de grupos de bloques. Esta es otro paso necesario a la hora
+        de acceder al contenido de un nodo.
+
+        \subsubsection{Inodes}
     
-    \subsection{Virtual file system}
+        Un \textit{inode} en el sistema es un nodo que representa cualquier tipo de archivo en el \textit{file system}.
+        Estos, contienen todo tipo de información sobre el nodo facilitando así los propositos de nuestro trabajo
+        practico. Finalmente, contienen punteros hacia el verdadero contenido del archivo.
+
+        \subsection{Virtual file system}
     
     \subsection{Apertura y manejo de archivos}
     En una primera instancia nos encargamos de adaptar nuestras llamadas a sistema y nuestra librería estandar
@@ -169,11 +212,11 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     \textit{write} podían ahora escribir en archivos, así como las llamadas a \textit{open} y \textit{close} se hicieron
     necesarias cuando antes no lo fueron.
     Al hacer una llamada a \textit{open()}, esta actualizaba tanto a nivel kernel como a nivel proceso que cierto
-    archivo habia sido abierto. El proceso contaba con una tabla de \textit{file descriptors}. Estos, apuntan al 
-    \textit{inode} siendo manipulado y además cuentan con punteros a función que indican como deben comportarse lecturas
-    y escrituras (entre otras cosas) dependiendo el tipo de archivo (podría bien ser un archivo regular o un link 
-    simbolico por ejemplo). Esto permitió que las implementaciones a \textit{read()}, \textit{write()} y \textit{close()}
-    sean bastante sencillas. 
+    archivo habia sido abierto. Como ya fue dicho, un proceso contaba con una tabla de \textit{file descriptors}. 
+    Estos, apuntan al \textit{inode} siendo manipulado y además cuentan con punteros a función que indican como 
+    deben comportarse lecturas y escrituras (entre otras cosas) dependiendo el tipo de archivo 
+    (podría bien ser un archivo regular o un link simbolico por ejemplo). Esto permitió que las implementaciones 
+    a \textit{read()}, \textit{write()} y \textit{close()} sean bastante sencillas. 
     
     Estas llamadas a sistema fueron siendo extendidas a medida que la funcionalidad del sistema operativo crecía. Como
     será visto en las proximas secciones, se escribieron funciones adecuadas para la manipulación de cada tipo de archivo.
@@ -185,6 +228,11 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     proveyendo finalmente el \textit{inode} deseado. 
 
     \subsection{Directorios}
+    
+    Ya a bajo nivel era posible detectar el tipo de \textit{inode} guardado en el sistema. Un directorio simplemente era
+    un inode que en su contenido se guardan referencias hacía otros inodes. Tanto la interfaz del driver Ext2 como la del
+    vfs permiten escribir directorios de forma correcta. Cabe destacar que ademas de la referencia al inode, una entrada
+    de directorio también guarda el nombre de la entrada que luego verá el usuario.
 
     \subsection{FIFO's}
 
@@ -201,6 +249,10 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     era posible.
 
     \subsection{Current working directory}
+        
+    Como ya fue mencionado, cada proceso contiene información sobre cual era el \textit{current working directory} en
+    el momento en que fue ejecutado. Esto permite que la obtención del \textit{current working directory} sea sencilla
+    y manipulable en los momentos necesarios, sobre todo al modificar el árbol del \textit{file system}.
 
     \subsection{Usuarios y grupos}
     
@@ -220,6 +272,22 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
 
 \newpage
 \section{Problemas encontrados}
+
+Durante el desarrollo de este trabajo practico fueron surgiendo diferentes dudas y problemas. El proposito de esta
+sección es comentarlos con el fin del aprendizaje.
+
+Un dilema bastante frecuente a lo largo del trabajo practico es lo que nos gusta llamar "gallina o huevo". Al realizar
+un desarrollo a bajo nivel que ha comenzado con pocos recursos, era habitual encontrarse con la duda de si convenía
+arrancar a implementar la lectura o la escritura de alguna prestación. Es evidente que si se hacía primero la lectura, 
+no había forma de probar su funcionamiento ya que no existía la escritura. Lo mismo sucedía a modo inverso. Si bien 
+la solución no era complicada (desarrollar todo) era incomodo y molesto a la hora de encontrar errores ya que los mismos
+podían encontrarse en cualquier lado.
+
+Varios problemas interesantes surgieron durante la creación del \textit{driver} ATA. A pesar de que se siguieron
+rigurosamente los estándares, se encontró que no todos los emuladores funcionaban de forma correcta con el mismo.
+Inclusive, detectamos que el driver no se comportaba de manera deseada al tratar con varios sectores a la vez con lo
+cual nos vimos forzados a modificar la lógica interna del driver simulando un acceso a multiples sectores a tráves de
+varios accesos de a un sector a la vez.
 
 \newpage     
 \section{Referencias}
