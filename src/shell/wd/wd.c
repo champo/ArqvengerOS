@@ -177,3 +177,46 @@ void manLs(void) {
     printf("The default DIRECTORY is the cwd.\n");
 }
 
+void command_chmod(char* argv) {
+    char* stringmode = strchr(argv, ' ');
+
+    if (stringmode == NULL) {
+        printf("Arguments invalid.\n");
+    }
+
+    char* file = strchr(stringmode + 1, ' ');
+
+    if (file == NULL) {
+        printf("Arguments invalid.\n");
+    }
+
+    int i;
+
+    for (i = 1; stringmode[i] != ' '; i++){
+
+    }
+
+    stringmode[i] = '\0';
+
+    int mode = parseoct(stringmode + 1);
+    
+    if (mode == -1) {
+        printf("The mode is not a valid number\n");
+        return;
+    }
+    
+    i = chmod(mode, file + 1);
+    
+    if (i != 0) {
+        printf("Operation unsuccesful.\n");
+    }
+}
+
+void man_chmod(void) {
+    setBold(1);
+    printf("Usage:\n\tchmod ");
+    setBold(0);
+    printf("MODE FILE.\n");
+    printf("MODE is an octal value.\n");
+}
+

@@ -53,7 +53,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 23
+#define NUM_COMMANDS 24
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -78,6 +78,7 @@ static const Command commands[] = {
     { &command_ln, "ln", "Create a symbolic link.", &man_ln, 0},
     { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
     { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
+    { &command_chmod, "chmod", "Change the permissions of a file.", &man_chmod, 0},
 };
 
 static termios shellStatus = { 0, 0 };

@@ -758,6 +758,6 @@ int _chmod(int mode, const char* file) {
     if (can_write(inode) != 0) {
         return -1;
     }
-
+    
     return fs_set_permission(inode, mode);
 }

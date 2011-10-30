@@ -143,3 +143,19 @@ int utoa(char *s, unsigned int n){
     return i;
 }
 
+int parseoct(char* string) {
+    
+    int ans = 0;
+    int base = 1;
+    int len = strlen(string);
+    
+    for (int i = len; i > 0; i--) {
+        if (!isdigit(string[i - 1]) || string[i -1] - '0' > 7) {
+            return -1;
+        }        
+        ans += (string[i - 1] - '0') * base;
+        base = base * 8;
+    }
+
+    return ans;
+}
