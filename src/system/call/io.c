@@ -24,6 +24,14 @@ static char* path_file(const char* path);
 
 static char* join_paths(const char* cwd, const char* path);
 
+/**
+ * Reads on the correct file.
+ *
+ * @param fd, the file descriptor to be read.
+ * @param buf, this string will containg what it's read.
+ * @param length, the amount of characters to be read.
+ * @return the amount of characters read.
+ */
 size_t _read(int fd, void* buf, size_t length) {
 
     struct Process* process = scheduler_current();
@@ -40,6 +48,14 @@ size_t _read(int fd, void* buf, size_t length) {
     return fileDescriptor->ops->read(fileDescriptor, buf, length);
 }
 
+/**
+ * Writes on the correct file.
+ *
+ * @param fd, the file descritor to be written.
+ * @param buf, the string to be written.
+ * @param length, the amount of characters to be written.
+ * @return the number of characters written.
+ */
 size_t _write(int fd, const void* buf, size_t length) {
 
     struct Process* process = scheduler_current();
@@ -56,6 +72,14 @@ size_t _write(int fd, const void* buf, size_t length) {
     return fileDescriptor->ops->write(fileDescriptor, buf, length);
 }
 
+/**
+ * Opens a file.
+ *
+ * @param path, the string where the file is located.
+ * @param flags, the access mode.
+ * @param mode indicates the permissions of the new file. It is only used if O_CREAT is specified in flags.
+ * @return the file descriptor if success, -1 if error.
+ */
 int _open(const char* path, int flags, int mode) {
 
     struct Process* process = scheduler_current();
@@ -157,6 +181,13 @@ int _open(const char* path, int flags, int mode) {
     return fd;
 }
 
+/**
+ * Creates a new file.
+ *
+ * @param path, the path of the new file.
+ * @param, the permissions for the new file.
+ * @return 0 if succes, -1 if error.
+ */
 int _creat(const char* path, int mode) {
 
     char* base = path_directory(path);
@@ -198,6 +229,12 @@ int _creat(const char* path, int mode) {
 
 }
 
+/**
+ * Closes a file already opened by the process.
+ *
+ * @param fd, the file descriptor to be closed.
+ * @return 0 if success, -1 if error.
+ */
 int _close(int fd) {
 
     struct Process* process = scheduler_current();
@@ -210,6 +247,13 @@ int _close(int fd) {
     return fs_fd_close(fileDescriptor);
 }
 
+/**
+ * Does driver dependent operations.
+ *
+ * @param fd, the file descriptor of the file to be manipulated.
+ * @param cmd, the command to be executed.
+ * @param argp, the arguments of the command.
+ */
 int _ioctl(int fd, int cmd, void* argp) {
 
     struct Process* process = scheduler_current();
@@ -222,6 +266,13 @@ int _ioctl(int fd, int cmd, void* argp) {
     return fileDescriptor->ops->ioctl(fileDescriptor, cmd, argp);
 }
 
+/**
+ * Creates a new directory.
+ *
+ * @param path, the path of the directory to be created. 
+ * @param mode, the permissions of the directory.
+ * @return 0 if success, other if error.
+ */
 int _mkdir(const char* path, int mode) {
 
     char* base = path_directory(path);
@@ -267,6 +318,12 @@ int _mkdir(const char* path, int mode) {
     return res;
 }
 
+/**
+ * Removes a directory if it is empty.
+ *
+ * @param path, the path of the directory to be erased.
+ * @return 0 if success, other if error.
+ */
 int _rmdir(const char* path) {
 
     char* base = path_directory(path);
@@ -297,6 +354,12 @@ int _rmdir(const char* path) {
     return res;
 }
 
+/**
+ * Remove a hard link from the file
+ *
+ * @param path, the path of the file to be unlinked.
+ * @return 0 if success, other if error
+ */
 int _unlink(const char* path) {
 
     char* base = path_directory(path);
@@ -319,9 +382,23 @@ int _unlink(const char* path) {
     return res;
 }
 
+/**
+ * Renames a file.
+ * @param from, the original path of the file.
+ * @param to, the new path of the file.
+ * @return 0 if success, other if error.
+ */
 int _rename(const char* from, const char* to) {
 }
 
+/**
+ * Reads an entry from a directory.
+ *
+ * @param fd, the file descriptor of the directory to be read.
+ * @param entry, the output of the entry to be read.
+ * @param hidden, should value 1 if hidden files are also wanted.
+ * @return, 1 if something was read, 0 if not.
+ */
 int _readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
 
     struct Process* process = scheduler_current();
@@ -347,6 +424,12 @@ int _readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
     }
 }
 
+/**
+ * Changes the cwd.
+ *
+ * @param path, the path of the new cwd.
+ * @return 0 if success, other if error.
+ */
 int _chdir(const char* path) {
 
     struct Process* process = scheduler_current();
@@ -374,6 +457,13 @@ int _chdir(const char* path) {
     return 0;
 }
 
+/**
+ * Joins the cwd and a relative path, resolving problems such as /.. and /. It takes in account full paths too.
+ * 
+ * @param cwd, the cwd.
+ * @param path, a relative path.
+ * @return, the complete path.
+ */
 char* join_paths(const char* cwd, const char* path) {
 
     size_t pathLen = strlen(path);
@@ -433,6 +523,13 @@ char* join_paths(const char* cwd, const char* path) {
     return nwd;
 }
 
+/**
+ * Get the cwd.
+ *
+ * @param path, the string which will contain the cwd.
+ * @param len, the maximum lenght of the string accepted.
+ * @return 0 if success, other if error.
+ */
 int _getcwd(char* path, size_t len) {
 
     strncpy(path, scheduler_current()->cwd, len);
@@ -441,6 +538,12 @@ int _getcwd(char* path, size_t len) {
     return 0;
 }
 
+/**
+ * Goes through a path, resolving links and returning its inode.
+ *
+ * @param path, the path to be resolved.
+ * @returns, the inode referenced by path. NULL if error.
+ */
 struct fs_Inode* resolve_path(const char* path) {
 
     size_t len = strlen(path);
@@ -490,6 +593,12 @@ struct fs_Inode* resolve_path(const char* path) {
     return curdir;
 }
 
+/**
+ * Separetes the directory in a path.
+ *
+ * @param path, the path to be analyzed.
+ * @return the directory part of path.
+ */
 char* path_directory(const char* path) {
 
     if (strcmp(path, "/") == 0) {
@@ -528,6 +637,12 @@ char* path_directory(const char* path) {
     return result;
 }
 
+/**
+ * Isolates the file from the path.
+ *
+ * @param path, the path to be analyzed.
+ * @return the file part of the path.
+ */
 char* path_file(const char* path) {
 
     if (strcmp(path, "/") == 0) {
@@ -555,8 +670,13 @@ char* path_file(const char* path) {
     return result;
 }
 
+/**
+ * Resolves the real link to which a symbolic link is pointing.
+ * 
+ * @param symlink, the inode of the symbolic link.
+ * @return the inode to which the symbolic link references.
+ */
 struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink) {
-
 
     int size = fs_get_inode_size(symlink);
     char* buff = kalloc(size + 1);
@@ -572,6 +692,14 @@ struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink) {
     return ans;
 }
 
+/**
+ * Opens a file that is really a symbolic link.
+ *
+ * @param symlink, the symbolic link to be opened.
+ * @param flags, the access mode.
+ * @param mode, mode indicates the permissions of the new file. It is only used if O_CREAT is specified in flags.
+ * @return the file descriptor if success, -1 if error.
+ */ 
 int open_sym_link(struct fs_Inode* symlink, int flags, int mode) {
 
     int size = fs_get_inode_size(symlink);
@@ -586,6 +714,13 @@ int open_sym_link(struct fs_Inode* symlink, int flags, int mode) {
     return ans;
 }
 
+/**
+ * Create a symbolic link.
+ *
+ * @param path, the symbolic link to be created.
+ * @param target, the target which will be referenced by path.
+ * @return 0 if success, other if error.
+ */
 int _symlink(const char* path, const char* target) {
 
     char* base = path_directory(target);
@@ -628,6 +763,12 @@ int _symlink(const char* path, const char* target) {
     return ans;
 }
 
+/**
+ * Create a named pipe.
+ *
+ * @param path, the path of the pipe to be created.
+ * @return 0 if success, other if error
+ */
 int _mkfifo(const char* path) {
 
     char* base = path_directory(path);

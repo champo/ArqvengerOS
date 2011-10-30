@@ -7,6 +7,13 @@
 #include "library/string.h"
 #include "type.h"
 
+/**
+ *  Gets information of the processes.
+ *
+ *  @param data, an array of structures where the information will be returned.
+ *  @param size, the lenght of the array.
+ *  @return the quantity of structures read.
+ */
 int _pinfo(struct ProcessInfo* data, size_t size) {
 
     int pcount = 0;

@@ -226,20 +226,35 @@ int vprintf(const char *format, va_list arg) {
 }
 
 /**
- * Calls the system so it can write on the correct file
+ * Calls the system so it can write on the correct file.
+ *
+ * @param fd, the file descritor to be written.
+ * @param cs, the string to be written.
+ * @param n, the amount of characters to be written.
+ * @return the number of characters written.
  */
 size_t write(int fd, const char *cs, size_t n){
     return system_call(_SYS_WRITE, fd, (int) cs, n);
 }
 
 /**
- * Calls the system so it can read on the correct file
+ * Calls the system so it can read on the correct file.
+ *
+ * @param fd, the file descriptor to be read.
+ * @param buf, this string will containg what it's read.
+ * @param n, the amount of characters to be read.
+ * @return the amount of characters read.
  */
 size_t read(int fd, void *buf, size_t n) {
     return system_call(_SYS_READ, fd, (int)buf, n);
 }
+
 /**
- *  Calls the system to do driver dependent operations
+ * Calls the system to do driver dependent operations.
+ *
+ * @param fd, the file descriptor of the file to be manipulated.
+ * @parem cmd, the command to be executed.
+ * @param argp, the arguments of the command.
  */
 size_t ioctl(int fd, int cmd, void *argp) {
     return system_call(_SYS_IOCTL, fd, cmd, (int)argp);
@@ -496,7 +511,7 @@ int fscanf(FILE *stream, const char *format, ...){
 /**
  * Closes a file already opened by the process.
  *
- * @param stream, a pointer to the file to be closed.
+ * @param fd, the file descriptor to be closed.
  * @return 0 if success, -1 if error.
  */
 int close(int fd) {
@@ -590,38 +605,97 @@ int fclose(FILE* stream) {
 }
 
 
+/**
+ * Creates a new directory.
+ *
+ * @param path, the path of the directory to be created.
+ * @param mode, the permissions of the directory.
+ * @return 0 if success, other if error.
+ */
 int mkdir(const char* path, int mode) {
     return system_call(_SYS_MKDIR, (int) path, mode, 0);
 }
 
+/**
+ * Removes a directory if it is empty.
+ *
+ * @param path, the path of the directory to be erased.
+ * @return 0 if success, other if error.
+ */
 int rmdir(const char* path) {
     return system_call(_SYS_RMDIR, (int) path, 0, 0);
 }
 
+/**
+ * Remove a hard link from the file
+ *
+ * @param path, the path of the file to be unlinked.
+ * @return 0 if success, other if error
+ */
 int unlink(const char* path) {
     return system_call(_SYS_UNLINK, (int) path, 0, 0);
 }
 
+/**
+ * Renames a file.
+ * @param from, the original path of the file.
+ * @param to, the new path of the file.
+ * @return 0 if success, other if error.
+ */
 int rename(const char* from, const char* to) {
     return system_call(_SYS_RENAME, (int) from, (int) to, 0);
 }
 
+/**
+ * Reads an entry from a directory.
+ *
+ * @param fd, the file descriptor of the directory to be read.
+ * @param entry, the output of the entry to be read.
+ * @param hidden, should value 1 if hidden files are also wanted.
+ * @return, 1 if something was read, 0 if not.
+ */
 int readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
     return system_call(_SYS_READDIR, fd, (int) entry, hidden);
 }
 
+/**
+ * Changes the cwd.
+ *
+ * @param path, the path of the new cwd.
+ * @return 0 if success, other if error.
+ */
 int chdir(const char* path) {
     return system_call(_SYS_CHDIR, (int) path, 0, 0);
 }
 
+/**
+ * Get the cwd.
+ *
+ * @param path, the string which will contain the cwd.
+ * @param len, the maximum lenght of the string accepted.
+ * @return 0 if success, other if error.
+ */
 int getcwd(char* path, size_t len) {
     return system_call(_SYS_GETCWD, (int) path, (int) len, 0);
 }
 
+/**
+ * Create a symbolic link.
+ *
+ * @param path, the symbolic link to be created.
+ * @param target, the target which will be referenced by path.
+ * @return 0 if success, other if error.
+ */
 int symlink(const char* path, const char* target) {
     return system_call(_SYS_SYMLINK, (int) path, (int) target, 0);
 }
 
+/**
+ * Create a named pipe.
+ *
+ * @param path, the path of the pipe to be created.
+ * @return 0 if success, other if error
+ */
 int mkfifo(const char* path) {
     return system_call(_SYS_MKFIFO, (int) path, 0, 0);
 }
