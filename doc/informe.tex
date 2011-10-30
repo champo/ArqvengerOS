@@ -247,8 +247,7 @@ El numero 12 es el \textit{Singly indirect Block Pointer}, y apunta a un bloque 
 El numero 13 y 14 son \textit{Doubly indirect Block Pointer} y \textit{Triply indirect Block Pointer}, respectivamente.
 Estos siguen la misma idea que el 12, pero lo hacen con mas niveles de indireccion entre el puntero original y los bloques de datos.
 
-    <<<< ACA SUSNI ALTO LUGAR PARA GRAFICO, YA SABES CUAL! >>>
-
+    <<<< ACA SUSNI ALTO LUGAR PARA GRAFICO, YA SABES CUAL! >>>>
 
 \subsubsection{Block Groups}
 En busqueda de eficiencia y organizacion, ext2 divide los bloques de la particion en varios grupos.
@@ -279,10 +278,11 @@ Como consecuencia, cada inode puede ser referencia con mas de un nombre, creando
 El tamaño maximo de la particion, y de los inodes, es definido en funcion del tamaño de bloque.
 Y en nuestro caso, se ve limitado por el driver ATA que soporta direccionar hasta $ 2^{28} $ sectores.
 
-El limite teorico de tamaño total viene dado por $$ 2^{32} * blockSize $$.
+El limite teorico de tamaño total viene dado por $ 2^{32} * blockSize $.
 Ahora, como nuestro driver ATA soporta solo sectores de 512 bytes, el limite real es $ 2^{28} * 512 bytes $.
 
-El limite de tamaño de un inode 
+El limite de tamaño de un inode viene dado por:
+$$( \frac{blockSize}{4}^3 + \frac{blockSize}{4}^2 + \frac{blockSize}{4} + 11 ) * blockSize $$
 
 \subsection{Virtual file system}
 
