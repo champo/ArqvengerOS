@@ -29,11 +29,13 @@ void groupaddmem(char* argv) {
     if (group == NULL) {
         printf("-Group %s does not exists\n", aux);
         printf("-Please choose another\n");
+        return;
     }
 
     if (user == NULL) {
         printf("-User %s does not exists\n", secondSpace + 1);
         printf("-Please choose another\n");
+        return;
     }
 
     add_group_member(group->id, user->id);  
