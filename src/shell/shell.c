@@ -52,7 +52,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 32
+#define NUM_COMMANDS 31
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -79,14 +79,12 @@ static const Command commands[] = {
     { &groupadd, "groupadd", "Create a new group.", &manGroupadd, 0},
     { &groups, "groups", "Display current group names.", &manGroups, 0},
     { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
-    { &users, "users", "Show users loggued.", &manUsers, 0},
     { &command_ln, "ln", "Create a symbolic link.", &man_ln, 0},
     { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
     { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
     { &command_renice, "renice", "Alter priority of a running process.", &manRenice, 0},
     { &busywait, "busywait", "Busywaits eternally, consuming resources and CPU time.", &manBusywait, 0},
     { &logout, "logout", "Logs out of the shell.", &manLogout, 1},
-
 };
 
 static termios shellStatus = { 0, 0 };
