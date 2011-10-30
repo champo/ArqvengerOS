@@ -45,9 +45,9 @@ struct User* get_user_by_id(int id) {
             free(user);
             return NULL;
         }
-        
+
         parseUserLine(str, user, def_group);
-    
+
     } while(user->id != id);
 
     fclose(fp);
@@ -56,42 +56,42 @@ struct User* get_user_by_id(int id) {
 
 void parseUserLine(char* str, struct User* user, char* def_group) {
 
-        char* nextColumn = strchr(str, ':');
-        char* buf = str;
-        char aux[200];
+    char* nextColumn = strchr(str, ':');
+    char* buf = str;
+    char aux[200];
 
-        strncpy(user->name, buf, nextColumn - buf);
-        user->name[nextColumn - buf] = '\0';
-        buf = nextColumn + 1;
+    strncpy(user->name, buf, nextColumn - buf);
+    user->name[nextColumn - buf] = '\0';
+    buf = nextColumn + 1;
 
-        nextColumn = strchr(buf, ':');
-        buf = nextColumn + 1;
+    nextColumn = strchr(buf, ':');
+    buf = nextColumn + 1;
 
-        nextColumn = strchr(buf, ':');
-        strncpy(aux, buf, nextColumn - buf);
-        aux[nextColumn - buf] = '\0';
+    nextColumn = strchr(buf, ':');
+    strncpy(aux, buf, nextColumn - buf);
+    aux[nextColumn - buf] = '\0';
 
-        buf = nextColumn + 1;
+    buf = nextColumn + 1;
 
-        user->id = atoi(aux);
+    user->id = atoi(aux);
 
-        nextColumn = strchr(buf, ':');
-        strncpy(aux, buf, nextColumn - buf);
-        aux[nextColumn - buf] = '\0';
+    nextColumn = strchr(buf, ':');
+    strncpy(aux, buf, nextColumn - buf);
+    aux[nextColumn - buf] = '\0';
 
-        buf = nextColumn + 1;
+    buf = nextColumn + 1;
 
-        user->gid[0] = atoi(aux);
+    user->gid[0] = atoi(aux);
 
-        nextColumn = strchr(buf, ':');
-        strncpy(aux, buf, nextColumn - buf);
-        aux[nextColumn - buf] = '\0';
+    nextColumn = strchr(buf, ':');
+    strncpy(aux, buf, nextColumn - buf);
+    aux[nextColumn - buf] = '\0';
 
-        strcpy(user->passwd, aux);
+    strcpy(user->passwd, aux);
 
-        buf = nextColumn + 1;
+    buf = nextColumn + 1;
 
-        strcpy(def_group, aux);
+    strcpy(def_group, aux);
 }
 
 struct User* get_user_by_name(char* name) {
@@ -109,7 +109,7 @@ struct User* get_user_by_name(char* name) {
         }
 
         parseUserLine(str, user, def_group);
-    
+
     } while(strcmp(user->name, name) != 0);
 
     fclose(fp);
@@ -129,7 +129,7 @@ int change_passwd(int uid, char* old_passwd, char* new_passwd) {
         strcpy(user->passwd, new_passwd);
 
         updateUsersFile(user, 0);
-        
+
         return PASSWD_CHANGED;
     } else {
         return INVALID_PASSWD;
@@ -148,13 +148,13 @@ int updateUsersFile(struct User* user, int delete) {
     fp = fopen("/users", "w");
 
     for (int j = 0; j < i - 1; j++) {
-        
+
         length = strchr(line[j], ':') - line[j];
         strncpy(aux, line[j], length);
         aux[length] = '\0';
 
         if (strcmp(user->name, aux) == 0) {
-            if (!delete) { 
+            if (!delete) {
                 writeUserLine(fp, user);
                 found = 1;
             }
@@ -162,7 +162,7 @@ int updateUsersFile(struct User* user, int delete) {
             fprintf(fp, "%s\n", line[j]);
         }
     }
-    
+
     if (!found && !delete) {
         writeUserLine(fp, user);
     }
@@ -193,17 +193,18 @@ int create_user(char* name, char* passwd, char* groupname) {
         parseUserLine(line, users[i], buf);
         ids[users[i]->id] = 1;
         i++;
-   }
+    }
+    fclose(fp);
 
     if (i >= MAX_USERS) {
-        
+
         for (int j = 0; j < i; j++) {
-            free(users[j]);        
+            free(users[j]);
         }
 
         return -1;
     }
-    
+
     users[i] = malloc(sizeof(struct User));
     i++;
 
@@ -220,11 +221,11 @@ int create_user(char* name, char* passwd, char* groupname) {
     group = get_group_by_name(groupname);
     users[i - 1]->gid[0] = group->id;
     users[i - 1]->id = id;
- 
+
     updateUsersFile(users[i - 1], 0);
-    
+
     for (int j = 0; j < i; j++) {
-        free(users[j]);        
+        free(users[j]);
     }
 
     return id;
@@ -238,7 +239,7 @@ int delete_user(char* name) {
     }
 
     updateUsersFile(user, 1);
-    
+
     free(user);
     return 0;
 }

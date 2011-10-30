@@ -12,7 +12,7 @@ static int updateGroupsFile(struct Group* group, int delete);
 static void writeGroupLine(FILE* fp, struct Group* group);
 
 int get_groups_num(void) {
-    
+
     FILE* fp = fopen("/groups", "r");
     int groups = 0;
     char c;
@@ -50,7 +50,7 @@ struct Group* get_group_by_id(int gid) {
 }
 
 void parseGroupLine(char* line, struct Group* group) {
-    
+
     char* nextColumn = strchr(line, ':');
     char* nextComma;
     char* buf = line;
@@ -77,13 +77,13 @@ void parseGroupLine(char* line, struct Group* group) {
     while((nextComma = strchr(buf, ',')) != NULL) {
         strncpy(aux, buf, nextComma - buf);
         aux[nextComma - buf] = '\0';
-    
+
         group->members[i] = get_user_by_name(aux);
         group->num_members = i+1;
         buf = nextComma + 1;
         i++;
     }
-    
+
     if (strcmp(buf, "") != 0) {
         //if buf is not empty there's a last member
         strcpy(aux, buf);
@@ -94,7 +94,7 @@ void parseGroupLine(char* line, struct Group* group) {
 
 
 struct Group* get_group_by_name(char* groupname) {
-    
+
     FILE* fp = fopen("/groups", "r");
     struct Group* group = malloc(sizeof(struct Group));
 
@@ -116,12 +116,12 @@ struct Group* get_group_by_name(char* groupname) {
 }
 
 char* get_groupname(int gid) {
-    
+
     return get_group_by_id(gid)->name;
 }
 
 int create_group(char* groupname) {
-   
+
     FILE* fp = fopen("/groups", "r+");
     char line[200];
     struct Group* groups[MAX_GROUPS];
@@ -135,6 +135,7 @@ int create_group(char* groupname) {
         ids[groups[i]->id] = 1;
         i++;
     }
+    fclose(fp);
 
     if (i >= MAX_GROUPS) {
 
@@ -144,7 +145,7 @@ int create_group(char* groupname) {
 
         return -1;
     }
-    
+
     groups[i] = malloc(sizeof(struct Group));
     i++;
 
@@ -154,13 +155,13 @@ int create_group(char* groupname) {
             break;
         }
     }
-    
+
     strcpy(groups[i - 1]->name, groupname);
     groups[i - 1]->id = id;
     groups[i - 1]->num_members = 0;
 
-    updateGroupsFile(groups[i], 0);
-    
+    updateGroupsFile(groups[i - 1], 0);
+
     for (int j = 0; j < i; j++) {
         free(groups[j]);
     }
@@ -171,25 +172,25 @@ int create_group(char* groupname) {
 int updateGroupsFile(struct Group* group, int delete) {
 
     FILE* fp = fopen("/groups", "r");
-    char line[200][100];
-    char aux[100];
-    int length, count, found = 0, i = 0;
-    
+    char line[MAX_GROUPS][200];
+    char aux[MAX_GROUPNAME_LEN + 1];
+    int found = 0, i = 0;
+
     while (fscanf(fp, "%s\n", line[i++]) != 0);
 
     fclose(fp);
     fp = fopen("/groups", "w");
-    
+
     for (int j = 0; j < i - 1; j++) {
-        
-        length = strchr(line[j], ':') - line[j];
+
+        size_t length = strchr(line[j], ':') - line[j];
         strncpy(aux, line[j], length);
         aux[length] = '\0';
 
         if (strcmp(aux, group->name) == 0) {
 
             if (!delete) {
-                writeGroupLine(fp, group);            
+                writeGroupLine(fp, group);
                 found = 1;
             }
 
@@ -199,9 +200,9 @@ int updateGroupsFile(struct Group* group, int delete) {
     }
 
     if (!found && !delete) {
-        writeGroupLine(fp, group);     
+        writeGroupLine(fp, group);
     }
-     
+
     fclose(fp);
     return 0;
 }
@@ -211,8 +212,8 @@ void writeGroupLine(FILE* fp, struct Group* group) {
     int i = 0;
 
     fprintf(fp, "%s:x:%d:", group->name, group->id);
-     
-    while(count != group->num_members) {
+
+    while (count < group->num_members && i < MAX_GROUP_MEMBERS) {
         if (group->members[i] != NULL) {
 
             fprintf(fp, "%s",group->members[i]->name);
@@ -227,7 +228,7 @@ void writeGroupLine(FILE* fp, struct Group* group) {
 }
 
 int delete_group(char* name) {
-    
+
     struct Group* group = get_group_by_name(name);
     if (group == NULL || group->num_members > 0) {
         return -1;
@@ -243,7 +244,7 @@ int add_group_member(int gid, int uid) {
 
     struct Group* group = get_group_by_id(gid);
     struct User* user = get_user_by_id(uid);
-    
+
     if (group == NULL || user == NULL) {
         return -1;
     }
@@ -253,12 +254,12 @@ int add_group_member(int gid, int uid) {
         return -1;
     }
 
-    user->gid[0] = gid; 
+    user->gid[0] = gid;
     group->members[group->num_members] = user;
     group->num_members++;
 
     updateGroupsFile(group, 0);
-    
+
     return group->num_members;
 }
 
@@ -266,20 +267,20 @@ int delete_group_member(int gid, int uid) {
 
     struct Group* group = get_group_by_id(gid);
     struct User* user = get_user_by_id(uid);
-    
+
     if (group == NULL || user == NULL) {
         return -1;
     }
-    
+
     for(int i = 0; i < group->num_members; i++) {
         if (group->members[i]->id == user->id) {
             group->members[i] = NULL;
             group->num_members--;
-            
+
             updateGroupsFile(group, 0);
-            
+
             return group->num_members;
-            
+
         }
     }
 
