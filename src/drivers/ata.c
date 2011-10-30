@@ -52,10 +52,20 @@ static void set_ports(unsigned long long sector, int count, unsigned char comman
 static int poll(void);
 static int checkBSY(void);
 
+/**
+ * Checks if an ata driver has been initialized.
+ *
+ * @return 1 if true, 0 if not.
+ */
 int ata_has_drive(void) {
     return !!sectors;
 }
 
+/**
+ * Initialize an ata driver.
+ *
+ * @param info, the multibot structure given by GRUB.
+ */
 void ata_init(struct multiboot_info* info) {
 
 
@@ -73,6 +83,14 @@ void ata_init(struct multiboot_info* info) {
     }
 }
 
+/**
+ * Reads from a hard drive.
+ *
+ * @param sector, the start sector of the reading.
+ * @param count, the number of sectors to be read.
+ * @param buffer, the output of the read.
+ * @return 0 if success, -1 if error.
+ */
 int ata_read(unsigned long long sector, int count, void* buffer) {
     int i,j;
 
@@ -102,6 +120,14 @@ int ata_read(unsigned long long sector, int count, void* buffer) {
 
 }
 
+/**
+ * Writes into a hard drive.
+ *
+ * @param sector, the start sector of the writing.
+ * @param count, the number of sectors to be written.
+ * @param buffer, the source to be written.
+ * @return 0 if success, -1 if error.
+ */
 int ata_write(unsigned long long sector, int count, const void* buffer) {
     int i;
 
@@ -124,6 +150,13 @@ int ata_write(unsigned long long sector, int count, const void* buffer) {
     return 0;
 }
 
+/**
+ * Sets the ports before an opperation into a hard drive
+ *
+ * @param sector, the starting sector of the opperation.
+ * @param count, the number of sectors to be used.
+ * @param command, defines the operation.
+ */
 void set_ports(unsigned long long sector, int count, unsigned char command) {
     outB(DRIVE_PORT, 0xE0 | ((sector >> 24) & 0x0F));
     outB(SECTOR_COUNT_PORT, (unsigned char) count);
@@ -133,6 +166,11 @@ void set_ports(unsigned long long sector, int count, unsigned char command) {
     outB(COMMAND_PORT, command);
 }
 
+/**
+ * Waits until the hard drive is ready to be operated or tells if an error occured.
+ *
+ * @return 0 if the drive is ready, -1 if an error was detected.
+ */
 int poll(void) {
     unsigned char status;
 
@@ -152,6 +190,11 @@ int poll(void) {
     return 0;
 }
 
+/**
+ * Checks and waits until the hard drive status is not busy.
+ *
+ * @return 0 if success, -1 if an error was detected in the drive.
+ */
 int checkBSY(void) {
 
     unsigned char status = inB(STATUS_PORT);
