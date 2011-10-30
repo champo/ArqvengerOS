@@ -86,6 +86,8 @@ static const Command commands[] = {
     { &command_ln, "ln", "Create a symbolic link.", &man_ln, 0},
     { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
     { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
+    { &command_renice, "renice", "Alter priority of a running process.", &manRenice, 0},
+
 };
 
 static termios shellStatus = { 0, 0 };

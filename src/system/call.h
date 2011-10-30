@@ -29,6 +29,8 @@ void _sleep(int seconds);
 
 int _nice(int priority);
 
+int _renice(pid_t pid, int priority);
+
 int _creat(const char* path, int mode);
 
 int _close(int fd);

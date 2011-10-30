@@ -295,3 +295,29 @@ char *reverse(char * s) {
     return s;
 
 }
+
+/*
+ *  Checks if a string is effectively a number.
+ *
+ *  @param  str, the string to be analyzed.
+ *  @return 1 if the string contains a number, 0 if not.
+ */
+int is_a_number(char* str) {
+    
+    int i = 0;
+    
+    while(str[0] == ' ') {
+        str++;
+    }
+
+    if (str[0] == '-') {
+        str++;
+    }
+
+    while(str[i] != '\0' && isdigit(str[i])) {
+        i++;
+    }
+
+    return str[i] == '\0' && i != 0;
+}
+

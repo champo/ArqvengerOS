@@ -22,6 +22,8 @@ void sleep(int seconds);
 
 int nice(int priority);
 
+int renice(int pid, int priority);
+
 int pinfo(struct ProcessInfo* data, size_t size);
 
 void setProcessPersona(int pid, int uid, int gid);
