@@ -25,5 +25,7 @@
 #include "shell/groupdel/groupdel.h"
 #include "shell/passwd/passwd.h"
 #include "shell/renice/renice.h"
+#include "shell/busywait/busywait.h"
+#include "shell/logout/logout.h"
 
 #endif
