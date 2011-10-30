@@ -201,7 +201,7 @@ void int80(registers* regs) {
             _getProcessPersona(regs->ebx, regs->ecx, regs->edx);
             break;
         case _SYS_SYMLINK:
-            _symlink((const char *)regs->ebx, (const char *)regs->ecx);
+            regs->eax = _symlink((const char *)regs->ebx, (const char *)regs->ecx);
             break;
         case _SYS_MKFIFO:
             regs->eax = _mkfifo((const char*)regs->ebx);

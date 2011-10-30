@@ -121,10 +121,46 @@ void command_ls(char* argv) {
     }
 
     struct fs_DirectoryEntry entry;
-
     while (readdir(fd, &entry, hidden) == 1) {
         printf("%s\n", entry.name);
     }
+}
+
+void command_ln(char* argv) {
+    char* target = strchr(argv, ' ');
+
+    if (target == NULL) {
+        printf("Arguments invalid.\n");
+    }
+
+    char* link = strchr(target + 1, ' ');
+
+    if (link == NULL) {
+        printf("Arguments invalid.\n");
+    }
+
+    int i;
+
+    for (i = 1; target[i] != ' '; i++){
+
+    }
+
+    target[i] = '\0';
+
+    i = symlink(link + 1, target + 1);
+
+    if (i != 0) {
+        printf("Operation unsuccesful.\n");
+    }
+}
+
+void man_ln(void) {
+    setBold(1);
+    printf("Usage:\n\t ln");
+    setBold(0);
+
+    printf(" target link_name\n");
+
 }
 
 void manLs(void) {
@@ -135,3 +171,4 @@ void manLs(void) {
     printf("The -a options indicates that hidden files should be shown.\n");
     printf("The default DIRECTORY is the cwd.\n");
 }
+

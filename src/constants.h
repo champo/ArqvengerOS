@@ -36,5 +36,6 @@
 #define EEXIST -5
 #define EIO -6
 #define ENOTEMPTY -7
+#define EISDIR -8
 
 #endif

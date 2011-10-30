@@ -170,18 +170,57 @@ int fs_unlink(struct fs_Inode* path, const char* name) {
         return ENOENT;
     }
 
-    struct fs_Inode* dir = fs_inode_open(entry.inode);
-    if (dir == NULL) {
+    struct fs_Inode* inode = fs_inode_open(entry.inode);
+    if (inode == NULL) {
         return EIO;
     }
+    if (INODE_TYPE(inode->data) == INODE_DIR) {
+        fs_inode_close(inode);
+        return EISDIR;
+    }
 
-    int res = remove_link(path, name, dir);
-    fs_inode_close(dir);
+    int res = remove_link(path, name, inode);
+    fs_inode_close(inode);
 
     return res;
 }
 
 int fs_symlink(struct fs_Inode* path, const char* entry, const char* to) {
+    
+    if (fs_mknod(path, entry, INODE_LINK) != 0) {
+        return -1;
+    }
+
+    struct fs_DirectoryEntry direntry = fs_findentry(path, entry);
+
+    if (direntry.inode == 0) {
+        //TODO should the new node be unlinked?
+        return -1;
+    }
+
+    struct fs_Inode* file = fs_inode_open(direntry.inode);
+
+    fs_set_permission(file, 00666);
+
+    int length = strlen(to);
+
+    if (length != ext2_write_inode_content(file, 0, length, to)) {
+        //TODO hay que hacerle unlink al mknod?        
+        fs_inode_close(file);
+        return -1;
+    }
+    fs_inode_close(file);
+    return 0;
+}
+
+char* fs_symlink_read(struct fs_Inode* symlink, int size, char* buff) {
+    
+    if (size != ext2_read_inode_content(symlink, 0, size, buff)) {
+        return NULL;
+    }
+    buff[size] = '\0';
+    return buff;
+
 }
 
 int fs_rename(struct fs_Inode* from, const char* original, struct fs_Inode* to, const char* new) {
@@ -278,6 +317,10 @@ int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
 
     inode->data->hardLinks++;
     return ext2_write_inode(inode);
+}
+
+int fs_get_inode_size(struct fs_Inode* inode) {
+    return inode->data->size;
 }
 
 int fs_fd_close(struct FileDescriptor* fd) {

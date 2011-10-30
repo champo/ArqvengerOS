@@ -55,8 +55,7 @@ static void run_command(struct Shell* self, const Command* cmd);
 
 struct User* askForLogin(struct Shell* self);
 
-#define NUM_COMMANDS 27
-
+#define NUM_COMMANDS 29
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -83,6 +82,8 @@ static const Command commands[] = {
     { &groupadd, "groupadd", "Create a new group.", &manGroupadd, 0},
     { &groups, "groups", "Display current group names.", &manGroups, 0},
     { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
+    { &users, "users", "Show users loggued.", &manUsers, 0},
+    { &command_ln, "ln", "Create a symbolic link.", &man_ln, 0},
     { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
     { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
 };
@@ -153,7 +154,7 @@ struct User* askForLogin(struct Shell* self) {
     printf("\n\n");
 
     struct User* user = get_user_by_name(username);
-    
+
     if (user != NULL) {
         if (strcmp(passwd, user->passwd) == 0) {
             return user;

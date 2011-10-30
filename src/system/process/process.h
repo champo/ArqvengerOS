@@ -14,6 +14,10 @@ struct ProcessMemory {
     void* esp;
     void* stackStart;
     int pagesInStack;
+
+    void* heap;
+    void* mallocContext;
+    int pagesInHeap;
 };
 
 enum ProcessStatus {
@@ -64,7 +68,7 @@ struct Process {
     char* cwd;
 };
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal);
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal, int kernel);
 
 void destroyProcess(struct Process* process);
 
