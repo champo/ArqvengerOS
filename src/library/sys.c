@@ -38,6 +38,10 @@ int nice(int priority) {
     return system_call(_SYS_NICE, priority, 0, 0);
 }
 
+int renice(int pid, int priority) {
+    return system_call(_SYS_RENICE, pid, priority, 0);
+}
+
 int pinfo(struct ProcessInfo* data, size_t size) {
     return system_call(_SYS_PINFO, data, size, 0);
 }

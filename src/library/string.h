@@ -32,4 +32,6 @@ int memcmp(const void *cs, const void *ct, size_t n);
 
 char *reverse(char *s);
 
+int is_a_number(char* str);
+
 #endif

@@ -1,6 +1,7 @@
 #include "system/call.h"
 #include "system/process/table.h"
 #include "system/scheduler.h"
+#include "type.h"
 
 pid_t _getpid(void) {
     return scheduler_current()->pid;
@@ -37,6 +38,17 @@ void _sleep(int seconds) {
 
 int _nice(int priority) {
     struct Process* proc = scheduler_current();
+    proc->schedule.priority = priority;
+    return proc->schedule.priority;
+}
+
+int _renice(pid_t pid, int priority) {
+    struct Process* proc = process_table_get(pid);
+    
+    if (proc == NULL) {             //this is priority dependent, must return 
+        return INVALID_PRIORITY;    //a value which is invalid for a priority
+    }
+
     proc->schedule.priority = priority;
     return proc->schedule.priority;
 }
