@@ -107,6 +107,13 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     \textit{current working directory}.
 
     \subsection{Scheduling}
+    Como primera estrategia de \textit{scheduling} se decidió implementar una simple estrategia de \textit{Round Robin}.
+    Esto es, los períodos de tiempo de uso de CPU (\textit{time slices}) son asignados a los procesos en porciones 
+    equivalentes y en orden circular, sin hacer uso de un sistema de prioridades. Este estrategia, además de ser muy 
+    fácil de implementar, asegura la provisión de tiempo de CPU a todos los procesos (\textit{starvation free}).
+
+    Para nuestra segunda estrategia, y siguiendo con la consigna del trabajo, implementamos un sistema basado en 
+    prioridades. 
 
     \subsection{Multiples Terminales}
 \newpage
