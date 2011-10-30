@@ -73,7 +73,7 @@
 \section{Introducción}
 El trabajo práctico consistía en la extensión del sistema operativo armado en la materia arquitectura de las 
 computadoras. Este debia ser modificado de modo tal que esta nueva versión soporte procesamiento multitareas
- (inclusive con más de una técnica de \texit{scheduling}), soporte de acceso a disco rígido y un \textit{file system}
+ (inclusive con más de una técnica de \textit{scheduling}), soporte de acceso a disco rígido y un \textit{file system}
  no tan básico con varios detalles interesantes (soporte de usuarios y grupos, \textit{FIFO's}, entre otros).
 
 \newpage
@@ -92,7 +92,7 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
       funcionalidades a los procesos, como por ejemplo usuarios y grupos.
      La jerarquía de los procesos fue modelada de forma similar a la de \textit{UNIX} y una vez preparados los datos
       necesarios se utilizó el uso de llamadas como \textit{run()} (función análoga a lo que era \textit{fork()} y
-      \textit{exec()} en un entorno \texit{UNIX}) para la creación de estos procesos.
+      \textit{exec()} en un entorno \textit{UNIX}) para la creación de estos procesos.
 
     \subsection{Estructura de un proceso}
     
@@ -107,15 +107,46 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     \textit{current working directory}.
 
     \subsection{Scheduling}
-    Como primera estrategia de \textit{scheduling} se decidió implementar una simple estrategia de \textit{Round Robin}.
-    Esto es, los períodos de tiempo de uso de CPU (\textit{time slices}) son asignados a los procesos en porciones 
-    equivalentes y en orden circular, sin hacer uso de un sistema de prioridades. Este estrategia, además de ser muy 
-    fácil de implementar, asegura la provisión de tiempo de CPU a todos los procesos (\textit{starvation free}).
+        
+        \subsubsection{Interfaz}
+        En una primera instancia, se creó una interfaz a la cual todas las implementaciones del \textit{scheduler} que se hicieran
+	deberían atenerse. Para una vista detallada de dicha interfaz dirigigirse al archivo \textit{src/system/scheduler.h}.
 
-    Para nuestra segunda estrategia, y siguiendo con la consigna del trabajo, implementamos un sistema basado en 
-    prioridades. 
+        \subsubsection{Implementación general}
+	Luego de algunas primeras y simples implementaciones del \textit{scheduler} nos dimos cuenta que ambas estrategias que 
+	implementaríamos serían prácticamente iguales: solo se diferenciaban en la forma en que se escogía al siguiente proceso
+	para darle tiempo de ejecución. 
 
-    \subsection{Multiples Terminales}
+	Esto pudo lograrse a nuestra estructura de datos \textit{ProcessQueue} la cual se adaptó con facilidad a ambas estrategias.
+
+	Cabe destacar en este punto también, que para implementar procesos dormidos (\textit{sleep}) hubo que implementar otra estructura
+	de datos, \textit{SleepList}. Esta estructura de datos no es otra cosa que la conocida \textit{Delta Queue}, utlizada para resolver 
+	esta clase de problemas.
+
+        \subsubsection{Primera estrategia: Round Robin}
+        Como primera estrategia de \textit{scheduling} se decidió implementar una simple estrategia de \textit{Round Robin}.
+        Esto es, los períodos de tiempo de uso de CPU (\textit{time slices}) son asignados a los procesos en porciones 
+        equivalentes y en orden circular, sin hacer uso de un sistema de prioridades. Este estrategia, además de ser muy 
+        fácil de implementar, asegura la provisión de tiempo de CPU a todos los procesos (\textit{starvation free}).
+
+	En nuestra implementación, utilizando la \textit{ProcessQueue} lo único que se hace es desencolar el siguiente proceso 
+	de la cola y encolar al final de ella al proceso que estaba ejecutando.
+
+        \subsubsection{Segunda estrategia: Algoritmo basado en prioridades}
+        Para nuestra segunda estrategia, y siguiendo con la consigna del trabajo, implementamos un sistema basado en 
+        prioridades. El algoritmo para elegir al siguiente proceso al que se le asignara un \textit{time slice} utiliza
+        2 parámetros: la prioridad de un proceso y su "prioridad acumulada". El mismo tiene la siguiente forma:
+
+        En un primer momento todos los procesos tienen prioridad acumulada 0. Al momento de elegir el siguiente proceso
+        se le suman a las "prioridades acumuladas", las prioridades de cada proceso. Luego, se elige como siguiente 
+        proceso al que tenga mayor "prioridad acumulada" y a dicho proceso se le reinicia su "prioridad acumulada" a 0.
+        El resto de los proceso mantienen s'us "prioridades acumuladas" para el siguiente turno. 
+
+        En cada momento de elección, se repite ese procedimiento. Este simple algoritmo, asegura que los procesos con 
+        mayor prioridad recibirán mayor tiempo de ejecución que los de menor prioridad, y que, tarde o temprano, todos
+        podrán ejecutarse.
+
+    \subsection{Múltiples Terminales}
 \newpage
 \section{Driver Ata}
     Se comenzó a implementar un \textit{driver} ATA en modo PIO. Esto significaba que los accesos a disco iban a ser
@@ -140,7 +171,7 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     este listo antes de realizar alguna operación. Hay dos maneras de realizar esta espera, se puede esperar a que una IRQ
     indique que el disco esta listo o se puede consultar el estado del disco hasta que este este listo (\textit{polling}).
     Hacer \textit{polling} puede hacer que se pierda tiempo en un sistema multitareas, pero por otro lado una sola
-    consulta de \{polling} es más rápida que esperar a una IRQ e implementar \textit{polling} es mucho más sencillo.
+    consulta de \textit{polling} es más rápida que esperar a una IRQ e implementar \textit{polling} es mucho más sencillo.
     Por esta última razón fue elegida la técnica de \textit{polling}.
 \newpage
 \section{File System}
@@ -255,6 +286,8 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     y manipulable en los momentos necesarios, sobre todo al modificar el árbol del \textit{file system}.
 
     \subsection{Usuarios y grupos}
+
+      
     
     \subsection{Permisos del sistema}
 
