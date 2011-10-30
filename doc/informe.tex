@@ -85,26 +85,24 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
   llamadas a sistema.
 \newpage
 \section{Procesos}
-    Al comenzar el nuevo trabajo práctico, uno de los primeros desafios era el de implementar un sistema multitarea.
-     En un principio, se diseñaron estructuras adecuadas para poder contener toda la información que formaba a un proceso,
-      así como los datos necesarios para poder recuperar los estados de un proceso a la hora de ser ejecutados
-      por el procesador. En esta instancia fue aprovechado el diseño de estas estructuras para agregarle ciertas
-      funcionalidades a los procesos, como por ejemplo usuarios y grupos.
-     La jerarquía de los procesos fue modelada de forma similar a la de \textit{UNIX} y una vez preparados los datos
-      necesarios se utilizó el uso de llamadas como \textit{run()} (función análoga a lo que era \textit{fork()} y
-      \textit{exec()} en un entorno \textit{UNIX}) para la creación de estos procesos.
 
-    \subsection{Estructura de un proceso}
-    
-    La estructura de un proceso necesitaba tener la información justa y necesaria para que una vez creado pueda ser 
-    ejecutado en un ambiente multitarea, con un \textit{file system} y con manejo de archivos. La llamada a 
-    \textit{run()} también debía ser soportada por estos procesos.
+\subsection{Estructura de un proceso}
+La estructura de proceso contiene toda la informacion necesaria para ejecutar el proceso y atender llamadas al sistema.
+Basicamente la informacion que contiene es:
+\begin{itemize}
+\item Contexto de ejecucion
+\item Padre
+\item Usuario y grupo
+\item Archivos abiertos
+\item Estado de scheduling
+\end{itemize}
 
-    Finalmente la estructura de un proceso conto con su identificador de proceso, datos sobre el proceso padre, datos
-    sobre el punto de entrada del proceso junto con sus argumentos y datos en memoria, datos sobre el estado de ejecución
-    del proceso junto con otros datos de \textit{scheduling}, información sobre el tiempo de ejecución, una tabla de
-    los archivos abiertos por el proceso, datos sobre el grupo y usuario que ejecutó el proceso y el 
-    \textit{current working directory}.
+El contexto de ejecucion es la parte fundamental de la estructura.
+Este contiene la memoria que es el stack y el heap del proceso.
+Tambien contiene una referencia al punto de entrada del proceso, y los argumentos pasados al momento de creacion.
+
+Para permitir la interaccion con el file system, el proceso tiene una tabla de que archivos tiene abiertos.
+Ademas, el usuario que lo ejecuto, que es necesario para verificar permisos.
 
     \subsection{Scheduling}
     Como primera estrategia de \textit{scheduling} se decidió implementar una simple estrategia de \textit{Round Robin}.
@@ -115,7 +113,27 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     Para nuestra segunda estrategia, y siguiendo con la consigna del trabajo, implementamos un sistema basado en 
     prioridades. 
 
-    \subsection{Multiples Terminales}
+\subsection{Multiples Terminales}
+Para el soporte de varias terminales, optamos por crear un proceso \textit{tty}, como mediador entre las \textit{shells} y el teclado y pantalla.
+Este proceso recibe los pedidos de IO de los procesos que deseen escribir a pantalla o leer de teclado.
+
+Una de sus tareas es tener en cuenta que proceso es activo, y por lo tanto, si puede o no leer del teclado.
+Si un proceso no activo intenta leer de teclado, se lo bloquea hasta que este estado cambie, o se mate al proceso.
+De la misma manera, para escribir a pantalla, se tiene el concepto de terminal activa.
+Es responsabilidad de \textit{tty} asegurar que solo se vea el output de la terminal activa, y que ante un cambio de terminal se redibuje la pantalla.
+
+Una de las motivaciones mas importantes para hacer de esto un proceso dedicado, es poder interpretar el input de teclado aun mientras el proceso activo no pida entrada.
+Es decir, es posible cambiar entre terminales cuando ningun proceso esta pidiendo input, ya que esta operacion la hace \textit{tty}.
+
+Una particularidad muy importante de \textit{tty} es que es uno de los dos procesos de \textit{kernel}.
+Al decir proceo de kernel, significa que corre en el contexto de memoria del kernel, y por lo tanto, puede hacer acceso directo a operaciones del kernel.
+Esto resulto ser necesario y muy valioso, por que permite a este proceso acceder a informacion de los procesos, y bloquearlos en caso de ser necesario.
+A pesar de esto, en todo otro aspecto se lo trata como un proceso normal.
+
+Una vez inicializado \textit{tty} este crea los procesos de \textit{login}, cada uno en su propia terminal.
+Este proceso se encarga de verificar las credenciales del usuario, y en caso de ser correctas, ejecutar el shell para que el usuario pueda utilizar el sistema.
+Entonces, cada shell es un proceso independiente, en su propia terminal.
+
 \newpage
 \section{Driver Ata}
     Se comenzó a implementar un \textit{driver} ATA en modo PIO. Esto significaba que los accesos a disco iban a ser
@@ -145,67 +163,77 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
 \newpage
 \section{File System}
     
-    Una vez implementado el \textit{driver} ATA era posible comenzar a implementar nuestro \textit{file system}.
-    Dado que nuestra intención era realizar un \textit{file system} persistente debiamos contar con ciertas estructuras
-    y ciertas especificaciones de como iba a estar representado el mismo en el disco. Luego de hacer un relevamiento
-    en el tópico decidimos que el implementar un sistema de tipo Ext2 abarcaba todas las caracteristicas que deseabamos
-    en nuestro sistema. Si bien es posible que un sistema Ext2 exceda los requerimientos del trabajo práctico, decidimos
-    que era más seguro seguir este estandar.
-    
-    Por otro lado, habia que realizar una lógica interna para la representación del \textit{file system}
-    incluyendo nuevas prestaciones en las llamadas a sistema y en nuestra libreria estandar. Esta parte de la 
-    implementación también es conocida como el \textit{virtual file system} (vfs).
+Una vez implementado el \textit{driver} ATA era posible comenzar a implementar nuestro \textit{file system}.
+Dado que nuestra intención era realizar un \textit{file system} persistente debiamos contar con ciertas estructuras
+y ciertas especificaciones de como iba a estar representado el mismo en el disco. Luego de hacer un relevamiento
+en el tópico decidimos que el implementar un sistema de tipo Ext2 abarcaba todas las caracteristicas que deseabamos
+en nuestro sistema. 
 
-    Una vez terminado el esqueleto que significaba el \textit{file system} se pudo profundizar en el mismo agregando
-    nuevas funcionalidades, particularmente vamos a hacer hincapie en las consecuencias de aperturas y manejo de
-    archivos, directorios, FIFO's, links simbolicos, \textit{current working
-    directory}, permisos del sistema y usuarios y grupos.
+Si bien es posible que un sistema Ext2 exceda los requerimientos del trabajo práctico, decidimos que era más seguro seguir este estandar. 
+Las herramientas provistas en la distribuciones de Linux para la manipulacion de ext2 probaron ser el mayor beneficio de esta eleccion.
+Contar con \textit{fsck} permitio asegurar el correcto funcionamiento de nuestra implementacion.
 
-    A continuación se presentan secciones detalladas sobre estos puntos.
+Una vez terminado el esqueleto que significaba el \textit{file system} se pudo profundizar en el mismo agregando
+nuevas funcionalidades, particularmente vamos a hacer hincapie en las consecuencias de aperturas y manejo de
+archivos, directorios, FIFO's, links simbolicos, \textit{current working
+directory}, permisos del sistema y usuarios y grupos.
 
-    \subsection{Sistema Ext2}
-    El sistema Ext2 provee un estandar de como guardar la información en el disco. Utiliza conceptos como super bloque, 
-    grupo de bloques, bloques y \textit{inodes} (algunos de los cuales fueron vistos en profundidad en clase). Como fue
-    dicho anteriormente, seguir este estandar fue una forma ordenada de tener la especificación de toda la estructura
-    de nuestro \textit{file system}.
+A continuación se presentan secciones detalladas sobre estos puntos.
 
-    Fue muy importante para nosotros al leer las especificaciones de Ext2 que todas las consideraciones a tener en cuenta
-    para armar nuestro sistema operativo según los requerimientos del trabajo práctico y lo más similar a un ambiente
-    UNIX ya estaban especificadas. Por ejemplo, grupos y usuarios pudieron ser usados facilmente. Inclusive, cosas más
-    especificas, como si un inode representa un archivo FIFO ya esataban implementadas en Ext2. Si bien fue un trabajo
-    largo, ayudó a simplificar el resto de la organización del sistema.
+\subsection{Sistema Ext2}
+El sistema Ext2 provee un estandar de como guardar la información en el disco.
+Existen varias versiones de ext2, y una serie de extensiones al mismo, pero por simpliciadad nosotros optamos por la version 0.
+Esta es la primera, y mas simple version de ext2.
 
-    Hay ciertos detalles interesantes a tener en cuenta sobre la implementación. Sobre el sistema Ext2 se implementaron
-    ciertos \textit{buffers} para así disminuir los accesos a disco.
+Sobre la division basica de sectores de disco, ext2 crea el concepto de bloques.
+Cada bloque, o \textit{Block}, se compone de uno o mas sectores fisicamente contiguos.
+Todos los bloques dentro de una particion ext2 son del mismo tamaño, y tienen un indentificador unico.
 
-    Ahora veremos la estructura de Ext2 en mayor detalle:
+Sobre los bloques se construye la estructura en disco, compuesta de un \textit{Superblock} y varios \textit{Block Groups}.
+A su vez, cada \textit{Block Group} contiene varios \textit{Inodes}.
 
-        \subsubsection{Bloques}
+\subsubsection{Superblock}
+El \textit{Superblock} contiene la informacion basica y necesaria sobre el file system.
+Esto es, el tamaño de bloque, la cantidad de bloques en la particion, y otras estadisticas utiles de uso.
+Como primer paso en montar el file system, se debe cargar esta estructura, que siempre esta ubicada a partir del byte 1024 de la particion.
+Al ser utilizada frecuentemente, esta informacion una vez leida se la mantiene siempre en memoria.
 
-        Un \textit{file system} de tipo Ext2 divide el disco en bloques lógicos de sectores contiguos. Esto permite
-        tener la información más organizada y provee un sistema especificando como acceder finalmente a cada nodo
-        generado.
+\subsubsection{Inodes}
+Un inode es la representacion fisica de un archivo.
+O sea, un nodo en el file system.
+Pero no debe confundirse con una entrada en el arbol de directorios, que como ya veremos, son independientes de los \textit{inodes}.
 
-        \subsubsection{Superbloque}
+Cada inode contiene informacion basica sobre si mismo.
+Esto son tipo, permisos, tamaño, fecha de creacion, etc...
+Por supuesto, tambien contiene referencias a los bloques donde se almacena el contenido del inode.
 
-        Lo primero a realizarse un sistema Ext2 es encontrar y analizar el superbloque. Este contiene toda la información
-        necesaria para acceder al sistema. Hay especificaciones sobre como analizar el mismo, que finalmente provee
-        toda la información necesaria sobre los grupos de bloques, bloques y nodos.
+\subsubsection{Block Groups}
+En busqueda de eficiencia y organizacion, ext2 divide los bloques de la particion en varios grupos.
+Estos grupos tienen un numero igual de bloques y de inodes.
 
-        \subsubsection{Grupos de bloques}
-        
-        Para poder tener un acceso más sencillo a la información los bloques se agrupan de a grupos de bloques.
-        El superbloque contiene una referencia a la tabla de grupos de bloques. Esta es otro paso necesario a la hora
-        de acceder al contenido de un nodo.
+El objetivo principal de creacion de estos, es reducir la fragmentacion. 
+Permiten buscar bloques disponibles para uso dentro del mismo grupo en el que se encuentra un inode, asi teniendo toda la informacion en bloques lo mas cercanos posibles.
 
-        \subsubsection{Inodes}
-    
-        Un \textit{inode} en el sistema es un nodo que representa cualquier tipo de archivo en el \textit{file system}.
-        Estos, contienen todo tipo de información sobre el nodo facilitando así los propositos de nuestro trabajo
-        practico. Finalmente, contienen punteros hacia el verdadero contenido del archivo.
+En particular, estos contienen:
+\begin{itemize}
+\item Bitmap de uso de bloques
+\item Bitmap de uso de inodes
+\item Tabla de inodes
+\item Bloques de datos
+\end{itemize}
 
-        \subsection{Virtual file system}
-    
+La ubicacion de esta informacion, y otros datos sobre el uso de un dado grupo, se encuentra en la \textit{Block Group Descriptor Table}.
+Esta se encuentra en el bloque inmediatamente posterior al \textit{Superblock}.
+En ella se almacenan muchos datos utilizados con el objetivo de poder verificar el correcto estado del file system.
+
+\subsubsection{Entradas de directorio}
+ext2 define como se almacena el contenido de un directorio.
+Se hace de una manera muy simple en forma de \textit{Linked List}.
+Cada entrada contiene un nombre, y un numero de inode al que hace referencia.
+Como consecuencia, cada inode puede ser referencia con mas de un nombre, creando lo conocido como \textit{hard links}.
+
+\subsection{Virtual file system}
+
     \subsection{Apertura y manejo de archivos}
     En una primera instancia nos encargamos de adaptar nuestras llamadas a sistema y nuestra librería estandar
     para que puedan desarrollar las nuevas funcionalidades de nuestro sistema operativo. Las llamadas a \textit{read} y
