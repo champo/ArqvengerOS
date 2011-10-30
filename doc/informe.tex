@@ -73,7 +73,7 @@
 \section{Introducción}
 El trabajo práctico consistía en la extensión del sistema operativo armado en la materia arquitectura de las 
 computadoras. Este debia ser modificado de modo tal que esta nueva versión soporte procesamiento multitareas
- (inclusive con más de una técnica de \texit{scheduling}), soporte de acceso a disco rígido y un \textit{file system}
+ (inclusive con más de una técnica de 	extit{scheduling}), soporte de acceso a disco rígido y un \textit{file system}
  no tan básico con varios detalles interesantes (soporte de usuarios y grupos, \textit{FIFO's}, entre otros).
 
 \newpage
@@ -92,7 +92,7 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
       funcionalidades a los procesos, como por ejemplo usuarios y grupos.
      La jerarquía de los procesos fue modelada de forma similar a la de \textit{UNIX} y una vez preparados los datos
       necesarios se utilizó el uso de llamadas como \textit{run()} (función análoga a lo que era \textit{fork()} y
-      \textit{exec()} en un entorno \texit{UNIX}) para la creación de estos procesos.
+      \textit{exec()} en un entorno \textit{UNIX}) para la creación de estos procesos.
 
     \subsection{Estructura de un proceso}
     
@@ -140,7 +140,7 @@ El trabajo práctico fue comenzado tomando como base el trabajo hecho en la mate
     este listo antes de realizar alguna operación. Hay dos maneras de realizar esta espera, se puede esperar a que una IRQ
     indique que el disco esta listo o se puede consultar el estado del disco hasta que este este listo (\textit{polling}).
     Hacer \textit{polling} puede hacer que se pierda tiempo en un sistema multitareas, pero por otro lado una sola
-    consulta de \{polling} es más rápida que esperar a una IRQ e implementar \textit{polling} es mucho más sencillo.
+    consulta de \textit{polling} es más rápida que esperar a una IRQ e implementar \textit{polling} es mucho más sencillo.
     Por esta última razón fue elegida la técnica de \textit{polling}.
 \newpage
 \section{File System}
