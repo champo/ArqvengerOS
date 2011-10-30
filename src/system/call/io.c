@@ -643,6 +643,12 @@ struct fs_Inode* resolve_path(const char* path) {
     return curdir;
 }
 
+/**
+ * Checks if the user can read an inode, checking permissions.
+ *
+ * @param inode, the inode to be read.
+ * @return 0 if it is available, -1 if not.
+ */
 int can_read(struct fs_Inode* inode) {
     int gid, uid, file_gid, file_uid;
 
@@ -669,6 +675,12 @@ int can_read(struct fs_Inode* inode) {
     return 0;
 }
 
+/**
+ * Checks if the user can write an inode, checking permissions.
+ *
+ * @param inode, the inode to be written.
+ * @return 0 if it is available, -1 if not.
+ */
 int can_write(struct fs_Inode* inode) {
     int gid, uid, file_gid, file_uid;
 
