@@ -155,9 +155,9 @@ int create_group(char* groupname) {
         }
     }
     
-    strcpy(groups[i]->name, groupname);
-    groups[i]->id = id;
-    groups[i]->num_members = 0;
+    strcpy(groups[i - 1]->name, groupname);
+    groups[i - 1]->id = id;
+    groups[i - 1]->num_members = 0;
 
     updateGroupsFile(groups[i], 0);
     
@@ -253,15 +253,12 @@ int add_group_member(int gid, int uid) {
         return -1;
     }
 
-    printf("group vale %d\n",group);
-    printf("group->members vale %d\n",group->members);
-    printf("num-members vale %d\n",group->num_members);
     user->gid[0] = gid; 
     group->members[group->num_members] = user;
     group->num_members++;
 
     updateGroupsFile(group, 0);
-    printf("asasa");
+    
     return group->num_members;
 }
 

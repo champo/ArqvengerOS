@@ -54,7 +54,7 @@ void tty_run(char* unused) {
    
     int fd;
     FILE* fp;
-    if ((fd = open("/users", O_RDONLY)) != -1) {
+    if ((fd = open("/users", O_RDONLY)) == -1) {
         fp = fopen("/users", "w");
         fprintf(fp, "root:x:0:0:root:root\n");
         fprintf(fp, "acrespo:x:5:1:alv:users\n");
@@ -63,7 +63,7 @@ void tty_run(char* unused) {
         close(fd);
     }
 
-    if ((fd = open("/groups", O_RDONLY)) != -1) {
+    if ((fd = open("/groups", O_RDONLY)) == -1) {
         fp = fopen("/groups", "w");
         fprintf(fp, "root:x:0:root\n");
         fprintf(fp, "users:x:1:acrespo\n");

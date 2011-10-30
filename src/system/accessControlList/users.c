@@ -10,6 +10,7 @@
 
 static void parseUserLine(char* str, struct User* user, char* def_group);
 static int updateUsersFile(struct User* user, int delete);
+static void writeUserLine(FILE* fp, struct User* user);
 
 void users_init(void) {
 
@@ -142,7 +143,7 @@ int updateUsersFile(struct User* user, int delete) {
     int length, found = 0, i = 0;
 
     while(fscanf(fp, "%s\n", line[i++]) != 0);
-        
+
     fclose(fp);
     fp = fopen("/users", "w");
 
@@ -202,7 +203,7 @@ int create_user(char* name, char* passwd, char* groupname) {
 
         return -1;
     }
-
+    
     users[i] = malloc(sizeof(struct User));
     i++;
 
@@ -213,14 +214,14 @@ int create_user(char* name, char* passwd, char* groupname) {
         }
     }
 
-    strcpy(users[i]->name, name);
-    strcpy(users[i]->passwd, passwd);
+    strcpy(users[i - 1]->name, name);
+    strcpy(users[i - 1]->passwd, passwd);
 
     group = get_group_by_name(groupname);
-    users[i]->gid[0] = group->id;
-    users[i]->id = id;
+    users[i - 1]->gid[0] = group->id;
+    users[i - 1]->id = id;
  
-    updateUsersFile(users[i], 0);
+    updateUsersFile(users[i - 1], 0);
     
     for (int j = 0; j < i; j++) {
         free(users[j]);        

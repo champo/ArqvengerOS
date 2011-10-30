@@ -33,12 +33,18 @@ void command_renice(char* argv) {
         printf("renice: please choose another\n");
         return;
     }
+    
+    if (!is_a_number(secondSpace + 1)) {
+        printf("renice: invalid pid value\n");
+        printf("renice: pids must be numeric\n");
+        printf("renice: please choose another\n");
+    }
 
     new_priority = renice(pid, new_priority);
-
-    if (!is_a_number(secondSpace + 1) || new_priority == INVALID_PRIORITY) {
+           
+    if (new_priority == INVALID_PRIORITY) {
         printf("renice: invalid pid value\n"); 
-        printf("renice: pids must be numeric and match the pid of an active process\n");
+        printf("renice: pids must match the pid of an active process\n");
         printf("renice: please choose another\n");
         return;
     }
