@@ -6,6 +6,9 @@
 #include "system/scheduler.h"
 #include "system/fs/fs.h"
 
+#include "library/stdio.h"
+#include "system/accessControlList/users.h"
+
 static int activeTerminal = 0;
 
 static struct Terminal terminals[NUM_TERMINALS];
@@ -36,11 +39,42 @@ void tty_run(char* unused) {
     });
 
     struct fs_Inode* root = fs_root();
-    fs_mknod(root, "tty", INODE_CHARDEV);
+    if (root == NULL) {
+        panic();
+    }
+
+    int res = fs_mknod(root, "tty", INODE_CHARDEV);
+    if (res != 0 && res != EEXIST) {
+        panic();
+    }
 
     open("/tty", O_RDONLY);
     open("/tty", O_WRONLY);
     open("/tty", O_WRONLY);
+
+    int fd;
+    FILE* fp;
+    if ((fd = open("/users", O_RDONLY)) == -1) {
+
+        fp = fopen("/users", "w");
+        fprintf(fp, "root:x:0:0:root:root\n");
+        fprintf(fp, "acrespo:x:5:1:alv:users\n");
+
+        fclose(fp);
+    } else {
+        close(fd);
+    }
+
+
+    if ((fd = open("/groups", O_RDONLY)) == -1) {
+        fp = fopen("/groups", "w");
+        fprintf(fp, "root:x:0:root\n");
+        fprintf(fp, "users:x:1:acrespo\n");
+
+        fclose(fp);
+    } else {
+        close(fd);
+    }
 
     // Spawn the shells (this is a kernel process, so we can do this)
     for (int i = 0; i < NUM_TERMINALS; i++) {

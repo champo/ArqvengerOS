@@ -19,3 +19,14 @@ void _setProcessPersona(int pid, int uid, int gid) {
 
     return;
 }
+
+void _getProcessPersona(int pid, int* uid, int* gid) {
+
+    struct Process* process = process_table_get(pid);
+    if (process != NULL) {
+        *uid = process->uid;
+        *gid = process->gid;
+    }
+
+    return;
+}

@@ -258,6 +258,10 @@ int fs_mknod(struct fs_Inode* path, const char* name, int type) {
 
     //TODO: This needs to check out the current user
     struct fs_Inode* nod = ext2_create_inode(fs, type, PERM_DEFAULT, 0, 0);
+    if (NULL == nod) {
+        return EIO;
+    }
+
     int res = add_link(path, name, nod);
     free_inode(nod);
 

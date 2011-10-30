@@ -3,6 +3,7 @@
 
 #define MAX_GROUPNAME_LEN   32
 #define MAX_GROUP_MEMBERS   128
+#define MAX_GROUPS  128
 
 struct Group {
     char name[MAX_GROUPNAME_LEN];
@@ -11,6 +12,7 @@ struct Group {
     int num_members;
 };
 
+int get_groups_num(void);
 
 struct Group* get_group_by_id(int gid);
 
@@ -20,6 +22,10 @@ char* get_groupname(int gid);
 
 int create_group(char* groupname);
 
-void add_group_member(int gid, int uid);
+int delete_group(char* groupname);
+
+int add_group_member(int gid, int uid);
+
+int delete_group_member(int gid, int uid);
 
 #endif

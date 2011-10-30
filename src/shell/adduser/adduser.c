@@ -17,19 +17,26 @@ void adduser(char* argv) {
     char proceed[LINE_WIDTH];
     int uid;
     int first = 1;
+    
     termios oldTermios;
     termios passwdTermios = {1 , 0};
 
     printf("\n");
 
     do {
+        if (!first) {
+            printf("-Username invalid or already taken\n");
+            printf("-Please choose another\n");
+        }
         printf("Login name for new user []:");
         scanf("%s",username);
         cleanbuffer();
-    } while(strcmp(username,"") == 0);
+        first = 0;
+    } while(strcmp(username,"") == 0 || get_user_by_name(username) != NULL);
 
     printf("\n");
     
+    first = 1;
     do {
         if (!first) {
             printf("-Group '%s' does not exists\n", groupname);
@@ -74,9 +81,26 @@ void adduser(char* argv) {
     ioctl(0, TCSETS, (void*) &oldTermios);
     printf("\n");
 
-    uid = create_user(username, passwd);
+    uid = create_user(username, passwd, groupname);
+
+    if (uid == -1) {
+        printf("adduser: unable to create new user\n");
+        printf("adduser: out of space\n");
+        printf("adduser: try deleting another user and trying again\n");
+        return;
+    }
+
+    struct Group* group = get_group_by_name(groupname);
     
-    add_group_member(uid,1);
+    if (add_group_member(group->id, uid) == -1) {
+        printf("adduser: could not add user to the group\n");
+        printf("adduser: it is very likely that the maximum capacity has been reached\n");
+        printf("adduser: try deleting other users to make room\n");
+        delete_user(username);
+        return;
+    }
+    
+    printf("Successfully created user account.\n");
 }
 
 
