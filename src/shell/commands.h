@@ -23,8 +23,6 @@
 #include "shell/groupadd/groupadd.h"
 #include "shell/groups/groups.h"
 #include "shell/groupdel/groupdel.h"
-#include "shell/groupaddmem/groupaddmem.h"
-#include "shell/groupdelmem/groupdelmem.h"
 #include "shell/passwd/passwd.h"
 #include "shell/renice/renice.h"
 
