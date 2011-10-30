@@ -260,6 +260,10 @@ int fs_mknod(struct fs_Inode* path, const char* name, int type) {
     struct Process* process = scheduler_current();
 
     struct fs_Inode* nod = ext2_create_inode(fs, type, PERM_DEFAULT, process->uid, process->gid);
+    if (NULL == nod) {
+        return EIO;
+    }
+
     int res = add_link(path, name, nod);
     free_inode(nod);
 

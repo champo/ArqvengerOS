@@ -248,10 +248,11 @@ size_t tty_read(void* buffer, size_t count) {
     }
 
     char* buf = (char*) buffer;
-    int i, c = (int) count;
+    int c = count, read;
 
     if (tty_current()->termios.canon) {
 
+        int i;
         // Make sure until we read a whole line, and then only take what we need.
         for (i = 0; i < bufferEnd && inputBuffer[i] != '\n'; i++);
 
@@ -277,17 +278,20 @@ size_t tty_read(void* buffer, size_t count) {
     caller->schedule.ioWait = 0;
 
     // Copy the input to the buffer
-    for (i = 0; i < c; i++) {
+    for (int i = 0; i < c; i++) {
         buf[i] = inputBuffer[i];
     }
 
+    read = c;
+
     // Make sure we move the input buffer to remove what was already read
+    int i;
     for (i = 0; c < bufferEnd; i++, c++) {
         inputBuffer[i] = inputBuffer[c];
     }
     bufferEnd = i;
 
-    return c;
+    return read;
 }
 
 /**

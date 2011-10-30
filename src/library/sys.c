@@ -116,3 +116,6 @@ void setProcessPersona(int pid, int uid, int gid) {
     system_call(_SYS_SETPPERSONA, pid, uid, gid);
 }
 
+void getProcessPersona(int pid, int* uid, int* gid) {
+    system_call(_SYS_GETPPERSONA, pid, uid, gid);
+}

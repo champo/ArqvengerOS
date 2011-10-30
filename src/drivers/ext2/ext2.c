@@ -7,10 +7,32 @@
 #include "system/fs/fs.h"
 #include "system/mm.h"
 
+/**
+ * The write function for regular files and symbolic links.
+ *
+ * @param fd, the file descriptor to be modified.
+ * @param buffer, the source to be written.
+ * @param len the amount of characters to be written.
+ * @return the amount of characters written.
+ */
 static size_t inode_write(struct FileDescriptor* fd, const void* buffer, size_t len);
 
+/**
+ * The read function for regular files and symbolic links.
+ *
+ * @param fd, the file descriptor to be modified.
+ * @param buffer, the output string.
+ * @param len the amount of characters to be read.
+ * @return the amount of characters read.
+ */
 static size_t inode_read(struct FileDescriptor* fd, void* buffer, size_t len);
 
+/**
+ * The function for reading the contents of a directory.
+ *
+ * @param fd, the file descriptor to be modified.
+ * @return a directory entry.
+ */
 static struct fs_DirectoryEntry readdir(struct FileDescriptor* fd);
 
 struct ext2* ext2_load(unsigned long long startSector) {

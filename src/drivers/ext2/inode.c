@@ -42,6 +42,7 @@ static int read_block_index(struct ext2* fs, int level, size_t block);
  */
 static int write_block_index(struct ext2* fs, int level);
 
+//TODO javadoc
 static size_t block_index_to_block(struct ext2* fs, struct ext2_Inode* inode, size_t blockIndex);
 
 /**

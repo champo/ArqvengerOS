@@ -53,7 +53,9 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 25
+struct User* askForLogin(struct Shell* self);
+
+#define NUM_COMMANDS 31
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -74,6 +76,12 @@ static const Command commands[] = {
     { &command_ls, "ls", "List entries in a directory.", &manLs, 0},
     { &append, "append", "Append content to a file.", &man_append, 0},
     { &adduser, "adduser", "Add new user account.", &manAdduser, 0},
+    { &users, "users", "Show users logged.", &manUsers, 0},
+    { &userdel, "userdel", "Delete an user account and related files.", &manUserdel, 0},
+    { &passwd, "passwd", "Chanfe user password", &manPasswd, 0},
+    { &groupadd, "groupadd", "Create a new group.", &manGroupadd, 0},
+    { &groups, "groups", "Display current group names.", &manGroups, 0},
+    { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
     { &users, "users", "Show users loggued.", &manUsers, 0},
     { &command_ln, "ln", "Create a symbolic link.", &man_ln, 0},
     { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
@@ -100,11 +108,12 @@ void shell(char* unused) {
     //TODO: Get this from somewhere
     self->ttyNumber = 0;
 
-    char username[MAX_USERNAME_LEN];
+    struct User* user;
     do {
         printf("login:");
-    } while (askForLogin(self, username));
+    } while ((user = askForLogin(self)) == NULL);
 
+    setProcessPersona(getpid(), user->id, user->gid[0]);
 
     // We always need to set the status needed by the shell, and then reset
     // it to the default, to make sure the input behaviour is as expected.
@@ -113,7 +122,7 @@ void shell(char* unused) {
 
     while (1) {
 
-        cmd = nextCommand(self, username);
+        cmd = nextCommand(self, user->name);
         if (cmd != NULL) {
 
             ioctl(0, TCSETS, (void*) &self->inputStatus);
@@ -125,10 +134,11 @@ void shell(char* unused) {
     }
 }
 
-int askForLogin(struct Shell* self, char* username) {
+struct User* askForLogin(struct Shell* self) {
 
     int promptLen = strlen("login");
     char passwd[MAX_PASSWD_LEN];
+    char username[MAX_USERNAME_LEN];
     termios passwdTermios = {1 , 0};
 
     scanf("%s", username);
@@ -147,15 +157,14 @@ int askForLogin(struct Shell* self, char* username) {
     printf("\n\n");
 
     struct User* user = get_user_by_name(username);
+
     if (user != NULL) {
         if (strcmp(passwd, user->passwd) == 0) {
-            strcpy(username, user->name);
-            return 0;
+            return user;
         }
     }
-    memset(username, 0, MAX_USERNAME_LEN);
     printf("Login incorrect\n");
-    return 1;
+    return NULL;
 
 }
 

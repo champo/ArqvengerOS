@@ -104,11 +104,6 @@ int _open(const char* path, int flags, int mode) {
         mode = 00666;
     }
 
-    if (flags & O_TRUNC) {
-        _unlink(path);
-        _creat(path, mode);
-    }
-
     char* base = path_directory(path);
     char* filename = path_file(path);
 
