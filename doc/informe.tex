@@ -220,6 +220,8 @@ Esta es la primera, y mas simple version de ext2.
 Sobre la division basica de sectores de disco, ext2 crea el concepto de bloques.
 Cada bloque, o \textit{Block}, se compone de uno o mas sectores fisicamente contiguos.
 Todos los bloques dentro de una particion ext2 son del mismo tamaño, y tienen un indentificador unico.
+El tamaño de un bloque se define como $ 2^{10 + n} $.
+Si bien $n$ puede tomar cualquier valor entre 0 y $ 2^{32} $, se toman valores comprendidos solo entre 0 y 3.
 
 Sobre los bloques se construye la estructura en disco, compuesta de un \textit{Superblock} y varios \textit{Block Groups}.
 A su vez, cada \textit{Block Group} contiene varios \textit{Inodes}.
@@ -238,6 +240,15 @@ Pero no debe confundirse con una entrada en el arbol de directorios, que como ya
 Cada inode contiene informacion basica sobre si mismo.
 Esto son tipo, permisos, tamaño, fecha de creacion, etc...
 Por supuesto, tambien contiene referencias a los bloques donde se almacena el contenido del inode.
+
+Las referencias a los bloques de datos se guardan con 14 punteros a bloques.
+Los primeros 11 punteros son conocidos como \textit{Direct Block Pointers}, ya que aputan directamente a un bloque que contiene datos.
+El numero 12 es el \textit{Singly indirect Block Pointer}, y apunta a un bloque que contiene un array de referencias a bloques de datos.
+El numero 13 y 14 son \textit{Doubly indirect Block Pointer} y \textit{Triply indirect Block Pointer}, respectivamente.
+Estos siguen la misma idea que el 12, pero lo hacen con mas niveles de indireccion entre el puntero original y los bloques de datos.
+
+    <<<< ACA SUSNI ALTO LUGAR PARA GRAFICO, YA SABES CUAL! >>>
+
 
 \subsubsection{Block Groups}
 En busqueda de eficiencia y organizacion, ext2 divide los bloques de la particion en varios grupos.
@@ -264,55 +275,74 @@ Se hace de una manera muy simple en forma de \textit{Linked List}.
 Cada entrada contiene un nombre, y un numero de inode al que hace referencia.
 Como consecuencia, cada inode puede ser referencia con mas de un nombre, creando lo conocido como \textit{hard links}.
 
+\subsubsection{Limitaciones}
+El tamaño maximo de la particion, y de los inodes, es definido en funcion del tamaño de bloque.
+Y en nuestro caso, se ve limitado por el driver ATA que soporta direccionar hasta $ 2^{28} $ sectores.
+
+El limite teorico de tamaño total viene dado por $$ 2^{32} * blockSize $$.
+Ahora, como nuestro driver ATA soporta solo sectores de 512 bytes, el limite real es $ 2^{28} * 512 bytes $.
+
+El limite de tamaño de un inode 
+
 \subsection{Virtual file system}
 
-    \subsection{Apertura y manejo de archivos}
-    En una primera instancia nos encargamos de adaptar nuestras llamadas a sistema y nuestra librería estandar
-    para que puedan desarrollar las nuevas funcionalidades de nuestro sistema operativo. Las llamadas a \textit{read} y
-    \textit{write} podían ahora escribir en archivos, así como las llamadas a \textit{open} y \textit{close} se hicieron
-    necesarias cuando antes no lo fueron.
-    Al hacer una llamada a \textit{open()}, esta actualizaba tanto a nivel kernel como a nivel proceso que cierto
-    archivo habia sido abierto. Como ya fue dicho, un proceso contaba con una tabla de \textit{file descriptors}. 
-    Estos, apuntan al \textit{inode} siendo manipulado y además cuentan con punteros a función que indican como 
-    deben comportarse lecturas y escrituras (entre otras cosas) dependiendo el tipo de archivo 
-    (podría bien ser un archivo regular o un link simbolico por ejemplo). Esto permitió que las implementaciones 
-    a \textit{read()}, \textit{write()} y \textit{close()} sean bastante sencillas. 
-    
-    Estas llamadas a sistema fueron siendo extendidas a medida que la funcionalidad del sistema operativo crecía. Como
-    será visto en las proximas secciones, se escribieron funciones adecuadas para la manipulación de cada tipo de archivo.
-    
-    Para realizar todas estas llamadas a sistema se explotó en su máximo potencial las prestaciones del vfs.
-    
-    Por último, es interesante destacar que dado que el usuario se maneja con cadenas de texto que representan 
-    \textit{inodes}, fueron armadas funciones que permiten resolver estas cadenas, dividiendo directorios y archivos,
-    proveyendo finalmente el \textit{inode} deseado. 
+Para proveer una interfaz desacoplada de la implementacion particular de ext2, creamos el \textit{VFS}.
+Este representa en memoria la estructura de inode y \textit{File Descriptors}.
+Y es el que utilizan los procesos para leer y escribir de archivos.
 
-    \subsection{Directorios}
+Este diseño nos permitio gran flexibilidad a la hora de implementar los distintos comportamientos esperados del file system.
+
+\subsection{Apertura y manejo de archivos}
+En una primera instancia nos encargamos de adaptar nuestras llamadas a sistema y nuestra librería estandar
+para que puedan desarrollar las nuevas funcionalidades de nuestro sistema operativo.
+Las llamadas a \textit{read} y \textit{write} podían ahora escribir en archivos, así como las llamadas a \textit{open} y \textit{close} se hicieron
+necesarias cuando antes no lo fueron.
+Al hacer una llamada a \textit{open()}, esta actualizaba tanto a nivel kernel como a nivel proceso que cierto archivo habia sido abierto. 
+Como ya fue dicho, un proceso contaba con una tabla de \textit{file descriptors}. 
+Estos, apuntan al \textit{inode} siendo manipulado y además cuentan con punteros a función que indican como deben comportarse lecturas y escrituras (entre otras cosas) dependiendo el tipo de archivo 
+(podría bien ser un archivo regular o un link simbolico por ejemplo). 
+Esto permitió que las implementaciones de \textit{read()}, \textit{write()} y \textit{close()} sean bastante sencillas. 
     
-    Ya a bajo nivel era posible detectar el tipo de \textit{inode} guardado en el sistema. Un directorio simplemente era
-    un inode que en su contenido se guardan referencias hacía otros inodes. Tanto la interfaz del driver Ext2 como la del
-    vfs permiten escribir directorios de forma correcta. Cabe destacar que ademas de la referencia al inode, una entrada
-    de directorio también guarda el nombre de la entrada que luego verá el usuario.
+Estas llamadas a sistema fueron siendo extendidas a medida que la funcionalidad del sistema operativo crecía. Como
+será visto en las proximas secciones, se escribieron funciones adecuadas para la manipulación de cada tipo de archivo.
 
-    \subsection{FIFO's}
+Para realizar todas estas llamadas a sistema se explotó en su máximo potencial las prestaciones del vfs.
 
-    \subsection{Links simbolicos}
+Por último, es interesante destacar que dado que el usuario se maneja con cadenas de texto que representan 
+\textit{inodes}, fueron armadas funciones que permiten resolver estas cadenas, dividiendo directorios y archivos,
+proveyendo finalmente el \textit{inode} deseado. 
+
+\subsection{Directorios}
+
+Ya a bajo nivel era posible detectar el tipo de \textit{inode} guardado en el sistema. Un directorio simplemente era
+un inode que en su contenido se guardan referencias hacía otros inodes. Tanto la interfaz del driver Ext2 como la del
+vfs permiten escribir directorios de forma correcta. Cabe destacar que ademas de la referencia al inode, una entrada
+de directorio también guarda el nombre de la entrada que luego verá el usuario.
+
+\subsection{FIFO}
+La implementacion de \textit{FIFOs} resulto trivial, ya que muchas de las decisiones diseño tomadas antes de implementarlos los tenian en cuenta.
+La existencia de la estructura \textit{FileDescriptorOps} que contiene punteros a funcion con las operaciones realizables sobre un File Descriptor, permitio que la implementacion sea totalmente transparente a nivel sistema.
+
+Al inode que representa un FIFO, cuando es abierto por primera vez se le asocia una estructura \textit{FIFO}.
+Esta contiene el buffer donde se guardan los datos escritos al FIFO, cuantos procesos abrieron el fifo, y otro datos utiles.
+
+
+\subsection{Links simbolicos}
+La implementación de links simbolicos implicaba la creación de nodos que inclusive en el sistema Ext2 eran marcados
+como links simbolicos. El contenido de los mismos simplemente indicaba el \textit{path} del archivo al que este
+hacia referencia.
+Luego, a la hora de leer un archivo que sea un link simbolico (o al tratar de resolver un \textit{path} cuyo alguno
+de sus directorios era un link simbolico) bastaba con reemplazar el este archivo con el link al que realmente
+apuntaba.
+
+En esta implementación (al igual que en el resto) tratamos de ser lo más fieles al entorno \textit{UNIX} como 
+era posible.
+
+\subsection{Current working directory}
     
-    La implementación de links simbolicos implicaba la creación de nodos que inclusive en el sistema Ext2 eran marcados
-    como links simbolicos. El contenido de los mismos simplemente indicaba el \textit{path} del archivo al que este
-    hacia referencia.
-    Luego, a la hora de leer un archivo que sea un link simbolico (o al tratar de resolver un \textit{path} cuyo alguno
-    de sus directorios era un link simbolico) bastaba con reemplazar el este archivo con el link al que realmente
-    apuntaba.
-
-    En esta implementación (al igual que en el resto) tratamos de ser lo más fieles al entorno \textit{UNIX} como 
-    era posible.
-
-    \subsection{Current working directory}
-        
-    Como ya fue mencionado, cada proceso contiene información sobre cual era el \textit{current working directory} en
-    el momento en que fue ejecutado. Esto permite que la obtención del \textit{current working directory} sea sencilla
-    y manipulable en los momentos necesarios, sobre todo al modificar el árbol del \textit{file system}.
+Como ya fue mencionado, cada proceso contiene información sobre cual era el \textit{current working directory} en
+el momento en que fue ejecutado. Esto permite que la obtención del \textit{current working directory} sea sencilla
+y manipulable en los momentos necesarios, sobre todo al modificar el árbol del \textit{file system}.
 
     \subsection{Usuarios y grupos}
 
