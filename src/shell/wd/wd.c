@@ -15,7 +15,8 @@ void command_cd(char* argv) {
 
     cmdEnd++;
     if (chdir(cmdEnd) == -1) {
-        printf("%s is not a directory.\n", cmdEnd);
+        //printf("%s is not a directory.\n", cmdEnd);
+        printf("Operation Unseccesful.\n");
     }
 }
 
@@ -53,7 +54,7 @@ void command_mkdir(char* argv) {
     cmdEnd++;
     switch (mkdir(cmdEnd, 0744)) {
         case -1:
-            printf("Cant create '%s': No such file or directory.\n", cmdEnd);
+            printf("Cant create '%s'.\n"/*: No such file or directory*/, cmdEnd);
             break;
         case EEXIST:
             printf("Cant create '%s': File already exists.\n", cmdEnd);
@@ -83,7 +84,7 @@ void command_rmdir(char* argv) {
     switch (rmdir(cmdEnd)) {
         case -1:
         case ENOENT:
-            printf("Cant remove '%s': No such file or directory.\n", cmdEnd);
+            printf("Cant remove '%s'.\n"/*: No such file or directory.\n"*/, cmdEnd);
             break;
         case EIO:
             printf("Cant remove '%s': Some wizardry went awry. Try again later.\n", cmdEnd);
@@ -136,12 +137,14 @@ void command_ln(char* argv) {
 
     if (target == NULL) {
         printf("Arguments invalid.\n");
+        return;
     }
 
     char* link = strchr(target + 1, ' ');
 
     if (link == NULL) {
         printf("Arguments invalid.\n");
+        return;
     }
 
     int i;
@@ -188,6 +191,7 @@ void command_chmod(char* argv) {
 
     if (file == NULL) {
         printf("Arguments invalid.\n");
+        return;
     }
 
     int i;
