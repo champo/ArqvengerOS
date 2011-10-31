@@ -105,6 +105,11 @@ Tambien contiene una referencia al punto de entrada del proceso, y los argumento
 Para permitir la interaccion con el file system, el proceso tiene una tabla de que archivos tiene abiertos.
 Ademas, el usuario que lo ejecuto, que es necesario para verificar permisos.
 
+\subsubsection{Stack inicial}
+Una parte muy importante, y delicada, de la creacion de un proceso nuevo es la inicializacion del stack del proceso.
+Es necesario asegurar que en el momento que el scheduler cambie al contexto del proceso por primera vez, este pueda salir de la interrupcion que genero el cambio.
+Tambien se asegura que cuando se retorna del punto de entrada del proceso, se llama a \textit{exit} para que este termine con exito.
+
     \subsection{Scheduling}
         
         \subsubsection{Interfaz}
