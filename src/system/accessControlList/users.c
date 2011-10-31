@@ -12,6 +12,8 @@ static void parseUserLine(char* str, struct User* user, char* def_group);
 static int updateUsersFile(struct User* user, int delete);
 static void writeUserLine(FILE* fp, struct User* user);
 
+static char nameBuf[100];
+
 void users_init(void) {
 
 }
@@ -118,9 +120,13 @@ struct User* get_user_by_name(char* name) {
 
 char* get_username(int id) {
     struct User* user = get_user_by_id(id);
-    char* name = user->name;
-    free_user(user);
-    return user->name;
+    if (user == NULL) {
+        strcpy(nameBuf, "");
+    } else {
+        strcpy(nameBuf, user->name);
+        free_user(user);
+    }
+    return nameBuf;
 }
 
 int change_passwd(int uid, char* old_passwd, char* new_passwd) {
@@ -131,7 +137,7 @@ int change_passwd(int uid, char* old_passwd, char* new_passwd) {
         strcpy(user->passwd, new_passwd);
 
         updateUsersFile(user, 0);
-        
+
         free_user(user);
         return PASSWD_CHANGED;
     } else {

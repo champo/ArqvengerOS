@@ -11,6 +11,8 @@ static void parseGroupLine(char* line,struct Group* group);
 static int updateGroupsFile(struct Group* group, int delete);
 static void writeGroupLine(FILE* fp, struct Group* group);
 
+static char nameBuf[100];
+
 int get_groups_num(void) {
 
     FILE* fp = fopen("/groups", "r");
@@ -116,11 +118,14 @@ struct Group* get_group_by_name(char* groupname) {
 }
 
 char* get_groupname(int gid) {
-    
     struct Group* group = get_group_by_id(gid);
-    char* groupname = group->name;
-    free_group(group);
-    return groupname;
+    if (group == NULL) {
+        strcpy(nameBuf, "");
+    } else {
+        strcpy(nameBuf, group->name);
+        free_group(group);
+    }
+    return nameBuf;
 }
 
 int create_group(char* groupname) {
@@ -291,11 +296,11 @@ int delete_group_member(int gid, int uid) {
 }
 
 void free_group(struct Group* group) {
-    
+
     for (int i = 0; i < group->num_members; i++) {
         free_user(group->members[i]);
     }
-    
+
     free(group);
     return;
 }
