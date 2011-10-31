@@ -168,7 +168,7 @@ Una de las motivaciones más importantes para hacer de esto un proceso dedicado,
 Es decir, es posible cambiar entre terminales cuando ningún proceso está pidiendo input, ya que esta operación la hace \textit{tty}.
 
 Una particularidad muy importante de \textit{tty} es que es uno de los dos procesos de \textit{kernel}.
-Al decir proceo de \textit{kernel}, significa que corre en el contexto de memoria del kernel, y por lo tanto, puede hacer acceso directo a operaciones del \textit{kernel}.
+Al decir proceso de \textit{kernel}, significa que corre en el contexto de memoria del kernel, y por lo tanto, puede hacer acceso directo a operaciones del \textit{kernel}.
 Esto resultó ser necesario y muy valioso, por que permite a este proceso acceder a información de los procesos, y bloquearlos en caso de ser necesario.
 A pesar de esto, en todo otro aspecto se lo trata como un proceso normal.
 
