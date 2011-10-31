@@ -10,7 +10,6 @@
 #include "shell/commands.h"
 #include "mcurses/mcurses.h"
 
-#define cleanbuffer() while(getchar()!='\n')
 
 #define BUFFER_SIZE 500
 #define HISTORY_SIZE 50
@@ -53,9 +52,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-struct User* askForLogin(struct Shell* self);
-
-#define NUM_COMMANDS 31
+#define NUM_COMMANDS 32
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -82,13 +79,13 @@ static const Command commands[] = {
     { &groupadd, "groupadd", "Create a new group.", &manGroupadd, 0},
     { &groups, "groups", "Display current group names.", &manGroups, 0},
     { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
-    { &users, "users", "Show users loggued.", &manUsers, 0},
     { &command_ln, "ln", "Create a symbolic link.", &man_ln, 0},
     { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
     { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
     { &command_chmod, "chmod", "Change the permissions of a file.", &man_chmod, 0},
     { &command_renice, "renice", "Alter priority of a running process.", &manRenice, 0},
-
+    { &busywait, "busywait", "Busywaits eternally, consuming resources and CPU time.", &manBusywait, 0},
+    { &logout, "logout", "Logs out of the shell.", &manLogout, 1},
 };
 
 static termios shellStatus = { 0, 0 };
@@ -108,17 +105,14 @@ void shell(char* unused) {
     //TODO: Get this from somewhere
     self->ttyNumber = 0;
 
-    struct User* user;
-    do {
-        printf("login:");
-    } while ((user = askForLogin(self)) == NULL);
-
-    setProcessPersona(getpid(), user->id, user->gid[0]);
-
     // We always need to set the status needed by the shell, and then reset
     // it to the default, to make sure the input behaviour is as expected.
     ioctl(0, TCGETS, (void*) &self->inputStatus);
     ioctl(0, TCSETS, (void*) &shellStatus);
+
+    int uid,gid;
+    getProcessPersona(getpid(), &uid, &gid);
+    struct User* user = get_user_by_id(uid);
 
     while (1) {
 
@@ -132,40 +126,6 @@ void shell(char* unused) {
             ioctl(0, TCSETS, (void*) &shellStatus);
         }
     }
-}
-
-struct User* askForLogin(struct Shell* self) {
-
-    int promptLen = strlen("login");
-    char passwd[MAX_PASSWD_LEN];
-    char username[MAX_USERNAME_LEN];
-    termios passwdTermios = {1 , 0};
-
-    scanf("%s", username);
-    cleanbuffer();
-
-    printf("Password:");
-
-    ioctl(0, TCGETS, (void*) &self->inputStatus);
-    ioctl(0, TCSETS, (void*) &passwdTermios);
-
-    scanf("%s", passwd);
-    cleanbuffer();
-
-    ioctl(0, TCSETS, (void*) &self->inputStatus);
-
-    printf("\n\n");
-
-    struct User* user = get_user_by_name(username);
-
-    if (user != NULL) {
-        if (strcmp(passwd, user->passwd) == 0) {
-            return user;
-        }
-    }
-    printf("Login incorrect\n");
-    return NULL;
-
 }
 
 void run_command(struct Shell* self, const Command* cmd) {

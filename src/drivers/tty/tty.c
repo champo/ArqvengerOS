@@ -5,7 +5,7 @@
 #include "system/process/table.h"
 #include "system/scheduler.h"
 #include "system/fs/fs.h"
-
+#include "shell/login.h"
 #include "library/stdio.h"
 #include "system/accessControlList/users.h"
 
@@ -80,7 +80,7 @@ void tty_run(char* unused) {
     for (int i = 0; i < NUM_TERMINALS; i++) {
         terminals[i].termios.canon = 1;
         terminals[i].termios.echo = 1;
-        process_table_new(shell, NULL, scheduler_current(), 0, i, 1);
+        process_table_new(login, NULL, scheduler_current(), 0, i, 1);
     }
 
     while (1) {
