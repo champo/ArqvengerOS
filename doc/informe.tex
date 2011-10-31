@@ -303,14 +303,12 @@ Estos, apuntan al \textit{inode} siendo manipulado y además cuentan con puntero
 (podría bien ser un archivo regular o un link simbolico por ejemplo). 
 Esto permitió que las implementaciones de \textit{read()}, \textit{write()} y \textit{close()} sean bastante sencillas. 
     
-Estas llamadas a sistema fueron siendo extendidas a medida que la funcionalidad del sistema operativo crecía. Como
-será visto en las proximas secciones, se escribieron funciones adecuadas para la manipulación de cada tipo de archivo.
+Estas llamadas a sistema fueron siendo extendidas a medida que la funcionalidad del sistema operativo crecía. 
+Como será visto en las proximas secciones, se escribieron funciones adecuadas para la manipulación de cada tipo de archivo.
 
-Para realizar todas estas llamadas a sistema se explotó en su máximo potencial las prestaciones del vfs.
-
-Por último, es interesante destacar que dado que el usuario se maneja con cadenas de texto que representan 
-\textit{inodes}, fueron armadas funciones que permiten resolver estas cadenas, dividiendo directorios y archivos,
-proveyendo finalmente el \textit{inode} deseado. 
+Cabe destacar que en memoria en un dado momento existe una sola representacion de un dado inode.
+Siempre que se desea pedir un inode, si este ya esta en uso, se devuelve esa misma referencia.
+Mediante \textit{Reference Counting} se asegura que solo se tenga cargados los inodes necesarios, y que estos no se quiten de memoria antes de tiempo.
 
 \subsection{Directorios}
 
@@ -324,8 +322,15 @@ La implementacion de \textit{FIFOs} resulto trivial, ya que muchas de las decisi
 La existencia de la estructura \textit{FileDescriptorOps} que contiene punteros a funcion con las operaciones realizables sobre un File Descriptor, permitio que la implementacion sea totalmente transparente a nivel sistema.
 
 Al inode que representa un FIFO, cuando es abierto por primera vez se le asocia una estructura \textit{FIFO}.
+Como todos los File Descriptors que representan un mismo archivo hacen referencia al mismo inode, todos tiene acceso la estructura \textit{FIFO}.
 Esta contiene el buffer donde se guardan los datos escritos al FIFO, cuantos procesos abrieron el fifo, y otro datos utiles.
 
+Cabe destacar el comportamiento de los FIFOs en cuanto su apertura, estrictura y lectura.
+Cuando se abre un FIFO, el proceso se bloquea hasta que el FIFO es abierto por al menos un proceso para lectura, y otro para escritura.
+La lectura de un FIFO es bloqueante, es decir si no hay contenido para leer el proceso bloquea hasta que lo haya.
+De la misma manera, la escritura es bloqueante en caso de que el FIFO no tenga espacio para escribir los datos.
+
+En caso de que alguna punta del FIFO sea cerrada por todos los procesos que la abrieron, cualquier operacion en curso se cancela, y retorna que se procesaron 0 bytes.
 
 \subsection{Links simbolicos}
 La implementación de links simbolicos implicaba la creación de nodos que inclusive en el sistema Ext2 eran marcados
