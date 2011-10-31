@@ -127,6 +127,11 @@ Tambien se asegura que cuando se retorna del punto de entrada del proceso, se ll
 	de datos, \textit{SleepList}. Esta estructura de datos no es otra cosa que la conocida \textit{Delta Queue}, utlizada para resolver 
 	esta clase de problemas.
 
+    Una importante decision de diseño tomada fue utilizar cambio de tarea por software.
+    En vez de utilizar la facilidad provista por Intel.
+    Optamos por esto por que nos parecia mas flexible y mas simple.
+    De esta manera podemos guardar el estado del proceso dentro de la misma estructura de proceso, y no tenemos que lidear con la carga de \textit{Task State Segments}.
+
         \subsubsection{Primera estrategia: Round Robin}
         Como primera estrategia de \textit{scheduling} se decidió implementar una simple estrategia de \textit{Round Robin}.
         Esto es, los períodos de tiempo de uso de CPU (\textit{time slices}) son asignados a los procesos en porciones 
