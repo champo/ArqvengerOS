@@ -443,6 +443,16 @@ Como implementar scrolling vertical en la terminal presenta un desafio important
 Los comandos que presentan grandes cantidades de informacion, como \textit{help} y \textit{ls}, cuando van a escribir mas alla de altura de la pantalla, paginan la salida.
 El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implemento en casos particulares y no como una utilidad generica.
 
+\subsection{Kernel-space y user-space}
+Inicialmente nuestro objetivo era contar con una delimitacion fuerte de que es kernel-space y que user-space.
+Esto es, que el kernel ejecute en ring 0 y los procesos en ring 3.
+Pero esto resulto en una serie de exceptions del procesador.
+Hacer los cambios de segmento entre segmentos de distintos privilegios sin ayuda de algun mecanismo especial no parece ser posible.
+
+Idealmente, esto se solucionaria haciendo uso de Task Gates.
+Que tambien permitiria tener un stack dedicado para el kernel, para uso dentro de los manejadores de interrupciones.
+Si bien esta es la mejor solucion disponible, no es trivial de implementar y sus beneficios estan fuera del enfoque del tp.
+
 \newpage     
 \section{Referencias}
 
