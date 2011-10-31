@@ -127,6 +127,11 @@ También se asegura que cuando se retorna del punto de entrada del proceso, se l
 	de datos, \textit{SleepList}. Esta estructura de datos no es otra cosa que la conocida \textit{Delta Queue}, utlizada para resolver 
 	esta clase de problemas.
 
+    Una importante decision de diseño tomada fue utilizar cambio de tarea por software.
+    En vez de utilizar la facilidad provista por Intel.
+    Optamos por esto por que nos parecia mas flexible y mas simple.
+    De esta manera podemos guardar el estado del proceso dentro de la misma estructura de proceso, y no tenemos que lidear con la carga de \textit{Task State Segments}.
+
         \subsubsection{Primera estrategia: Round Robin}
         Como primera estrategia de \textit{scheduling} se decidió implementar una simple estrategia de \textit{Round Robin}.
         Esto es, los períodos de tiempo de uso de CPU (\textit{time slices}) son asignados a los procesos en porciones 
@@ -323,6 +328,12 @@ Ahora, como nuestro driver ATA soporta solo sectores de 512 bytes, el límite re
 El límite de tamaño de un \textit{inode} viene dado por:
 $$( \frac{blockSize}{4}^3 + \frac{blockSize}{4}^2 + \frac{blockSize}{4} + 11 ) * blockSize $$
 
+\subsubsection{Cache}
+Dado lo caras que son las operaciones a disco, y la limitacion de poder trabajar de a sectores, el FS tiene una serie de buffers que usa para mitigar estos efectos.
+Estos permiten por ejemplo, mantener cargados entre operaciones los indices de un inode.
+O hacer escrituras parciales sin preocupaciones.
+Si bien el diseño ideal utiliza un cache de tamaño dinamico, por simplicidad optamos por una cantidad fija de buffers manejada internamente por el FS.
+
 \subsection{Virtual file system}
 
 Para proveer una interfaz desacoplada de la implementación particular de ext2, creamos el \textit{VFS}.
@@ -345,9 +356,9 @@ Esto permitió que las implementaciones de \textit{read()}, \textit{write()} y \
 Estas llamadas a sistema fueron siendo extendidas a medida que la funcionalidad del sistema operativo crecía. 
 Como será visto en las próximas secciones, se escribieron funciones adecuadas para la manipulación de cada tipo de archivo.
 
-Cabe destacar que en memoria en un dado momento existe una sola representación de un dado \textit{inode}.
-Siempre que se desea pedir un \textit{inode}, si éste ya está en uso, se devuelve esa misma referencia.
-Mediante \textit{Reference Counting} se asegura que solo se tenga cargados los \textit{inodes} necesarios, y que estos no se quiten de memoria antes de tiempo.
+\subsection{Tabla de inodes}
+Para evitar tener duplicada información en memoria, creamos una tabla de inodes abiertos.
+Esta tabla es consultada antes de hacer cualquier búsqueda en disco, e implementa un sistema simple de \textit{Reference Counting}.
 
 \subsection{Directorios}
 
@@ -450,7 +461,29 @@ cual nos vimos forzados a modificar la lógica interna del driver simulando un a
 varios accesos de a un sector a la vez.
 
 
-<<<< Mencionar el tema de los comandos internos de la shell >>>>
+\subsection{Comandos de shell}
+Durante el desarrollo del file system, eventualmente llegamos al punto en el que necesitabamos implementar \textit{cd}.
+Una vez terminaba la implementacion, notamos que no funcionaba, pero todo el output de debugging indicaba que si.
+Finalmente nos dimos cuenta de que \textit{cd} ejecutaba en un proceso distinto al de la shell.
+Entonces cambiaba su propio directorio, pero no el de la shell.
+Para solucionar este problema necesitamos introducir el concepto de comandos internos de la shell.
+Vease, comandos que se ejecutan dentro del mismo proceso que la shell.
+
+\subsection{Scrolling}
+Dado el alto numero de comandos que presenta el ArqvengerOS, llego un momento en el que la lista de todos no entraba en una sola pantalla.
+Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solucion mas simple pero igual de efectiva.
+Los comandos que presentan grandes cantidades de informacion, como \textit{help} y \textit{ls}, cuando van a escribir mas alla de altura de la pantalla, paginan la salida.
+El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implemento en casos particulares y no como una utilidad generica.
+
+\subsection{Kernel-space y user-space}
+Inicialmente nuestro objetivo era contar con una delimitacion fuerte de que es kernel-space y que user-space.
+Esto es, que el kernel ejecute en ring 0 y los procesos en ring 3.
+Pero esto resulto en una serie de exceptions del procesador.
+Hacer los cambios de segmento entre segmentos de distintos privilegios sin ayuda de algun mecanismo especial no parece ser posible.
+
+Idealmente, esto se solucionaria haciendo uso de Task Gates.
+Que tambien permitiria tener un stack dedicado para el kernel, para uso dentro de los manejadores de interrupciones.
+Si bien esta es la mejor solucion disponible, no es trivial de implementar y sus beneficios estan fuera del enfoque del tp.
 
 \newpage     
 \section{Referencias}
