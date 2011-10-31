@@ -6,17 +6,24 @@
 
 void groupdel(char* argv) {
 
+    struct Group* group;
     char* firstSpace = strchr(argv, ' ');
+    
     if (firstSpace == NULL) {
         printf("Usage: groupdel GROUP\n");
-    } else if (get_group_by_name(firstSpace + 1) == NULL) {
+    } else if ((group = get_group_by_name(firstSpace + 1)) == NULL) {
         printf("groupdel: group '%s' does not exists.\n", firstSpace + 1);
     } else {
+       
+        free_group(group);
+
         if(delete_group(firstSpace + 1) == -1) {
+
             printf("groupdel: could not delete group\n");
             printf("groupdel: only empty groups may be deleted\n");
             printf("groupdel: please choose another\n");
         } else {
+
             printf("Group succesfully deleted\n");
         }
     }

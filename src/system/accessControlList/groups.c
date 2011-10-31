@@ -37,7 +37,7 @@ struct Group* get_group_by_id(int gid) {
     do {
         if (fscanf(fp, "%s\n", line) == 0) {
             fclose(fp);
-            free(group);
+            free_group(group);
             return NULL;
         }
 
@@ -103,7 +103,7 @@ struct Group* get_group_by_name(char* groupname) {
     do {
         if (fscanf(fp, "%s\n", line) == 0) {
             fclose(fp);
-            free(group);
+            free_group(group);
             return NULL;
         }
 
@@ -116,8 +116,11 @@ struct Group* get_group_by_name(char* groupname) {
 }
 
 char* get_groupname(int gid) {
-
-    return get_group_by_id(gid)->name;
+    
+    struct Group* group = get_group_by_id(gid);
+    char* groupname = group->name;
+    free_group(group);
+    return groupname;
 }
 
 int create_group(char* groupname) {
@@ -140,7 +143,7 @@ int create_group(char* groupname) {
     if (i >= MAX_GROUPS) {
 
         for (int j = 0; j < i; j++) {
-            free(groups[j]);
+            free_group(groups[j]);
         }
 
         return -1;
@@ -163,7 +166,7 @@ int create_group(char* groupname) {
     updateGroupsFile(groups[i - 1], 0);
 
     for (int j = 0; j < i; j++) {
-        free(groups[j]);
+        free_group(groups[j]);
     }
 
     return id;
@@ -236,7 +239,7 @@ int delete_group(char* name) {
 
     updateGroupsFile(group, 1);
 
-    free(group);
+    free_group(group);
     return 0;
 }
 
@@ -287,4 +290,12 @@ int delete_group_member(int gid, int uid) {
     return -1;
 }
 
-
+void free_group(struct Group* group) {
+    
+    for (int i = 0; i < group->num_members; i++) {
+        free_user(group->members[i]);
+    }
+    
+    free(group);
+    return;
+}
