@@ -53,7 +53,7 @@ int displayManual(char* name) {
     commands = getShellCommands(&numCommands);
     for (i = 0; i < numCommands; i++) {
 
-        if (strncmp(commands[i].name, realStart, nameLen) == 0) {
+        if (strncmp(commands[i].name, realStart, nameLen) == 0 && commands[i].name[nameLen] == 0) {
 
             setBold(1);
             printf("%s\n", commands[i].name);
@@ -79,7 +79,7 @@ void manMan(void) {
     setBold(0);
 
     printf(" commandname\n\n");
-    
+
     setBold(1);
     printf("Also see:\n\thelp");
     setBold(0);
