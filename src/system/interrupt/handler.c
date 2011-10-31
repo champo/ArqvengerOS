@@ -215,6 +215,9 @@ void int80(registers* regs) {
         case _SYS_STAT:
             regs->eax = _stat((const char*)regs->ebx, (struct stat*)regs->ecx);
             break;
+        case _SYS_CHOWN:
+            regs->eax = _chown((const char*)regs->ebx);
+            break;
     }
 }
 

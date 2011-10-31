@@ -313,3 +313,23 @@ void man_chmod(void) {
     printf("MODE is an octal value.\n");
 }
 
+void command_chown(char* argv) {
+
+    char* cmdEnd = strchr(argv, ' ');
+    if (cmdEnd == NULL) {
+        printf("Usage: cd path\n");
+        return;
+    }
+
+    cmdEnd++;
+    if (chown(cmdEnd) != 0) {
+        printf("Operation Unseccesful.\n");
+    }
+}
+
+void man_chown(void) {
+    setBold(1);
+    printf("Usage:\n\t chown");
+    setBold(0);
+    printf(" FILE.\n");
+}

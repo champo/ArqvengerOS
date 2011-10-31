@@ -29,4 +29,8 @@ void command_chmod(char* argv);
 
 void man_chmod(void);
 
+void command_chown(char* argv);
+
+void man_chown(void);
+
 #endif

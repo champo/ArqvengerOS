@@ -955,3 +955,24 @@ int _stat(const char* entry, struct stat* data) {
     return 0;
 }
 
+/**
+ * Changes the owner and group of a file.
+ *
+ * @param file, the path of the file.
+ * @return 0 if success, -1 if error.
+ */
+int _chown(const char* file) {
+
+    struct fs_Inode* inode = resolve_path(file);
+    if (inode == NULL) {
+        return -1;
+    }
+
+    if (can_write(inode) != 0) {
+        return -1;
+    }
+
+    struct Process* process = scheduler_current();
+
+    return fs_set_own(inode, process->uid, process->gid);
+}

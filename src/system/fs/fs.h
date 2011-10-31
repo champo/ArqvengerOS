@@ -46,4 +46,6 @@ int fs_fd_close(struct FileDescriptor* fd);
 
 void fs_register_ops(int fileType, struct FileDescriptorOps ops);
 
+int fs_set_own(struct fs_Inode* inode, int uid, int gid);
+
 #endif

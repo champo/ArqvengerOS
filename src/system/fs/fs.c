@@ -341,3 +341,18 @@ int fs_fd_close(struct FileDescriptor* fd) {
     return res;
 }
 
+/**
+ * Changes the uid and gid of a file.
+ *
+ * @param inode, the inode representing the file.
+ * @param uid, the new user id.
+ * @param gid, the new group id.
+ * @return 0.
+ */
+int fs_set_own(struct fs_Inode* inode, int uid, int gid) {
+    
+    inode->data->uid = uid;
+    inode->data->gid = gid;
+
+    return 0;
+}

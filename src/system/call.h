@@ -64,4 +64,6 @@ int _chmod(int mode, const char* file);
 
 int _stat(const char* path, struct stat* data);
 
+int _chown(const char* path);
+
 #endif

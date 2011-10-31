@@ -729,3 +729,12 @@ int stat(const char* path, struct stat* data) {
     return system_call(_SYS_STAT, (int) path, (int) data, 0);
 }
 
+/**
+ * Calls a system call to change the owner and group of a file.
+ *
+ * @param file, the path to the file.
+ * @return 0 if success, -1 if error.
+ */
+int chown(char* file) {
+    return system_call(_SYS_CHOWN, (int)file, 0, 0);
+}
