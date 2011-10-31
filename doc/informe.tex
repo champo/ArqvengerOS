@@ -429,7 +429,19 @@ cual nos vimos forzados a modificar la lógica interna del driver simulando un a
 varios accesos de a un sector a la vez.
 
 
-<<<< Mencionar el tema de los comandos internos de la shell >>>>
+\subsection{Comandos de shell}
+Durante el desarrollo del file system, eventualmente llegamos al punto en el que necesitabamos implementar \textit{cd}.
+Una vez terminaba la implementacion, notamos que no funcionaba, pero todo el output de debugging indicaba que si.
+Finalmente nos dimos cuenta de que \textit{cd} ejecutaba en un proceso distinto al de la shell.
+Entonces cambiaba su propio directorio, pero no el de la shell.
+Para solucionar este problema necesitamos introducir el concepto de comandos internos de la shell.
+Vease, comandos que se ejecutan dentro del mismo proceso que la shell.
+
+\subsection{Scrolling}
+Dado el alto numero de comandos que presenta el ArqvengerOS, llego un momento en el que la lista de todos no entraba en una sola pantalla.
+Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solucion mas simple pero igual de efectiva.
+Los comandos que presentan grandes cantidades de informacion, como \textit{help} y \textit{ls}, cuando van a escribir mas alla de altura de la pantalla, paginan la salida.
+El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implemento en casos particulares y no como una utilidad generica.
 
 \newpage     
 \section{Referencias}
