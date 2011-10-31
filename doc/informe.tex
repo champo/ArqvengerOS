@@ -347,20 +347,16 @@ era posible.
     
 Como ya fue mencionado, cada proceso contiene información sobre cual era el \textit{current working directory} en
 el momento en que fue ejecutado. Esto permite que la obtención del \textit{current working directory} sea sencilla
-y manipulable en los momentos necesarios, sobre todo al modificar el árbol del \textit{file system}.
+y manipulable en los momentos necesarios, sobre todo para permitir \textit{paths} relativos.
 
-    \subsection{Usuarios y grupos}
-
-      
     
-    \subsection{Permisos del sistema}
+\subsection{Permisos del sistema}
+Una vez implementados usuarios y grupos era fácil saber el gid y el uid de un proceso. Dada la forma en que estaba
+implementado nuestro \textit{file system}, Ext2 contaba con lugares especificos para guardar tanto los permisos y el
+uid y gid del archivo. Además, las prestaciones del vfs hacían que estos datos también fuesen fáciles de obtener.
 
-    Una vez implementados usuarios y grupos era fácil saber el gid y el uid de un proceso. Dada la forma en que estaba
-    implementado nuestro \textit{file system}, Ext2 contaba con lugares especificos para guardar tanto los permisos y el
-    uid y gid del archivo. Además, las prestaciones del vfs hacían que estos datos también fuesen fáciles de obtener.
-
-    Una vez conseguidos estos datos, era trivial evaluar en que casos se permitía abrir un archivo, teniendo en cuenta
-    que tanto el archivo tenga los permisos adecuados así como el \textit{path} que lo contiene.
+Una vez conseguidos estos datos, era trivial evaluar en que casos se permitía abrir un archivo, teniendo en cuenta
+que tanto el archivo tenga los permisos adecuados así como el \textit{path} que lo contiene.
 
 \newpage
 \section{Comandos provistos}
