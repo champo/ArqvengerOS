@@ -353,6 +353,6 @@ int fs_set_own(struct fs_Inode* inode, int uid, int gid) {
     
     inode->data->uid = uid;
     inode->data->gid = gid;
-
-    return 0;
+    
+    return ext2_write_inode(inode) == -1 ? EIO : 0;
 }
