@@ -209,6 +209,9 @@ void int80(registers* regs) {
         case _SYS_MKFIFO:
             regs->eax = _mkfifo((const char*)regs->ebx);
             break;
+        case _SYS_CHMOD:
+            regs->eax = _chmod(regs->ebx, (const char*)regs->ecx);
+            break;
     }
 }
 

@@ -701,3 +701,14 @@ int mkfifo(const char* path) {
     return system_call(_SYS_MKFIFO, (int) path, 0, 0);
 }
 
+
+/**
+ * Calls a system call to change the permissions of a file.
+ *
+ * @param mode, the new permissions.
+ * @param file, the path to the file.
+ * @return 0 if success, -1 if error.
+ */
+int chmod(int mode, char* file) {
+    return system_call(_SYS_CHMOD, mode, (int)file, 0);
+}

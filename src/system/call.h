@@ -59,4 +59,6 @@ int _symlink(const char* path, const char* target);
 
 int _mkfifo(const char* path);
 
+int _chmod(int mode, const char* file);
+
 #endif

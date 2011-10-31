@@ -25,4 +25,8 @@ void man_ln(void);
 
 void manLs(void);
 
+void command_chmod(char* argv);
+
+void man_chmod(void);
+
 #endif

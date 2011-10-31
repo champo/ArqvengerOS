@@ -79,14 +79,13 @@ static const Command commands[] = {
     { &groupadd, "groupadd", "Create a new group.", &manGroupadd, 0},
     { &groups, "groups", "Display current group names.", &manGroups, 0},
     { &groupdel, "groupdel", "Delete a group", &manGroupdel, 0},
-    { &users, "users", "Show users loggued.", &manUsers, 0},
     { &command_ln, "ln", "Create a symbolic link.", &man_ln, 0},
     { &command_unlink, "unlink", "Remove a specified file.", &manUnlink, 0},
     { &command_mkfifo, "mkfifo", "Creates a named pipe.", &manFifo, 0},
+    { &command_chmod, "chmod", "Change the permissions of a file.", &man_chmod, 0},
     { &command_renice, "renice", "Alter priority of a running process.", &manRenice, 0},
     { &busywait, "busywait", "Busywaits eternally, consuming resources and CPU time.", &manBusywait, 0},
     { &logout, "logout", "Logs out of the shell.", &manLogout, 1},
-
 };
 
 static termios shellStatus = { 0, 0 };

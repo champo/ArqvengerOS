@@ -1,6 +1,7 @@
 #include "system/fs/fs.h"
 #include "system/mm.h"
 #include "system/kprintf.h"
+#include "system/process/process.h"
 #include "drivers/ext2/ext2.h"
 #include "drivers/ext2/directory.h"
 #include "library/string.h"
@@ -257,9 +258,10 @@ int fs_mknod(struct fs_Inode* path, const char* name, int type) {
     if (fs_findentry(path, name).inode != 0) {
         return EEXIST;
     }
+    
+    struct Process* process = scheduler_current();
 
-    //TODO: This needs to check out the current user
-    struct fs_Inode* nod = ext2_create_inode(fs, type, PERM_DEFAULT, 0, 0);
+    struct fs_Inode* nod = ext2_create_inode(fs, type, PERM_DEFAULT, process->uid, process->gid);
     if (NULL == nod) {
         return EIO;
     }
@@ -275,8 +277,10 @@ int fs_mkdir(struct fs_Inode* path, const char* name) {
     if (fs_findentry(path, name).inode != 0) {
         return EEXIST;
     }
-    //TODO: This needs to check out the current user
-    struct fs_Inode* dir = ext2_dir_create(fs, PERM_DEFAULT, 0, 0);
+    
+    struct Process* process = scheduler_current();
+
+    struct fs_Inode* dir = ext2_dir_create(fs, PERM_DEFAULT, process->uid, process->gid);
 
     int res = add_link(path, name, dir);
     if (res == 0) {

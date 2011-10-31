@@ -24,6 +24,10 @@ static char* path_file(const char* path);
 
 static char* join_paths(const char* cwd, const char* path);
 
+static int can_read(struct fs_Inode* inode);
+
+static int can_write(struct fs_Inode* inode);
+
 /**
  * Reads on the correct file.
  *
@@ -149,18 +153,14 @@ int _open(const char* path, int flags, int mode) {
     unsigned short perms = fs_permission(file);
 
     if ((flags & 3) == O_RDONLY || (flags & 3) == O_RDWR) {
-       if (!(perms & S_IROTH) &&
-            !(perms & S_IRGRP && file_gid == gid) &&
-            !(perms & S_IRUSR && file_uid == uid)) {
+        if  (can_read(file) != 0) {
             fs_inode_close(file);
             return -1;
         }
     }
 
     if ((flags & 3) == O_WRONLY || (flags & 3) == O_RDWR) {
-       if(!(perms & S_IWOTH) &&
-          !(perms & S_IWGRP && file_gid == gid) &&
-          !(perms & S_IWUSR && file_uid == uid)) {
+        if (can_write(file) != 0) {
             fs_inode_close(file);
             return -1;
         }
@@ -344,7 +344,24 @@ int _rmdir(const char* path) {
 
         return -1;
     }
+    
+    struct fs_DirectoryEntry nextdir = fs_findentry(parent, filename);
+    
+    if (nextdir.inode == 0) {
+        fs_inode_close(parent);
+        return -1;
+    }
 
+    struct fs_Inode* curdir = fs_inode_open(nextdir.inode);
+
+    if (can_write(curdir) != 0) {
+        fs_inode_close(parent);
+        fs_inode_close(curdir);
+        return -1;
+    }
+
+    fs_inode_close(curdir);
+    
     int res = fs_rmdir(parent, filename);
 
     kfree(base);
@@ -373,6 +390,24 @@ int _unlink(const char* path) {
         return -1;
     }
 
+    struct fs_DirectoryEntry nextdir = fs_findentry(parent, filename);
+    
+    if (nextdir.inode == 0) {
+        fs_inode_close(parent);
+        return -1;
+    }
+
+
+    struct fs_Inode* file = fs_inode_open(nextdir.inode);
+
+    if (can_write(file) != 0) {
+        fs_inode_close(parent);
+        fs_inode_close(file);
+        return -1;
+    }
+
+    fs_inode_close(file);
+ 
     int res = fs_unlink(parent, filename);
 
     kfree(base);
@@ -561,6 +596,11 @@ struct fs_Inode* resolve_path(const char* path) {
         }
     }
 
+    if (can_read(curdir) != 0) {
+        fs_inode_close(curdir);
+        return NULL;
+    }
+
     while (index < len) {
 
         int i;
@@ -579,6 +619,11 @@ struct fs_Inode* resolve_path(const char* path) {
         }
 
         curdir = fs_inode_open(nextdir.inode);
+        
+        if (can_read(curdir) != 0) {
+            fs_inode_close(curdir);
+            return NULL;
+        }
 
         if (INODE_TYPE(curdir->data) == INODE_LINK) {
             struct fs_Inode* auxdir = resolve_sym_link(curdir);
@@ -591,6 +636,70 @@ struct fs_Inode* resolve_path(const char* path) {
     }
 
     return curdir;
+}
+
+/**
+ * Checks if the user can read an inode, checking permissions.
+ *
+ * @param inode, the inode to be read.
+ * @return 0 if it is available, -1 if not.
+ */
+int can_read(struct fs_Inode* inode) {
+    int gid, uid, file_gid, file_uid;
+
+    struct Process* process = scheduler_current();
+
+    gid = process->gid;
+    uid = process->uid;
+    
+    if (uid == 0) {
+        return 0;
+    }
+
+    file_uid = inode->data->uid;
+    file_gid = inode->data->gid;
+ 
+    unsigned short perms = fs_permission(inode);
+
+    if (!(perms & S_IROTH) &&
+        !(perms & S_IRGRP && file_gid == gid) &&
+        !(perms & S_IRUSR && file_uid == uid)) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
+ * Checks if the user can write an inode, checking permissions.
+ *
+ * @param inode, the inode to be written.
+ * @return 0 if it is available, -1 if not.
+ */
+int can_write(struct fs_Inode* inode) {
+    int gid, uid, file_gid, file_uid;
+
+    struct Process* process = scheduler_current();
+
+    gid = process->gid;
+    uid = process->uid;
+
+    if (uid == 0) {
+        return 0;
+    }    
+
+    file_uid = inode->data->uid;
+    file_gid = inode->data->gid;
+ 
+    unsigned short perms = fs_permission(inode);
+
+    if (!(perms & S_IWOTH) &&
+        !(perms & S_IWGRP && file_gid == gid) &&
+        !(perms & S_IWUSR && file_uid == uid)) {
+        return -1;
+    }
+
+    return 0;
 }
 
 /**
@@ -789,3 +898,23 @@ int _mkfifo(const char* path) {
     return res;
 }
 
+/**
+ * Changes the permissions of a file.
+ *
+ * @param mode, the new permissions.
+ * @param file, the path of the file.
+ * @return 0 if success, -1 if error.
+ */
+int _chmod(int mode, const char* file) {
+    
+    struct fs_Inode* inode = resolve_path(file);
+    if (inode == NULL) {
+        return -1;
+    }
+
+    if (can_write(inode) != 0) {
+        return -1;
+    }
+    
+    return fs_set_permission(inode, mode);
+}

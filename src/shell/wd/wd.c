@@ -15,7 +15,8 @@ void command_cd(char* argv) {
 
     cmdEnd++;
     if (chdir(cmdEnd) == -1) {
-        printf("%s is not a directory.\n", cmdEnd);
+        //printf("%s is not a directory.\n", cmdEnd);
+        printf("Operation Unseccesful.\n");
     }
 }
 
@@ -53,7 +54,7 @@ void command_mkdir(char* argv) {
     cmdEnd++;
     switch (mkdir(cmdEnd, 0744)) {
         case -1:
-            printf("Cant create '%s': No such file or directory.\n", cmdEnd);
+            printf("Cant create '%s'.\n"/*: No such file or directory*/, cmdEnd);
             break;
         case EEXIST:
             printf("Cant create '%s': File already exists.\n", cmdEnd);
@@ -83,7 +84,7 @@ void command_rmdir(char* argv) {
     switch (rmdir(cmdEnd)) {
         case -1:
         case ENOENT:
-            printf("Cant remove '%s': No such file or directory.\n", cmdEnd);
+            printf("Cant remove '%s'.\n"/*: No such file or directory.\n"*/, cmdEnd);
             break;
         case EIO:
             printf("Cant remove '%s': Some wizardry went awry. Try again later.\n", cmdEnd);
@@ -119,6 +120,11 @@ void command_ls(char* argv) {
     } else {
         fd = open(cmdEnd + 1, O_RDONLY);
     }
+    
+    if (fd == -1) {
+        printf("The directory specified could not be opened\n");
+        return;
+    }
 
     struct fs_DirectoryEntry entry;
     while (readdir(fd, &entry, hidden) == 1) {
@@ -131,12 +137,14 @@ void command_ln(char* argv) {
 
     if (target == NULL) {
         printf("Arguments invalid.\n");
+        return;
     }
 
     char* link = strchr(target + 1, ' ');
 
     if (link == NULL) {
         printf("Arguments invalid.\n");
+        return;
     }
 
     int i;
@@ -170,5 +178,49 @@ void manLs(void) {
     printf("[-a] [DIRECTORY].\n");
     printf("The -a options indicates that hidden files should be shown.\n");
     printf("The default DIRECTORY is the cwd.\n");
+}
+
+void command_chmod(char* argv) {
+    char* stringmode = strchr(argv, ' ');
+
+    if (stringmode == NULL) {
+        printf("Arguments invalid.\n");
+    }
+
+    char* file = strchr(stringmode + 1, ' ');
+
+    if (file == NULL) {
+        printf("Arguments invalid.\n");
+        return;
+    }
+
+    int i;
+
+    for (i = 1; stringmode[i] != ' '; i++){
+
+    }
+
+    stringmode[i] = '\0';
+
+    int mode = parseoct(stringmode + 1);
+    
+    if (mode == -1) {
+        printf("The mode is not a valid number\n");
+        return;
+    }
+    
+    i = chmod(mode, file + 1);
+    
+    if (i != 0) {
+        printf("Operation unsuccesful.\n");
+    }
+}
+
+void man_chmod(void) {
+    setBold(1);
+    printf("Usage:\n\tchmod ");
+    setBold(0);
+    printf("MODE FILE.\n");
+    printf("MODE is an octal value.\n");
 }
 
