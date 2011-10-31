@@ -5,11 +5,18 @@
 \usepackage[spanish]{babel}
 \usepackage[pdftex,usenames,dvipsnames]{color}
 \usepackage[pdftex]{graphicx}
-\usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage{enumerate}
+\usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage[table]{xcolor}
+\usepackage[small,bf]{caption}
+\usepackage{float}
+\usepackage{subfig}
 \usepackage{listings}
+\usepackage{bm}
+\usepackage{times}
 \lstset{language=C}
 \lstset{showstringspaces=false}
 \lstset{basicstyle=\ttfamily,}
@@ -116,6 +123,13 @@ También se asegura que cuando se retorna del punto de entrada del proceso, se l
         En una primera instancia, se creó una interfaz a la cual todas las implementaciones del \textit{scheduler} que se hicieran
 	deberían atenerse. Para una vista detallada de dicha interfaz dirigigirse al archivo \textit{src/system/scheduler.h}.
 
+	\subsubsection{Cambio de contexto}
+	Una importante decisión de diseño tomada fue utilizar cambio de tarea por software.
+	En vez de utilizar la facilidad provista por Intel.
+	Optamos por esto por que nos parecía más flexible y más simple.
+	De esta manera podemos guardar el estado del proceso dentro de la misma estructura de proceso, y no tenemos que lidiar con la carga de
+	\textit{Task State Segments}.
+
         \subsubsection{Implementación general}
 	Luego de algunas primeras y simples implementaciones del \textit{scheduler} nos dimos cuenta que ambas estrategias que 
 	implementaríamos serían prácticamente iguales: solo se diferenciaban en la forma en que se escogía al siguiente proceso
@@ -127,10 +141,9 @@ También se asegura que cuando se retorna del punto de entrada del proceso, se l
 	de datos, \textit{SleepList}. Esta estructura de datos no es otra cosa que la conocida \textit{Delta Queue}, utlizada para resolver 
 	esta clase de problemas.
 
-    Una importante decision de diseño tomada fue utilizar cambio de tarea por software.
-    En vez de utilizar la facilidad provista por Intel.
-    Optamos por esto por que nos parecia mas flexible y mas simple.
-    De esta manera podemos guardar el estado del proceso dentro de la misma estructura de proceso, y no tenemos que lidear con la carga de \textit{Task State Segments}.
+	Otra característica que se le agregó al \textit{scheduler} fue la capacidad de llevar cuenta de la cantidad de ciclos durante la cual ejecutó un proceso,
+	y tomar muestras de ellos. Esto fue vital para poder calcular el tiempo o porcentaje de CPU utilizado por cada proceso en un período de tiempo,
+	lo cual puede verse a través del comando \textit{top}.
 
         \subsubsection{Primera estrategia: Round Robin}
         Como primera estrategia de \textit{scheduling} se decidió implementar una simple estrategia de \textit{Round Robin}.
@@ -420,10 +433,88 @@ La lista completa de comandos disponibles puede encontrarse mediante el comando 
 
 A continuación se presentan algunos casos interesantes.
 
+      \subsection{Top}
+      El comando \textit{top} resulta interesante por varias razones. Primero que nada, da cuenta de los múltiples proceso existentes en el sistema. Segundo, 
+      ofrece información detallada de cada uno de ellos, la cual puede ser usada por el usuario (por ejemplo para saber el pid de un proceso al que se desea matar).
+      Tercero, dentro de esa información se encuentra el porcentaje de CPU utilizado por cada proceso, un aspecto no menor para todo usuario con conocimientos medios
+      sobre computación. Por último, la información que brinda este comando se va actualizando con el correr del tiempo (apretando sucesivamente la tecla ENTER).
+      
+      \begin{figure}[H]
+	\begin{center}
+	\includegraphics[scale=0.65]{./images/top.png}
+	% top.png: 723x477 pixel, 96dpi, 19.13x12.62 cm, bb=0 0 542 358
+	 \caption{Captura de pantalla del comando top.}
+	\end{center}
+      \end{figure}
+
+      \subsection{Ls}
+      El comando \textit{ls} resulta muy interesante para ver los archivos y carpetas del \textit{Current Worling Directory}, junto con información detallada sobre los mismos.
+
+     \begin{figure}[H]
+      \begin{center}
+	\includegraphics[scale=0.65]{./images/ls.png}
+	% ls.png: 725x475 pixel, 96dpi, 19.18x12.57 cm, bb=0 0 544 356
+	 \caption{Captura de pantalla del comando ls.}
+	\end{center}
+      \end{figure}
+
+      \subsection{Help}
+      El comando \textit{help} resulta vital para aprender a utilizar el sistema y ver todas las posibilidades que ofrece. 
+
+     \begin{figure}[H]
+      \begin{center}
+      \includegraphics[scale=0.65]{./images/help.png}
+      % help.png: 719x477 pixel, 96dpi, 19.02x12.62 cm, bb=0 0 539 358
+	 \caption{Captura de pantalla del comando help.}
+      \end{center}
+      \end{figure}
+
+      \subsection{Sudoku}
+      El comando \textit{sudoku}, si bien no muestra ninguna característica implementada específicamente para este trabajo, es una forma sencilla y divertida
+      de comprobar que las cosas funcionan como se supone que lo hagan.
+
+     \begin{figure}[H]
+      \begin{center}
+      \includegraphics[scale=0.65]{./images/sudoku.png}
+      % sudoku.png: 725x475 pixel, 96dpi, 19.18x12.57 cm, bb=0 0 544 356
+	 \caption{Captura de pantalla del comando sudoku.}
+      \end{center}
+      \end{figure}
+
+      \subsection{Logout}
+      El comando \textit{logout} permite salir de una sesión, para volver a loguearse con otro usuario. Es importante para mostrar el correcto manejo y 
+      almacenamiento de usuarios, así como de sus contraseñas y grupos.
+    
+      Aquí se presenta una imagen en la que, una vez deslogueado, se intenta loguearse 2 veces, una erronéamente y otra de manera correcta.
+     \begin{figure}[H]
+      \begin{center}
+      \includegraphics[scale=0.65]{./images/login.png}
+      % login.png: 722x478 pixel, 96dpi, 19.10x12.65 cm, bb=0 0 541 358
+	 \caption{Captura de pantalla de como se ve ve el login.}
+      \end{center}
+      \end{figure}
+
+      \subsection{Roflcopter}
+      El comando \textit{roflcopter}, de nuevo, no muestra ningun funcionalidad especial, pero es una marca registrada en todos nuestros trabajos y proyectos,
+      por lo que no pudimos no incluirlo. Esperamos, no incomodar ni generar molestias u algún tipo de rechazo.
+
+     \begin{figure}[H]
+      \begin{center}
+      \includegraphics[scale=0.65]{./images/roflcopter.png}
+      % roflcopter.png: 719x475 pixel, 96dpi, 19.02x12.57 cm, bb=0 0 539 356
+	 \caption{Captura de pantalla del comando roflcopter.}
+      \end{center}
+      \end{figure}
+
+
+
+
+
+
 \newpage
 \section{Agregados}
 \subsection{Memory managment}
-Inicialmente, el TP contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
+Inicialmente, el Trabajo Práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
 Por supuesto, esta solución es menos que óptima, ya que genera un desperdicio de memoria e impone límites arbitrarios al sistema.
 Para evitar esto, desarrollamos un sistema de allocación de páginas de memoria.
 Y encima de este sistema, utilizamos la implementación de \textit{malloc} de Dario Sneidermanis, publicada en \href{https://github.com/esneider/malloc}{Github}.
@@ -461,29 +552,41 @@ cual nos vimos forzados a modificar la lógica interna del driver simulando un a
 varios accesos de a un sector a la vez.
 
 
-\subsection{Comandos de shell}
-Durante el desarrollo del file system, eventualmente llegamos al punto en el que necesitabamos implementar \textit{cd}.
-Una vez terminaba la implementacion, notamos que no funcionaba, pero todo el output de debugging indicaba que si.
-Finalmente nos dimos cuenta de que \textit{cd} ejecutaba en un proceso distinto al de la shell.
-Entonces cambiaba su propio directorio, pero no el de la shell.
-Para solucionar este problema necesitamos introducir el concepto de comandos internos de la shell.
-Vease, comandos que se ejecutan dentro del mismo proceso que la shell.
+      \subsection{Comandos de shell}
+      Durante el desarrollo del file system, eventualmente llegamos al punto en el que necesitábamos implementar \textit{cd}.
+      Una vez terminaba la implementación, notamos que no funcionaba, pero todo el output de debugging indicaba que si.
+      Finalmente, nos dimos cuenta de que \textit{cd} ejecutaba en un proceso distinto al de la shell.
+      Entonces cambiaba su propio directorio, pero no el de la shell.
+      Para solucionar este problema necesitamos introducir el concepto de comandos internos de la shell.
+      Véase, comandos que se ejecutan dentro del mismo proceso que la shell.
 
-\subsection{Scrolling}
-Dado el alto numero de comandos que presenta el ArqvengerOS, llego un momento en el que la lista de todos no entraba en una sola pantalla.
-Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solucion mas simple pero igual de efectiva.
-Los comandos que presentan grandes cantidades de informacion, como \textit{help} y \textit{ls}, cuando van a escribir mas alla de altura de la pantalla, paginan la salida.
-El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implemento en casos particulares y no como una utilidad generica.
+      \subsection{Scrolling}
+      Dado el alto número de comandos que presenta el ArqvengerOS, llegó un momento en el que la lista de todos ellos no entraba en una sola pantalla.
+      Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solución más simple pero igual de efectiva.
+      Los comandos que presentan grandes cantidades de información, como \textit{help} y \textit{ls}, cuando van a escribir más alla de altura de la pantalla, 
+      paginan la salida.
+      El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implementó en casos particulares y no como una utilidad genérica.
 
-\subsection{Kernel-space y user-space}
-Inicialmente nuestro objetivo era contar con una delimitacion fuerte de que es kernel-space y que user-space.
-Esto es, que el kernel ejecute en ring 0 y los procesos en ring 3.
-Pero esto resulto en una serie de exceptions del procesador.
-Hacer los cambios de segmento entre segmentos de distintos privilegios sin ayuda de algun mecanismo especial no parece ser posible.
+      \subsection{Kernel-space y user-space}
+      Inicialmente nuestro objetivo era contar con una delimitación fuerte de que es \textit{kernel-space} y \textit{user-space}.
+      Esto es, que el kernel ejecute en ring 0 y los procesos en ring 3.
+      Pero esto resultó en una serie de excepciones del procesador.
+      Hacer los cambios de segmento entre segmentos de distintos privilegios sin ayuda de algún mecanismo especial no parece ser posible.
 
-Idealmente, esto se solucionaria haciendo uso de Task Gates.
-Que tambien permitiria tener un stack dedicado para el kernel, para uso dentro de los manejadores de interrupciones.
-Si bien esta es la mejor solucion disponible, no es trivial de implementar y sus beneficios estan fuera del enfoque del tp.
+      Idealmente, esto se solucionaría haciendo uso de Task Gates.
+      Que también permitiría tener un stack dedicado para el kernel, para uso dentro de los manejadores de interrupciones.
+      Si bien esta es la mejor solución disponible, no es trivial de implementar y sus beneficios están fuera del enfoque del trabajo práctico.
+      
+      \subsection{Cálculo de porcentaje de CPU utilizado}
+      Para completar la implementación del comando \textit{top}, se requería calcular el porcentaje de CPU utilizado por cada proceso, en un determinado
+      período de tiempo. Esta tarea no fue sencilla, por varias razones. Primero, se debe determinar que es lo que se medirá, tiempo, ticks (IRQ8) o ciclos. 
+      Segundo, se debe determinar cuándo se tomarám las mediciones o actualizarán los valores. 
+
+      En algunos primeros intentos se pensó, erronéamente, en contar ticks, o tomar las mediciones cada vez que llegara un interrupción de \textit{timmer tick} (IRQ8).
+      Pero todas esas propuestas tenían alguna falla de algún tipo: o eran aproximaciones, o sencillamente no respondían al objetivo buscado.
+
+      Finalmente, se decidió que claramente la mejor opción era contar ciclos clock (\textit{Clock Cycles}) y tomar las mediciones en cada cambio de contexto.
+      De esta forma, obtenemos un medición muchísimo más precisa, y la complejidad de implementar esta tarea no fue tan grande.
 
 \newpage     
 \section{Referencias}
@@ -508,7 +611,25 @@ Si bien esta es la mejor solucion disponible, no es trivial de implementar y sus
   \item http://en.wikipedia.org/wiki/Calculating\_the\_day\_of\_the\_week
   \item http://cplusplus.com/
   \item http://github.com/esneider/malloc
+  \item Unix System Programming, Second Edition - K. Haviland, D. Gray, B. Salama.
   \item http://www.nongnu.org/ext2-doc/ext2.html
+  \item http://wiki.osdev.org/Blocking\_Process
+  \item http://forum.osdev.org/viewtopic.php?f=1\&t=21719
+  \item http://f.osdev.org/viewtopic.php?f=1\&t=18738
+  \item http://wiki.osdev.org/Context\_Switching
+  \item http://wiki.osdev.org/Scheduling\_Algorithms
+  \item http://en.wikipedia.org/wiki/Scheduling\_(computing)
+  \item http://en.wikipedia.org/wiki/Round-robin\_scheduling
+  \item http://en.wikipedia.org/wiki/Nice\_(Unix)
+  \item http://en.wikipedia.org/wiki/Htop
+  \item http://en.wikipedia.org/wiki/Top\_(Unix)
+  \item http://www.suse.de/~agruen/acl/linux-acls/online/
+  \item http://www.gnu.org/s/hello/manual/libc/Users-and-Groups.html
+  \item http://www.gnu.org/s/hello/manual/libc/User-and-Group-IDs.html\#User-and-Group-IDs
+  \item http://www.gnu.org/s/hello/manual/libc/Process-Persona.html\#Process-Persona
+  \item http://www.gnu.org/s/hello/manual/libc/User-Database.html\#User-Database
+  \item http://www.gnu.org/s/hello/manual/libc/Group-Database.html\#Group-Database
+
 \end{itemize}
    
 \end{document}
