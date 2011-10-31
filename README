@@ -10,8 +10,9 @@ I'm in space!
 Besides that, there's something you need to take into account before trying to build the project:
 1. Create a bin/ and img/ folders
 2. Obtain a copy of tpe.img file and drop it in img/
-3. Setup your .mtoolsrc and .bochsrc
-4. Create and populate src/common.mk
+3. Create a flat disk image with bximage, and format it with mkfs.ext2 -r 0
+4. Setup your .mtoolsrc and .bochsrc
+5. Create and populate src/common.mk
     In most 32-bit linux systems the content will simply be:
     CC=gcc
     LD=ld
@@ -19,3 +20,8 @@ Besides that, there's something you need to take into account before trying to b
     If you're not in one of those, well my friend, you're in for a treat. You need a cross compiler for i386-aout-linux and then you set your common.mk to:
     CC=path to your cross gcc
     LD=path to your cross ld
+6. Go to src and build it!
+    Here you have a choice, you can use the round robin scheduler, and a priority based scheduler.
+    To build with the round robin scheduler just do: make SCHEDULER=scheduler
+    To build with the priority based scheduler: make SCHEDULER=priorityScheduler
+7. Enjoy
