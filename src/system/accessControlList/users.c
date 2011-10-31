@@ -117,8 +117,10 @@ struct User* get_user_by_name(char* name) {
 }
 
 char* get_username(int id) {
-
-    return get_user_by_id(id)->name;
+    struct User* user = get_user_by_id(id);
+    char* name = user->name;
+    free_user(user);
+    return user->name;
 }
 
 int change_passwd(int uid, char* old_passwd, char* new_passwd) {
@@ -129,9 +131,11 @@ int change_passwd(int uid, char* old_passwd, char* new_passwd) {
         strcpy(user->passwd, new_passwd);
 
         updateUsersFile(user, 0);
-
+        
+        free_user(user);
         return PASSWD_CHANGED;
     } else {
+        free_user(user);
         return INVALID_PASSWD;
     }
 }
@@ -244,5 +248,7 @@ int delete_user(char* name) {
     return 0;
 }
 
-
+void free_user(struct User* user) {
+    free(user);
+}
 
