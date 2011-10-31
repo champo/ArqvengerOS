@@ -19,7 +19,7 @@ void adduser(char* argv) {
     int first = 1;
     struct User* user;
     struct Group* group;
-    
+
     termios oldTermios;
     termios passwdTermios = {1 , 0};
 
@@ -38,7 +38,7 @@ void adduser(char* argv) {
 
     free_user(user);
     printf("\n");
-    
+
     first = 1;
     do {
         if (!first) {
@@ -48,21 +48,21 @@ void adduser(char* argv) {
         printf("Initial group [ users ]:");
         scanf("%s", groupname);
         cleanbuffer();
-    
+
         if (strcmp(groupname, "") == 0) {
             strcpy(groupname, "users");
         }
 
         first = 0;
     } while ((group = get_group_by_name(groupname)) == NULL);
-  
+
 
     printf("\nNew account will be created as follows:\n");
     printf("------------------------------------------\n");
     printf("Login name: %s\n", username);
     printf("UID: [ Next available ]\n");
     printf("Initial group: %s\n", groupname);
-    
+
     printf("\n");
     do {
         printf("This is it... if you want to bail out, type quit. Otherwise, press\n");
@@ -72,13 +72,17 @@ void adduser(char* argv) {
 
     } while (strcmp(proceed, "quit") != 0 && strcmp(proceed, "") != 0);
 
+    if (strcmp(proceed, "quit") == 0) {
+        exit();
+    }
+
     printf("\n\nCreating new account...\n");
-    
+
     printf("Password:");
-    
+
     ioctl(0, TCGETS, (void*) &oldTermios);
     ioctl(0, TCSETS, (void*) &passwdTermios);
-    
+
     scanf("%s", passwd);
     cleanbuffer();
 
@@ -98,12 +102,12 @@ void adduser(char* argv) {
         printf("adduser: could not add user to the group\n");
         printf("adduser: it is very likely that the maximum capacity has been reached\n");
         printf("adduser: try deleting other users to make room\n");
-        
+
         delete_user(username);
         free_group(group);
         return;
     }
-        
+
     free_group(group);
     printf("Successfully created user account.\n");
 }
