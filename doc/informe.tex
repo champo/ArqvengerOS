@@ -299,6 +299,12 @@ Ahora, como nuestro driver ATA soporta solo sectores de 512 bytes, el limite rea
 El limite de tamaño de un inode viene dado por:
 $$( \frac{blockSize}{4}^3 + \frac{blockSize}{4}^2 + \frac{blockSize}{4} + 11 ) * blockSize $$
 
+\subsubsection{Cache}
+Dado lo caras que son las operaciones a disco, y la limitacion de poder trabajar de a sectores, el FS tiene una serie de buffers que usa para mitigar estos efectos.
+Estos permiten por ejemplo, mantener cargados entre operaciones los indices de un inode.
+O hacer escrituras parciales sin preocupaciones.
+Si bien el diseño ideal utiliza un cache de tamaño dinamico, por simplicidad optamos por una cantidad fija de buffers manejada internamente por el FS.
+
 \subsection{Virtual file system}
 
 Para proveer una interfaz desacoplada de la implementacion particular de ext2, creamos el \textit{VFS}.
@@ -321,9 +327,9 @@ Esto permitió que las implementaciones de \textit{read()}, \textit{write()} y \
 Estas llamadas a sistema fueron siendo extendidas a medida que la funcionalidad del sistema operativo crecía. 
 Como será visto en las proximas secciones, se escribieron funciones adecuadas para la manipulación de cada tipo de archivo.
 
-Cabe destacar que en memoria en un dado momento existe una sola representacion de un dado inode.
-Siempre que se desea pedir un inode, si este ya esta en uso, se devuelve esa misma referencia.
-Mediante \textit{Reference Counting} se asegura que solo se tenga cargados los inodes necesarios, y que estos no se quiten de memoria antes de tiempo.
+\subsection{Tabla de inodes}
+Para evitar tener duplicada informacion en memoria, creamos una tabla de inodes abiertos.
+Esta tabla es consultada antes de hacer cualquier busqueda en disco, e implementa un sistema simple de \textit{Reference Counting}.
 
 \subsection{Directorios}
 
