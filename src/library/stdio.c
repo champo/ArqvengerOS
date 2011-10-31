@@ -9,10 +9,7 @@
 #include "library/ctype.h"
 #include "library/call.h"
 #include "constants.h"
-
-//TODO remove this when changed
-#include "system/common.h"
-#include "system/mm.h"
+#include "system/malloc/malloc.h"
 
 #define S_IRWXU 00700
 #define S_IRUSR 00400
@@ -31,6 +28,7 @@ FILE *stdout;
 FILE *stdin;
 FILE *stderr;
 
+static int print_padding(FILE* stream, char pad, int strlen, int to);
 
 /**
  * Insert a character into the given stream.
@@ -74,6 +72,18 @@ int getfd(FILE *stream) {
     return stream->fd;
 }
 
+int print_padding(FILE* stream, char pad, int strlen, int to) {
+
+    if (pad == 0 || to <= strlen) {
+        return 0;
+    } else {
+        for (int i = strlen; i < to; i++) {
+            fputc(pad, stream);
+        }
+        return to - strlen;
+    }
+}
+
 /**
  *  Prints with format given the FILE and the va_list initiated.
  *
@@ -109,11 +119,14 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
 
             i++;
             symb++;
+            int padding = atoi(format + i);
+            for (;isdigit(format[i]); i++);
+
             switch (format[i]) {
                 case 'd':
                 case 'i':
                     sizestring = itoa(buffint,va_arg(arg,int));
-                    plus += sizestring;
+                    plus += sizestring + print_padding(stream, ' ', sizestring, padding);
                     if (write(getfd(stream),buffint,sizestring) != sizestring) {
                         return -1;
                     }
@@ -121,7 +134,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                     break;
                 case 'u':
                     sizestring = utoa(buffint,va_arg(arg, unsigned int));
-                    plus += sizestring;
+                    plus += sizestring + print_padding(stream, ' ', sizestring, padding);
                     if (write(getfd(stream),buffint,sizestring) != sizestring) {
                         return -1;
                     }
@@ -135,13 +148,14 @@ int vfprintf(FILE *stream, const char *format, va_list arg) {
                 case 's':
                     buffstring = va_arg(arg,char *);
                     sizestring = strlen(buffstring);
-                    plus += sizestring;
+                    plus += sizestring + print_padding(stream, ' ', sizestring, padding);
                     if (write(getfd(stream),buffstring,sizestring) != sizestring) {
                         return -1;
                     }
                     symb++;
                     break;
                 case '%':
+                    plus += 1 + print_padding(stream, ' ',  1, padding);
                     if(fputc('%', stream) == EOF) {
                         return -1;
                     }
@@ -552,9 +566,7 @@ int open(const char* filename, int flags, ...) {
  */
 FILE* fopen(const char* filename, const char* mode) {
     int fd;
-    disableInterrupts();
-    FILE *fp = kalloc(sizeof(FILE));
-    enableInterrupts();
+    FILE *fp = malloc(sizeof(FILE));
 
     int  hasR = strchr(mode, 'r') != NULL;
     int hasW = strchr(mode, 'w') != NULL;
@@ -711,3 +723,8 @@ int mkfifo(const char* path) {
 int chmod(int mode, char* file) {
     return system_call(_SYS_CHMOD, mode, (int)file, 0);
 }
+
+int stat(const char* path, struct stat* data) {
+    return system_call(_SYS_STAT, (int) path, (int) data, 0);
+}
+

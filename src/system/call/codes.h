@@ -38,5 +38,6 @@
 #define _SYS_GETCWD 183
 #define _SYS_SYMLINK 83
 #define _SYS_MKFIFO 0xFA
+#define _SYS_STAT 106
 
 #endif

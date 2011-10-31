@@ -13,7 +13,7 @@
 #define getc(stream) fputc((stream))
 #define getchar() fgetc(stdin)
 
-
+#include "system/stat.h"
 #include "library/stdarg.h"
 
 typedef struct {
@@ -70,5 +70,7 @@ int symlink(const char* path, const char* target);
 int mkfifo(const char* path);
 
 int chmod(int mode, char* file);
+
+int stat(const char* path, struct stat* data);
 
 #endif

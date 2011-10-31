@@ -212,6 +212,9 @@ void int80(registers* regs) {
         case _SYS_CHMOD:
             regs->eax = _chmod(regs->ebx, (const char*)regs->ecx);
             break;
+        case _SYS_STAT:
+            regs->eax = _stat((const char*)regs->ebx, (struct stat*)regs->ecx);
+            break;
     }
 }
 

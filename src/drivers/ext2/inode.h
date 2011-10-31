@@ -8,11 +8,7 @@
 #define INODE_TYPE(inode) (((inode)->typesAndPermissions & 0xF000) >> 12)
 #define INODE_PERMISSIONS(inode) ((inode)->typesAndPermissions & 0x0FFF)
 
-#define INODE_FIFO 0x1
-#define INODE_DIR 0x4
-#define INODE_FILE 0x8
-#define INODE_LINK 0xA
-#define INODE_CHARDEV 0x2
+#include "system/fs/types.h"
 
 struct ext2_Inode {
     unsigned short typesAndPermissions;

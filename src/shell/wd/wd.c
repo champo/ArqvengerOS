@@ -4,6 +4,13 @@
 #include "library/stdlib.h"
 #include "library/string.h"
 #include "mcurses/mcurses.h"
+#include "system/stat.h"
+#include "system/fs/types.h"
+#include "system/accessControlList/users.h"
+#include "system/accessControlList/groups.h"
+#include "system/call/ioctl/keyboard.h"
+
+static void print_flag(int value, int flag, char c);
 
 void command_cd(char* argv) {
 
@@ -102,6 +109,14 @@ void manRmdir(void) {
     printf("DIRECTORY.\n");
 }
 
+void print_flag(int value, int flag, char c) {
+    if (value & flag) {
+        putchar(c);
+    } else {
+        putchar('-');
+    }
+}
+
 void command_ls(char* argv) {
 
     int fd;
@@ -115,21 +130,95 @@ void command_ls(char* argv) {
         }
     }
 
-    if (cmdEnd == NULL) {
-        fd = open(".", O_RDONLY);
-    } else {
-        fd = open(cmdEnd + 1, O_RDONLY);
+    if (cmdEnd != NULL) {
+        chdir(cmdEnd + 1);
     }
-    
+
+    fd = open(".", O_RDONLY);
     if (fd == -1) {
         printf("The directory specified could not be opened\n");
         return;
     }
 
+    termios inputStatus;
+    termios lsStatus = { 0, 0 };
+    ioctl(0, TCGETS, (void*) &inputStatus);
+    ioctl(0, TCSETS, (void*) &lsStatus);
+
+    size_t usableLines = TOTAL_ROWS - 1, i = 0;
     struct fs_DirectoryEntry entry;
     while (readdir(fd, &entry, hidden) == 1) {
-        printf("%s\n", entry.name);
+
+        struct stat data;
+        if (stat(entry.name, &data) == -1) {
+            printf("Opps. Something went awry, try again. Or maybe tell your sysadmin about.");
+            ioctl(0, TCSETS, (void*) &inputStatus);
+            exit();
+        }
+
+        if (i >= usableLines) {
+            printf(" -- Press enter to see more (or q to quit) -- ");
+            int c;
+            while ((c = getchar()) != '\n') {
+                if (c == 'q') {
+                    printf("\n");
+                    ioctl(0, TCSETS, (void*) &inputStatus);
+                    return;
+                }
+            }
+
+            moveCursorInRow(1);
+            clearLine(ERASE_ALL);
+        }
+        i++;
+
+        struct User* user = get_user_by_id(data.uid);
+        struct Group* group = get_group_by_id(data.gid);
+
+        switch (data.type) {
+            case INODE_FILE:
+                putchar('-');
+                break;
+            case INODE_LINK:
+                putchar('l');
+                break;
+            case INODE_DIR:
+                putchar('d');
+                break;
+            case INODE_FIFO:
+                putchar('p');
+                break;
+            case INODE_CHARDEV:
+                putchar('c');
+                break;
+        }
+        print_flag(data.mode, S_IRUSR, 'r');
+        print_flag(data.mode, S_IWUSR, 'w');
+        print_flag(data.mode, S_IXUSR, 'x');
+        print_flag(data.mode, S_IRGRP, 'r');
+        print_flag(data.mode, S_IWGRP, 'w');
+        print_flag(data.mode, S_IXGRP, 'x');
+        print_flag(data.mode, S_IROTH, 'r');
+        print_flag(data.mode, S_IWOTH, 'w');
+        print_flag(data.mode, S_IXOTH, 'x');
+        putchar(' ');
+
+        if (user != NULL) {
+            printf("%10s ", user->name);
+        } else {
+            printf("%10c ", ' ');
+        }
+
+        if (user != NULL) {
+            printf("%10s ", group->name);
+        } else {
+            printf("%10c ", ' ');
+        }
+
+        printf("%7d %s\n", data.size, entry.name);
     }
+
+    ioctl(0, TCSETS, (void*) &inputStatus);
 }
 
 void command_ln(char* argv) {
@@ -203,14 +292,14 @@ void command_chmod(char* argv) {
     stringmode[i] = '\0';
 
     int mode = parseoct(stringmode + 1);
-    
+
     if (mode == -1) {
         printf("The mode is not a valid number\n");
         return;
     }
-    
+
     i = chmod(mode, file + 1);
-    
+
     if (i != 0) {
         printf("Operation unsuccesful.\n");
     }

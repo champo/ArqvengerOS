@@ -4,6 +4,7 @@
 #include "type.h"
 #include "system/pinfo.h"
 #include "system/fs/direntry.h"
+#include "system/stat.h"
 
 size_t _write(int fd, const void* buf, size_t length);
 
@@ -60,5 +61,7 @@ int _symlink(const char* path, const char* target);
 int _mkfifo(const char* path);
 
 int _chmod(int mode, const char* file);
+
+int _stat(const char* path, struct stat* data);
 
 #endif

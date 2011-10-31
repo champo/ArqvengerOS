@@ -269,7 +269,7 @@ int _ioctl(int fd, int cmd, void* argp) {
 /**
  * Creates a new directory.
  *
- * @param path, the path of the directory to be created. 
+ * @param path, the path of the directory to be created.
  * @param mode, the permissions of the directory.
  * @return 0 if success, other if error.
  */
@@ -344,9 +344,9 @@ int _rmdir(const char* path) {
 
         return -1;
     }
-    
+
     struct fs_DirectoryEntry nextdir = fs_findentry(parent, filename);
-    
+
     if (nextdir.inode == 0) {
         fs_inode_close(parent);
         return -1;
@@ -361,7 +361,7 @@ int _rmdir(const char* path) {
     }
 
     fs_inode_close(curdir);
-    
+
     int res = fs_rmdir(parent, filename);
 
     kfree(base);
@@ -391,7 +391,7 @@ int _unlink(const char* path) {
     }
 
     struct fs_DirectoryEntry nextdir = fs_findentry(parent, filename);
-    
+
     if (nextdir.inode == 0) {
         fs_inode_close(parent);
         return -1;
@@ -407,7 +407,7 @@ int _unlink(const char* path) {
     }
 
     fs_inode_close(file);
- 
+
     int res = fs_unlink(parent, filename);
 
     kfree(base);
@@ -494,7 +494,7 @@ int _chdir(const char* path) {
 
 /**
  * Joins the cwd and a relative path, resolving problems such as /.. and /. It takes in account full paths too.
- * 
+ *
  * @param cwd, the cwd.
  * @param path, a relative path.
  * @return, the complete path.
@@ -619,7 +619,7 @@ struct fs_Inode* resolve_path(const char* path) {
         }
 
         curdir = fs_inode_open(nextdir.inode);
-        
+
         if (can_read(curdir) != 0) {
             fs_inode_close(curdir);
             return NULL;
@@ -651,14 +651,14 @@ int can_read(struct fs_Inode* inode) {
 
     gid = process->gid;
     uid = process->uid;
-    
+
     if (uid == 0) {
         return 0;
     }
 
     file_uid = inode->data->uid;
     file_gid = inode->data->gid;
- 
+
     unsigned short perms = fs_permission(inode);
 
     if (!(perms & S_IROTH) &&
@@ -686,11 +686,11 @@ int can_write(struct fs_Inode* inode) {
 
     if (uid == 0) {
         return 0;
-    }    
+    }
 
     file_uid = inode->data->uid;
     file_gid = inode->data->gid;
- 
+
     unsigned short perms = fs_permission(inode);
 
     if (!(perms & S_IWOTH) &&
@@ -781,7 +781,7 @@ char* path_file(const char* path) {
 
 /**
  * Resolves the real link to which a symbolic link is pointing.
- * 
+ *
  * @param symlink, the inode of the symbolic link.
  * @return the inode to which the symbolic link references.
  */
@@ -808,7 +808,7 @@ struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink) {
  * @param flags, the access mode.
  * @param mode, mode indicates the permissions of the new file. It is only used if O_CREAT is specified in flags.
  * @return the file descriptor if success, -1 if error.
- */ 
+ */
 int open_sym_link(struct fs_Inode* symlink, int flags, int mode) {
 
     int size = fs_get_inode_size(symlink);
@@ -906,7 +906,7 @@ int _mkfifo(const char* path) {
  * @return 0 if success, -1 if error.
  */
 int _chmod(int mode, const char* file) {
-    
+
     struct fs_Inode* inode = resolve_path(file);
     if (inode == NULL) {
         return -1;
@@ -915,6 +915,43 @@ int _chmod(int mode, const char* file) {
     if (can_write(inode) != 0) {
         return -1;
     }
-    
+
     return fs_set_permission(inode, mode);
 }
+
+int _stat(const char* entry, struct stat* data) {
+
+    char* path = path_directory(entry);
+    char* filename = path_file(entry);
+
+    struct fs_Inode* directory = resolve_path(path);
+    if (directory == NULL) {
+        return -1;
+    }
+
+    struct fs_DirectoryEntry fileEntry = fs_findentry(directory, filename);
+
+    kfree(path);
+    kfree(filename);
+    fs_inode_close(directory);
+
+    if (fileEntry.inode == 0) {
+        return -1;
+    }
+
+    struct fs_Inode* inode = fs_inode_open(fileEntry.inode);
+    if (inode == NULL) {
+        return -1;
+    }
+
+    data->inode = inode->number;
+    data->size = inode->data->size;
+    data->mode = fs_permission(inode);
+    data->uid = inode->data->uid;
+    data->gid = inode->data->gid;
+    data->type = INODE_TYPE(inode->data);
+    fs_inode_close(inode);
+
+    return 0;
+}
+
