@@ -30,6 +30,8 @@ int create_user(char* name, char* passwd, char* groupname);
 
 int delete_user(char* name);
 
+void free_user(struct User* user);
+
 #endif
 
 

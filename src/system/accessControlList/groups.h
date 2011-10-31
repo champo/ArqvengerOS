@@ -28,4 +28,6 @@ int add_group_member(int gid, int uid);
 
 int delete_group_member(int gid, int uid);
 
+void free_group(struct Group* group);
+
 #endif

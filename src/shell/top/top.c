@@ -26,7 +26,7 @@ void top(char* argv) {
     clearScreen(CLEAR_ALL);
 
   
-    printf("PID\tPPID\tUSER\tGROUP\t%%CPU\tPRIO\tSTATE\tSTART DATE\tCOMMAND\n");
+    printf("PID\tPPID\tUSER\tGROUP\t%%CPU\tPRIO\tSTATE\tCOMMAND\n");
     
     do {
         moveCursor(2, 1);
@@ -42,7 +42,7 @@ void top(char* argv) {
             printf("%d\t", data[i].cputime);
             printf("%d\t", data[i].priority);
             printf("%s\t", (data[i].state)? "alive":  "zombie");
-            printf("%s\t", asctime(localtime(&data[i].timeStart)));
+            //printf("%s\t", asctime(localtime(&data[i].timeStart)));
             printf("%s", data[i].name);
             printf("\n");
         }

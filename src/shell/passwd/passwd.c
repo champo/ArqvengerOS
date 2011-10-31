@@ -14,6 +14,7 @@ void passwd(char* argv) {
     char old_passwd[MAX_PASSWD_LEN];
     char new_passwd1[MAX_PASSWD_LEN];
     char new_passwd2[MAX_PASSWD_LEN];
+    char* username;
     int uid, gid;
     struct User* me;
     termios oldTermios;
@@ -21,8 +22,9 @@ void passwd(char* argv) {
 
     getProcessPersona(getpid(), &uid, &gid);
     me = get_user_by_id(uid);
+    username = me->name;
 
-    printf("Changing password for %s\n", me->name);
+    printf("Changing password for %s\n", username);
 
     printf("(current) password:");
 

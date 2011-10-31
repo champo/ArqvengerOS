@@ -4,8 +4,11 @@
 #include "system/common.h"
 #include "system/scheduler.h"
 #include "system/call.h"
-#include "library/sys.h"
 #include "system/fs/fs.h"
+#include "system/malloc/malloc.h"
+#include "system/kprintf.h"
+#include "library/sys.h"
+#include "library/string.h"
 #include "debug.h"
 
 static int pid = 0;

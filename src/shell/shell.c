@@ -113,10 +113,11 @@ void shell(char* unused) {
     int uid,gid;
     getProcessPersona(getpid(), &uid, &gid);
     struct User* user = get_user_by_id(uid);
-
+    char* username = user->name;
+    free_user(user);
     while (1) {
 
-        cmd = nextCommand(self, user->name);
+        cmd = nextCommand(self, username);
         if (cmd != NULL) {
 
             ioctl(0, TCSETS, (void*) &self->inputStatus);

@@ -15,6 +15,7 @@ void users(char* argv) {
         if (user != NULL) {
             printf("name:%s uid:%d gid:%d\n", user->name, user->id, user->gid[0]);
             users++;
+            free_user(user);
         } 
     }
 }

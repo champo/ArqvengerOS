@@ -21,6 +21,7 @@ void login(char* unused) {
 
         setProcessPersona(getpid(), user->id, user->gid[0]);
         
+        free_user(user);        
         run(shell, NULL, 1);
 
         wait();
