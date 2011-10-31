@@ -181,7 +181,7 @@ Una de las motivaciones más importantes para hacer de esto un proceso dedicado,
 Es decir, es posible cambiar entre terminales cuando ningún proceso está pidiendo input, ya que esta operación la hace \textit{tty}.
 
 Una particularidad muy importante de \textit{tty} es que es uno de los dos procesos de \textit{kernel}.
-Al decir proceo de \textit{kernel}, significa que corre en el contexto de memoria del kernel, y por lo tanto, puede hacer acceso directo a operaciones del \textit{kernel}.
+Al decir proceso de \textit{kernel}, significa que corre en el contexto de memoria del kernel, y por lo tanto, puede hacer acceso directo a operaciones del \textit{kernel}.
 Esto resultó ser necesario y muy valioso, por que permite a este proceso acceder a información de los procesos, y bloquearlos en caso de ser necesario.
 A pesar de esto, en todo otro aspecto se lo trata como un proceso normal.
 
@@ -425,13 +425,44 @@ uid y gid del archivo. Además, las prestaciones del vfs hacían que estos datos
 Una vez conseguidos estos datos, era trivial evaluar en que casos se permitía abrir un archivo, teniendo en cuenta
 que tanto el archivo tenga los permisos adecuados así como el \textit{path} que lo contiene.
 
+\section{Llamadas a sistema}
+
+Si bien al comenzar el trabajo ya contabamos con una interfaz para realizar llamadas a sistema, la cantidad de las mismas
+creció mucho en este trabajo. Ahora, las llamadas a sistema tenian la responsabilidad adicional de modificar estados de
+los procesos y de manejar archivos guardados en el disco.
+
+A modo de ejemplo presentamos algunas de las mismas:
+
+\subsection{Open}
+
+La llamada a sistema a \textit{open} es sumamente interesante ya que se ponen a prueba muchas de las funcionalidades del
+sistema. Al realizarse una llamada a \textit{open}, en una primera instancia hay que resolver el path (teniendo en cuenta
+directorios y links simoblicos). Luego hay que considerar los permisos del archivo. Finalmente, se marca al archivo como
+abierto. Para esto no solo hay que abrir un nodo, sino que tambien hay que actualizar la tabla de archivos abiertos en
+el proceso actual. Como ya fue mencionado, para esto se utilizan \textit{file descriptors} que contienen las
+funcionalidades provistas por el archivo.
+
+Como último detalle, es importante mencionar que los \textit{flags} que se le pasan a la función \textit{open} deben
+ser considerados en distintos puntos del a implementación. Por ejemplo, O\_CREAT se valida en el caso que el archivo
+no exista, caso en el cual se lo pasa a crear.
+
+\subsection{Nice}
+
+Si bien la llamada de sistema \textit{nice} no es demasiado compleja, da un muy buen ejemplo de una llamada a sistema
+que debe modificar el estado del proceso, en este caso, modificando la prioridad del mismo.
+
+\subsection{Unlink}
+
+La llamada a sistema unlink justamente tiene que hacer lo que su nombre dice, eliminar un \textit{link} a un archivo.
+Esto implica decrementar su contador de referencias y solamente en el caso que este llegue a 0, eliminarla. A más bajo
+nivel, esto implica que debe recuperar la estructura del nodo a nivel vfs y decrementarle sus referencias, y solo en el
+caso de que esta llegue a 0, va a utilizar el driver Ext2 para efectivamente eliminarla. 
+
 \newpage
 \section{Comandos provistos}
 Para poder probar y mostrar las nuevas funcionalidades del trabajo hubo que agregar ciertos comandos y funcionalidades ejecutables desde la consola. 
 La lista completa de comandos disponibles puede encontrarse mediante el comando \textit{help}, y la documentación de cada comando mediante el comando \textit{man}.
-
-
-A continuación se presentan algunos casos interesantes.
+Algunos de estos comandos estan atados de forma directa a ciertas llamadas a sistema.
 
       \subsection{Top}
       El comando \textit{top} resulta interesante por varias razones. Primero que nada, da cuenta de los múltiples proceso existentes en el sistema. Segundo, 
@@ -629,7 +660,6 @@ varios accesos de a un sector a la vez.
   \item http://www.gnu.org/s/hello/manual/libc/Process-Persona.html\#Process-Persona
   \item http://www.gnu.org/s/hello/manual/libc/User-Database.html\#User-Database
   \item http://www.gnu.org/s/hello/manual/libc/Group-Database.html\#Group-Database
-
 \end{itemize}
    
 \end{document}

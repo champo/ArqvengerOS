@@ -916,7 +916,11 @@ int _chmod(int mode, const char* file) {
         return -1;
     }
 
-    return fs_set_permission(inode, mode);
+    int ans = fs_set_permission(inode, mode);
+
+    fs_inode_close(inode);
+
+    return ans;
 }
 
 int _stat(const char* entry, struct stat* data) {
@@ -973,6 +977,10 @@ int _chown(const char* file) {
     }
 
     struct Process* process = scheduler_current();
+    
+    int ans = fs_set_own(inode, process->uid, process->gid);
 
-    return fs_set_own(inode, process->uid, process->gid);
+    fs_inode_close(inode);
+
+    return ans;
 }
