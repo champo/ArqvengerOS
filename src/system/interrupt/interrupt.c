@@ -110,7 +110,7 @@ void setupIDT(void) {
     // Disabling interrupts to make sure we're in absolute control.
     reMapPIC(PIC1_BASE_OFFSET,PIC2_BASE_OFFSET);
 
-    setIdtEntry(idt, 0x80, 0x08, (dword)&_int80Handler, ACS_INT);
+    setIdtEntry(idt, 0x80, 0x08, (dword)&_int80Handler, 0xEE);
     setIdtEntry(idt, 0x20, 0x08, (dword)&_int20Handler, ACS_INT);
     setIdtEntry(idt, 0x21, 0x08, (dword)&_int21Handler, ACS_INT);
 

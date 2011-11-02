@@ -4,6 +4,7 @@
 #include "system/sleepList.h"
 #include "system/process/table.h"
 #include "system/tick.h"
+#include "system/task.h"
 #include "type.h"
 
 struct ProcessQueue scheduler_queue = {.first = NULL, .last = NULL};
@@ -34,15 +35,15 @@ void scheduler_add(struct Process* process) {
 void scheduler_do(void) {
 
     if (scheduler_curr != NULL) {
-        __asm__ __volatile ("mov %%ebp, %0":"=r"(scheduler_curr->mm.esp)::);
-
+        __asm__ __volatile__ ("mov %%ebp, %0":"=r"(scheduler_curr->mm.esp0)::);
         update_cycles();
     }
 
     choose_next();
 
     if (scheduler_curr != NULL) {
-        __asm__ __volatile__ ("mov %0, %%ebp"::"r"(scheduler_curr->mm.esp));
+        task_load(scheduler_curr);
+        __asm__ __volatile__ ("mov %0, %%ebp"::"r"(scheduler_curr->mm.esp0));
     }
 }
 

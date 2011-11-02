@@ -13,6 +13,10 @@
  */
 size_t strlen(const char *s) {
 
+    if (s == NULL) {
+        return 0;
+    }
+
     int i = 0;
 
     while (*(s+i) != '\0') {
@@ -303,9 +307,9 @@ char *reverse(char * s) {
  *  @return 1 if the string contains a number, 0 if not.
  */
 int is_a_number(char* str) {
-    
+
     int i = 0;
-    
+
     while(str[0] == ' ') {
         str++;
     }

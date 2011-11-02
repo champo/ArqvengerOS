@@ -7,6 +7,7 @@
 
 #define NO_TERMINAL -1
 #define MAX_OPEN_FILES 10
+#define KERNEL_STACK_PAGES 10
 
 typedef void (*EntryPoint)(char*);
 
@@ -18,6 +19,11 @@ struct ProcessMemory {
     void* heap;
     void* mallocContext;
     int pagesInHeap;
+
+    void* esp0;
+    void* kernelStack;
+    void* kernelStackStart;
+    int pagesInKernelStack;
 };
 
 enum ProcessStatus {
@@ -37,6 +43,7 @@ struct ProcessSchedule {
 
 struct Process {
     int pid;
+    int kernel;
 
     int ppid;
     struct Process* parent;

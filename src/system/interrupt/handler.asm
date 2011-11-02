@@ -1,11 +1,15 @@
-EXTERN  int08, int09, interruptDispatcher, mm_set_kernel_context, mm_set_process_context
+EXTERN  interruptDispatcher, mm_set_kernel_context, mm_set_process_context
 GLOBAL _interruptEnd
 
 ; Defines a macro that takes as an argument the interrupt number.
 ; Calls that interrupt.
-%macro CALLER 1
+%macro CALLER 2
     ; Save the current execution context
     pushad
+    push gs
+    push fs
+    push es
+    push ds
 
     ; Set up the handler execution context
     mov ax, 0x10    
@@ -13,42 +17,35 @@ GLOBAL _interruptEnd
     mov es, ax
     mov fs, ax
     mov gs, ax
-    mov ss, ax
 
     call mm_set_kernel_context
 
-    call %1
+    call %2
 
     call mm_set_process_context
     
-    mov ax, 0x10
-    mov ds, ax 
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-
+    pop ds
+    pop es
+    pop fs
+    pop gs
     popad
 
     ; Move the sp to where it when the interrupt was triggered
     add esp, 8
 
-    sti
-    iret
+    iretd
 %endmacro
 
 _interruptEnd:
 
     call mm_set_process_context
 
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
+    pop ds
+    pop es
+    pop fs
+    pop gs
 
-    iret
+    iretd
 
 
 ; Defines a macro that takes as an argument the interrupt number.
@@ -61,18 +58,16 @@ GLOBAL _int%1Handler
     ; Save the interrupt number (intNum).
     push 0
     push %1h      
-    CALLER %2
+    CALLER %1, %2
 %endmacro
 
 %macro ERR_ISR 2 
 GLOBAL _int%1Handler   
   _int%1Handler:
-    cli
 
     ; Save the interrupt number (intNum).
-    push 0
     push %1h      
-    CALLER %2
+    CALLER %1,%2
 %endmacro
 
 ; Definition of the interrupt handlers

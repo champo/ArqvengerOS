@@ -1,6 +1,7 @@
 #include "system/process/table.h"
 #include "system/scheduler.h"
 #include "drivers/tty/tty.h"
+#include "debug.h"
 
 #define PTABLE_SIZE 64
 
