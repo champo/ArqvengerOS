@@ -116,15 +116,6 @@ int _open(const char* path, int flags, int mode) {
         return -1;
     }
 
-    if ((flags & 3) != O_RDONLY) {
-        if (can_write(directory) != 0) {
-            kfree(base);
-            kfree(filename);
-            fs_inode_close(directory);
-            return -1;
-        }
-    }
-
     struct fs_DirectoryEntry fileEntry = fs_findentry(directory, filename);
     if (fileEntry.inode == 0) {
 
