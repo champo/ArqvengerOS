@@ -33,4 +33,8 @@ void command_chown(char* argv);
 
 void man_chown(void);
 
+void command_cp(char* argv);
+
+void man_cp(void);
+
 #endif
