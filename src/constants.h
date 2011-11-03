@@ -38,7 +38,8 @@
 #define ENOTEMPTY -7
 #define EISDIR -8
 
-
-
+#define READ_PURPOSE 0
+#define WRITE_PURPOSE 1
+#define RDWR_PURPOSE 2
 
 #endif
