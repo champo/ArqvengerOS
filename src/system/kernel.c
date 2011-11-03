@@ -7,6 +7,7 @@
 #include "system/scheduler.h"
 #include "drivers/ata.h"
 #include "system/fifo.h"
+#include "system/mm/pagination.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 
@@ -22,6 +23,7 @@ static void idle(char* unused) {
 void kmain(struct multiboot_info* info, unsigned int magic) {
 
     initMemoryMap(info);
+    mm_pagination_init();
 
     setupGDT();
     setupIDT();
