@@ -1,16 +1,12 @@
 #include "system/interrupt.h"
-#include "shell/shell.h"
 #include "library/stdio.h"
-#include "library/string.h"
 #include "drivers/tty/tty.h"
-#include "system/mm.h"
-#include "system/common.h"
+#include "system/mm/allocator.h"
 #include "system/gdt.h"
 #include "system/process/table.h"
 #include "system/scheduler.h"
-#include "system/accessControlList/users.h"
-#include "system/accessControlList/groups.h"
 #include "drivers/ata.h"
+#include "system/fifo.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 

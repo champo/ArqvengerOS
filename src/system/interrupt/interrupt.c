@@ -1,6 +1,6 @@
 #include "system/interrupt.h"
 #include "system/common.h"
-#include "system/mm.h"
+#include "system/mm/allocator.h"
 #include "system/io.h"
 #include "system/call.h"
 #include "system/interrupt/handler.h"

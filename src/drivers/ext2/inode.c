@@ -1,7 +1,7 @@
 #include "drivers/ext2/inode.h"
 #include "drivers/ext2/superblock.h"
 #include "drivers/ext2/blockGroup.h"
-#include "system/mm.h"
+#include "system/mm/allocator.h"
 #include "system/fs/inode.h"
 #include "system/call.h"
 #include "drivers/ext2/allocator.h"

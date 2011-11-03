@@ -1,5 +1,5 @@
-#ifndef __SYSTEM_MM__
-#define __SYSTEM_MM__
+#ifndef __SYSTEM_MM_ALLOCATOR__
+#define __SYSTEM_MM_ALLOCATOR__
 
 #include "multiboot.h"
 #include "type.h"

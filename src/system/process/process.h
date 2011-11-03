@@ -1,7 +1,6 @@
 #ifndef __SYSTEM_PROCESS_PROCESS__
 #define __SYSTEM_PROCESS_PROCESS__
 
-#include "system/mm.h"
 #include "type.h"
 #include "system/fs/fd.h"
 

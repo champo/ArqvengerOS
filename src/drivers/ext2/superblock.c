@@ -1,5 +1,5 @@
 #include "drivers/ext2/superblock.h"
-#include "system/mm.h"
+#include "system/mm/allocator.h"
 
 int ext2_superblock_init(struct ext2* fs) {
 

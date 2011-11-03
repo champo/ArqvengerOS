@@ -1,5 +1,5 @@
 #include "system/process/process.h"
-#include "system/mm.h"
+#include "system/mm/allocator.h"
 #include "system/panic.h"
 #include "system/common.h"
 #include "system/scheduler.h"
