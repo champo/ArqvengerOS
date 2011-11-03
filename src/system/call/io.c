@@ -12,9 +12,9 @@
 #include "library/stdio.h"
 #include "debug.h"
 
-static struct fs_Inode* resolve_path(const char* path, int purpose);
+static struct fs_Inode* resolve_path(const char* path);
 
-static struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink, int purpose);
+static struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink);
 
 static int open_sym_link(struct fs_Inode* symlink, int flags, int mode);
 
@@ -109,20 +109,7 @@ int _open(const char* path, int flags, int mode) {
 
     int purpose;
 
-    if ((flags & 3) == O_RDONLY) {
-        purpose = READ_PURPOSE;
-    }
-
-    if ((flags & 3) == O_WRONLY) {
-        purpose = WRITE_PURPOSE;
-    }
-
-
-    if ((flags & 3) == O_RDWR) {
-        purpose = RDWR_PURPOSE;
-    }
-
-    struct fs_Inode* directory = resolve_path(base, purpose);
+    struct fs_Inode* directory = resolve_path(base);
     if (directory == NULL) {
         kfree(base);
         kfree(filename);
@@ -208,10 +195,17 @@ int _creat(const char* path, int mode) {
     char* base = path_directory(path);
     char* filename = path_file(path);
 
-    struct fs_Inode* directory = resolve_path(base, WRITE_PURPOSE);
+    struct fs_Inode* directory = resolve_path(base);
     if (directory == NULL) {
         kfree(base);
         kfree(filename);
+        return -1;
+    }
+
+    if (can_write(directory) != 0) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(directory);
         return -1;
     }
 
@@ -293,11 +287,18 @@ int _mkdir(const char* path, int mode) {
     char* base = path_directory(path);
     char* filename = path_file(path);
 
-    struct fs_Inode* parent = resolve_path(base, WRITE_PURPOSE);
+    struct fs_Inode* parent = resolve_path(base);
     if (parent == NULL) {
         kfree(base);
         kfree(filename);
 
+        return -1;
+    }
+
+    if (can_write(parent) != 0) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(parent);
         return -1;
     }
 
@@ -322,7 +323,7 @@ int _mkdir(const char* path, int mode) {
     kfree(base);
     kfree(filename);
 
-    struct fs_Inode* directory = resolve_path(path, WRITE_PURPOSE);
+    struct fs_Inode* directory = resolve_path(path);
     if (directory == NULL) {
         return -1;
     }
@@ -344,11 +345,18 @@ int _rmdir(const char* path) {
     char* base = path_directory(path);
     char* filename = path_file(path);
 
-    struct fs_Inode* parent = resolve_path(base, WRITE_PURPOSE);
+    struct fs_Inode* parent = resolve_path(base);
     if (parent == NULL) {
         kfree(base);
         kfree(filename);
 
+        return -1;
+    }
+
+    if (can_write(parent) != 0) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(parent);
         return -1;
     }
 
@@ -397,11 +405,18 @@ int _unlink(const char* path) {
     char* base = path_directory(path);
     char* filename = path_file(path);
 
-    struct fs_Inode* parent = resolve_path(base, WRITE_PURPOSE);
+    struct fs_Inode* parent = resolve_path(base);
     if (parent == NULL) {
         kfree(base);
         kfree(filename);
 
+        return -1;
+    }
+
+    if (can_write(parent) != 0) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(parent);
         return -1;
     }
 
@@ -486,7 +501,7 @@ int _chdir(const char* path) {
 
     char* nwd = join_paths(process->cwd, path);
 
-    struct fs_Inode* destination = resolve_path(nwd, READ_PURPOSE);
+    struct fs_Inode* destination = resolve_path(nwd);
 
     if (destination == NULL) {
         kfree(nwd);
@@ -595,7 +610,7 @@ int _getcwd(char* path, size_t len) {
  * @param purpose, 0 if the operation is a read, 1 if its a write, 2 if it can be both.
  * @returns, the inode referenced by path. NULL if error.
  */
-struct fs_Inode* resolve_path(const char* path, int purpose) {
+struct fs_Inode* resolve_path(const char* path) {
 
     size_t len = strlen(path);
     size_t index = 0;
@@ -607,22 +622,14 @@ struct fs_Inode* resolve_path(const char* path, int purpose) {
         curdir = fs_root();
         index++;
     } else {
-        curdir = resolve_path(scheduler_current()->cwd, purpose);
+        curdir = resolve_path(scheduler_current()->cwd);
         if (curdir == NULL) {
             return NULL;
         }
     }
 
-    if (purpose == READ_PURPOSE) {
-        permission = can_read(curdir);
-    }
-    if (purpose == WRITE_PURPOSE)  {
-        permission = can_write(curdir);
-    }
-    if (purpose == RDWR_PURPOSE) {
-        permission = can_write(curdir) + can_read(curdir);
-    }
-
+    permission = can_read(curdir);
+    
     if (permission != 0) {
         fs_inode_close(curdir);
         return NULL;
@@ -647,15 +654,7 @@ struct fs_Inode* resolve_path(const char* path, int purpose) {
 
         curdir = fs_inode_open(nextdir.inode);
  
-        if (purpose == READ_PURPOSE) {
-            permission = can_read(curdir);
-        }
-        if (purpose == WRITE_PURPOSE)  {
-            permission = can_write(curdir);
-        }
-        if (purpose == RDWR_PURPOSE) {
-            permission = can_write(curdir) + can_read(curdir);
-        } 
+        permission = can_read(curdir);
 
         if (permission != 0) {
             fs_inode_close(curdir);
@@ -663,7 +662,7 @@ struct fs_Inode* resolve_path(const char* path, int purpose) {
         }
 
         if (INODE_TYPE(curdir->data) == INODE_LINK) {
-            struct fs_Inode* auxdir = resolve_sym_link(curdir, purpose);
+            struct fs_Inode* auxdir = resolve_sym_link(curdir);
             fs_inode_close(curdir);
             curdir = auxdir;
             if (curdir == NULL) {
@@ -823,7 +822,7 @@ char* path_file(const char* path) {
  * @param purpose, 0 if the operation is a read, 1 if it is a write, 2 if it can be both.
  * @return the inode to which the symbolic link references.
  */
-struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink, int purpose) {
+struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink) {
 
     int size = fs_get_inode_size(symlink);
     char* buff = kalloc(size + 1);
@@ -834,7 +833,7 @@ struct fs_Inode* resolve_sym_link(struct fs_Inode* symlink, int purpose) {
         return NULL;
     }
 
-    struct fs_Inode* ans = resolve_path(buff, purpose);
+    struct fs_Inode* ans = resolve_path(buff);
     kfree(buff);
     return ans;
 }
@@ -873,7 +872,7 @@ int _symlink(const char* path, const char* target) {
     char* base = path_directory(target);
     char* filename = path_file(target);
 
-    struct fs_Inode* directory = resolve_path(base, READ_PURPOSE);
+    struct fs_Inode* directory = resolve_path(base);
     if (directory == NULL) {
         kfree(base);
         kfree(filename);
@@ -894,13 +893,21 @@ int _symlink(const char* path, const char* target) {
     base = path_directory(path);
     filename = path_file(path);
 
-    directory = resolve_path(base, WRITE_PURPOSE);
+    directory = resolve_path(base);
 
     if (directory == NULL) {
         kfree(base);
         kfree(filename);
         return -1;
     }
+
+    if (can_write(directory) != 0) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(directory);
+        return -1;
+    }
+
 
     int ans = fs_symlink(directory, filename, fulltarget);
     kfree(base);
@@ -921,12 +928,22 @@ int _mkfifo(const char* path) {
     char* base = path_directory(path);
     char* filename = path_file(path);
 
-    struct fs_Inode* directory = resolve_path(base, WRITE_PURPOSE);
+    struct fs_Inode* directory = resolve_path(base);
     if (directory == NULL) {
         kfree(base);
         kfree(filename);
         return -1;
     }
+
+
+    if (can_write(directory) != 0) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(directory);
+        return -1;
+    }
+
+
     int res = fs_mknod(directory, filename, INODE_FIFO);
 
     kfree(base);
@@ -948,13 +965,21 @@ int _chmod(int mode, const char* file) {
     char* base = path_directory(file);
     char* filename = path_file(file);
 
-    struct fs_Inode* inode = resolve_path(base, WRITE_PURPOSE);
+    struct fs_Inode* inode = resolve_path(base);
     if (inode == NULL) {
         kfree(base);
         kfree(filename);
         return -1;
     }
     
+    if (can_write(inode) != 0) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(inode);
+        return -1;
+    }
+
+
     struct fs_DirectoryEntry nextdir = fs_findentry(inode, file);
     fs_inode_close(inode);
 
@@ -981,7 +1006,7 @@ int _stat(const char* entry, struct stat* data) {
     char* path = path_directory(entry);
     char* filename = path_file(entry);
 
-    struct fs_Inode* directory = resolve_path(path, READ_PURPOSE);
+    struct fs_Inode* directory = resolve_path(path);
     if (directory == NULL) {
         return -1;
     }
@@ -1023,13 +1048,19 @@ int _chown(const char* file) {
     char* base = path_directory(file);
     char* filename = path_file(file);
 
-    struct fs_Inode* inode = resolve_path(base, WRITE_PURPOSE);
+    struct fs_Inode* inode = resolve_path(base);
     if (inode == NULL) {
         kfree(base);
         kfree(filename);
         return -1;
     }
     
+    if (can_write(inode) != 0) {
+        kfree(base);
+        kfree(filename);
+        fs_inode_close(inode);
+        return -1;
+    }
     struct fs_DirectoryEntry nextdir = fs_findentry(inode, file);
     fs_inode_close(inode);
 
