@@ -73,4 +73,10 @@ int chmod(int mode, char* file);
 
 int stat(const char* path, struct stat* data);
 
+char* path_directory(const char* path);
+
+char* path_file(const char* path);
+
+char* join_paths(const char* cwd, const char* path);
+
 #endif

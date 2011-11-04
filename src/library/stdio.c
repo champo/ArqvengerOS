@@ -739,3 +739,146 @@ int chown(char* file) {
     return system_call(_SYS_CHOWN, (int)file, 0, 0);
 }
 
+/**
+ * Separetes the directory in a path.
+ *
+ * @param path, the path to be analyzed.
+ * @return the directory part of path.
+ */
+char* path_directory(const char* path) {
+
+    if (strcmp(path, "/") == 0) {
+        char* result = malloc(sizeof(char) * 2);
+        result[0] = '/';
+        result[1] = '\0';
+        return result;
+    }
+
+    size_t len = strlen(path);
+
+    // If we have a trailing slash, we ignore it
+    if (path[len - 1] == '/') {
+        len--;
+    }
+
+    // Isolate the last element so that we can ignore it
+    int lastSlash;
+    for (lastSlash = len - 1; lastSlash >= 0 && path[lastSlash] != '/'; lastSlash--);
+
+    char* result;
+    if (lastSlash == -1) {
+        // There is no directory component in this path
+        result = malloc(sizeof(char) * 2);
+        strcpy(result, ".");
+    } else if (lastSlash == 0) {
+        // The directory component is root
+        result = malloc(sizeof(char) * 2);
+        strcpy(result, "/");
+    } else {
+        result = malloc(sizeof(char) * (lastSlash + 2));
+        strncpy(result, path, lastSlash);
+        result[lastSlash + 1] = 0;
+    }
+
+    return result;
+}
+
+/**
+ * Isolates the file from the path.
+ *
+ * @param path, the path to be analyzed.
+ * @return the file part of the path.
+ */
+char* path_file(const char* path) {
+
+    if (strcmp(path, "/") == 0) {
+        char* result = kalloc(sizeof(char) * 2);
+        result[0] = '.';
+        result[1] = '\0';
+        return result;
+    }
+        
+    size_t len = strlen(path);
+
+    //If we have a trailing slash, we ignore it
+    if (path[len - 1] == '/') {
+        len--;
+    }
+                                     
+    // Isolate the last element so that we can ignore it
+    int lastSlash;
+    for (lastSlash = len - 1; lastSlash >= 0 && path[lastSlash] != '/'; lastSlash--);
+                            
+    char* result = kalloc(sizeof(char) * (len - lastSlash + 1));
+    strncpy(result, path + (lastSlash + 1), len - lastSlash - 1);
+    result[len - lastSlash] = 0;
+                         
+    return result;
+}
+
+/**
+ * Joins the cwd and a relative path, resolving problems such as /.. and /. It takes in account full paths too.
+ *
+ * @param cwd, the cwd.
+ * @param path, a relative path.
+ * @return, the complete path.
+ */
+char* join_paths(const char* cwd, const char* path) {
+
+    size_t pathLen = strlen(path);
+    char* nwd;
+
+    if (path[0] == '/') {
+        // If the new path is absolute little work needs to be done
+        nwd = kalloc(sizeof(char) * (pathLen + 1));
+        strcpy(nwd, path);
+
+        return nwd;
+    }
+
+    size_t cwdLen = strlen(cwd);
+
+    nwd = kalloc(sizeof(char) * (cwdLen + pathLen + 2));
+    strcpy(nwd, cwd);
+
+    int index = cwdLen;
+    if (nwd[cwdLen - 1] == '/') {
+        index--;
+    }
+
+    for (size_t pathIndex = 0; pathIndex < pathLen;) {
+
+        size_t start = pathIndex;
+        size_t componentLen = 0;
+
+        for (; pathIndex < pathLen && path[pathIndex] != '/'; pathIndex++, componentLen++);
+        // Make sure we skip any forward slashes
+        pathIndex++;
+
+        if (path[start] == '.') {
+
+            if (componentLen == 1) {
+                continue;
+            } else if (componentLen == 2 && path[start + 1] == '.') {
+                // Remove the last component of nwd
+                for (; index > 0 && nwd[index] != '/'; index--);
+                continue;
+            }
+
+        }
+
+        nwd[index++] = '/';
+        for (size_t i = 0; i < componentLen; i++, index++) {
+            nwd[index] = path[start + i];
+        }
+    }
+
+    if (index == 0) {
+        nwd[index++] = '/';
+    }
+
+    nwd[index] = 0;
+
+    return nwd;
+}
+
