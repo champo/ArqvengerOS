@@ -113,6 +113,10 @@ struct Terminal* tty_active(void) {
 }
 
 struct Terminal* tty_terminal(int number) {
+    if (number == NO_TERMINAL) {
+        return tty_current();
+    }
+
     return &terminals[number];
 }
 

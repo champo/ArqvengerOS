@@ -4,12 +4,20 @@
 #include "library/stdlib.h"
 #include "library/string.h"
 
-static void putc(char c) {
-    tty_write(&c, 1);
+#ifndef DEFAULT_LOG_LEVEL
+#define DEFAULT_LOG_LEVEL LOG_INFO
+#endif
+
+static int logLevel = DEFAULT_LOG_LEVEL;
+
+static void putc(int terminal, char c) {
+    tty_write_to_terminal(terminal, &c, 1);
 }
 
+int tkprintf(int terminal, const char* format, va_list arg);
+
 /**
- *  Prints with format to the kernel output.
+ *  Prints with format to the kernel given terminal.
  *
  *  The variables sent will be printed in order specifying the types with a %
  *  symbol in the format.
@@ -23,10 +31,7 @@ static void putc(char c) {
  *
  *  @return the number of characters printed or -1 in case of failiure.
  */
-int kprintf(const char *format, ...) {
-
-    va_list arg;
-    va_start(arg, format);
+int tkprintf(int terminal, const char *format, va_list arg) {
 
     int i = 0;
     int symb = 0;
@@ -38,7 +43,7 @@ int kprintf(const char *format, ...) {
 
     while (format[i] != '\0') {
         if (format[i] == '%') {
-            tty_write(format + lastprint, i - lastprint);
+            tty_write_to_terminal(terminal, format + lastprint, i - lastprint);
 
             i++;
             symb++;
@@ -47,27 +52,27 @@ int kprintf(const char *format, ...) {
                 case 'i':
                     sizestring = itoa(buffint, va_arg(arg, int));
                     plus += sizestring;
-                    tty_write(buffint, sizestring);
+                    tty_write_to_terminal(terminal, buffint, sizestring);
                     symb++;
                     break;
                 case 'u':
                     sizestring = utoa(buffint, va_arg(arg, unsigned int));
                     plus += sizestring;
-                    tty_write(buffint, sizestring);
+                    tty_write_to_terminal(terminal, buffint, sizestring);
                     symb++;
                     break;
                 case 'c':
-                    putc(va_arg(arg, int));
+                    putc(terminal, va_arg(arg, int));
                     break;
                 case 's':
                     buffstring = va_arg(arg, char *);
                     sizestring = strlen(buffstring);
                     plus += sizestring;
-                    tty_write(buffstring, sizestring);
+                    tty_write_to_terminal(terminal, buffstring, sizestring);
                     symb++;
                     break;
                 case '%':
-                    putc('%');
+                    putc(terminal, '%');
                     break;
             }
             i++;
@@ -77,7 +82,68 @@ int kprintf(const char *format, ...) {
         }
     }
 
-    tty_write(format + lastprint, i - lastprint);
+    tty_write_to_terminal(terminal, format + lastprint, i - lastprint);
 
     return i - symb + plus;
 }
+
+int kprintf(const char* format, ...) {
+
+    va_list arg;
+    va_start(arg, format);
+
+    int res = tkprintf(NO_TERMINAL, format, arg);
+
+    va_end(arg);
+    return res;
+}
+
+int log_debug(const char* format, ...) {
+
+    if (logLevel < LOG_DEBUG) {
+        return 0;
+    }
+
+    va_list arg;
+    va_start(arg, format);
+
+    int res = tkprintf(NO_TERMINAL, format, arg);
+
+    va_end(arg);
+    return res;
+}
+
+int log_info(const char* format, ...) {
+
+    if (logLevel < LOG_INFO) {
+        return 0;
+    }
+
+    va_list arg;
+    va_start(arg, format);
+
+    int res = tkprintf(NO_TERMINAL, format, arg);
+
+    va_end(arg);
+    return res;
+}
+
+int log_error(const char* format, ...) {
+
+    if (logLevel < LOG_ERROR) {
+        return 0;
+    }
+
+    va_list arg;
+    va_start(arg, format);
+
+    int res = tkprintf(NO_TERMINAL, format, arg);
+
+    va_end(arg);
+    return res;
+}
+
+void set_log_level(int level) {
+    logLevel = level;
+}
+

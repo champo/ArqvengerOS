@@ -351,6 +351,10 @@ size_t tty_write_active(const char* buf, size_t length) {
     return tty_write_to_screen(tty_active(), buf, length);
 }
 
+size_t tty_write_to_terminal(int terminal, const char* buf, size_t length) {
+    return tty_write_to_screen(tty_terminal(terminal), buf, length);
+}
+
 size_t tty_write_to_screen(struct Terminal* term, const void* buf, size_t length) {
 
     struct ScreenStatus* status = &term->screen;

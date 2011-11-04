@@ -16,4 +16,6 @@ int ioctlKeyboard(int cmd, void* argp);
 
 void tty_detach_process(struct Process* process);
 
+size_t tty_write_to_terminal(int terminal, const char* buf, size_t length);
+
 #endif
