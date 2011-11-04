@@ -4,7 +4,7 @@
 #include "type.h"
 #include "system/process/process.h"
 
-#define NUM_TERMINALS 4
+#define NUM_TERMINALS 5
 
 size_t tty_write(const void* buf, size_t length);
 

@@ -38,6 +38,12 @@
 #define F2_CODE 0x3C
 #define F3_CODE 0x3D
 #define F4_CODE 0x3E
+#define F5_CODE 0x3F
+#define F6_CODE 0x40
+#define F7_CODE 0x41
+#define F8_CODE 0x42
+#define F9_CODE 0x43
+#define F10_CODE 0x44
 
 static char normalCodeTable[] = {
         0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
@@ -211,8 +217,10 @@ void process_scancode(void) {
                 }
                 break;
             default:
-                if (F1_CODE <= makeCode && makeCode <= F4_CODE) {
-                    tty_change(makeCode - F1_CODE);
+                if (F1_CODE <= makeCode && makeCode <= F10_CODE) {
+                    if (makeCode - F1_CODE < NUM_TERMINALS) {
+                        tty_change(makeCode - F1_CODE);
+                    }
                 }
                 break;
         }
