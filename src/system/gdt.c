@@ -1,6 +1,7 @@
 #include "system/gdt.h"
-#include "system/mm.h"
+#include "system/mm/allocator.h"
 #include "system/common.h"
+#include "system/task.h"
 
 #pragma pack(1)
 
@@ -33,17 +34,20 @@ static void setupGDTEntry(int num, int base, int limit, short access, short gran
 void setupGDT(void) {
 
     struct GDTR gdtr;
+    struct TaskState* ts = task_create_tss();
 
-    gdt = kalloc(sizeof(struct SegmentDescriptor) * 5);
+    gdt = kalloc(sizeof(struct SegmentDescriptor) * 6);
     setupGDTEntry(0, 0, 0, 0, 0);
     setupGDTEntry(1, 0, 0x000FFFFF, 0x9A, 0xC0);
     setupGDTEntry(2, 0, 0x000FFFFF, 0x92, 0xC0);
-    setupGDTEntry(3, 0, 0x000FFFFF, 0xFA, 0xC0);
+    setupGDTEntry(3, 0, 0x000FFFFF, 0xFC, 0xC0);
     setupGDTEntry(4, 0, 0x000FFFFF, 0xF2, 0xC0);
+    setupGDTEntry(5, (int) ts, (int) (ts + 1) + 1, 0x89, 0);
 
-    gdtr.limit = 5 * sizeof(struct SegmentDescriptor) - 1;
+    gdtr.limit = 6 * sizeof(struct SegmentDescriptor) - 1;
     gdtr.base = (int) gdt;
 
     __asm__ volatile("lgdt (%%eax)"::"A"(&gdtr):);
+    __asm__ volatile("ltr %%ax"::"a"(TASK_STATE_SEGMENT):);
 }
 

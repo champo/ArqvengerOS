@@ -1,6 +1,6 @@
 #include "drivers/ext2/blockGroup.h"
 #include "drivers/ext2/superblock.h"
-#include "system/mm.h"
+#include "system/mm/allocator.h"
 #include "system/kprintf.h"
 
 #define SUPERBLOCK_END \

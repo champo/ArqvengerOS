@@ -5,7 +5,7 @@
 #include "drivers/ext2/inode.h"
 #include "drivers/ext2/directory.h"
 #include "system/fs/fs.h"
-#include "system/mm.h"
+#include "system/mm/allocator.h"
 
 /**
  * The write function for regular files and symbolic links.

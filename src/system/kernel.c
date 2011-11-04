@@ -1,16 +1,13 @@
 #include "system/interrupt.h"
-#include "shell/shell.h"
 #include "library/stdio.h"
-#include "library/string.h"
 #include "drivers/tty/tty.h"
-#include "system/mm.h"
-#include "system/common.h"
+#include "system/mm/allocator.h"
 #include "system/gdt.h"
 #include "system/process/table.h"
 #include "system/scheduler.h"
-#include "system/accessControlList/users.h"
-#include "system/accessControlList/groups.h"
 #include "drivers/ata.h"
+#include "system/fifo.h"
+#include "system/mm/pagination.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 
@@ -26,6 +23,7 @@ static void idle(char* unused) {
 void kmain(struct multiboot_info* info, unsigned int magic) {
 
     initMemoryMap(info);
+    mm_pagination_init();
 
     setupGDT();
     setupIDT();
@@ -48,7 +46,7 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
 
     struct Process* idleProcess = process_table_new(idle, NULL, NULL, 1, NO_TERMINAL, 0);
     struct Process* shellProcess = process_table_new(tty_run, NULL, idleProcess, 1, NO_TERMINAL, 0);
-    enableInterrupts();
+    yield();
 
     while (1) {}
 }

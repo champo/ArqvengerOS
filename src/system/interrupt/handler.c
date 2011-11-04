@@ -8,6 +8,7 @@
 #include "system/scheduler.h"
 
 typedef struct {
+    int ds, es, fs, gs;
     int edi, esi, ebp, esp, ebx, edx, ecx, eax;
     int intNum, errCode;
     int eip, cs, eflags, useresp, ss;

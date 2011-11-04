@@ -1,9 +1,5 @@
 #include "drivers/ata.h"
 #include "type.h"
-#include "library/stdio.h"
-#include "library/stdlib.h"
-#include "library/string.h"
-#include "system/mm.h"
 
 struct DriveInfo {
     size_t len;

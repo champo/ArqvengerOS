@@ -12,6 +12,12 @@
 
 static void print_flag(int value, int flag, char c);
 
+static void cp_wrapper(const char* source, const char* dest, int recursive);
+
+static void cp_recursive(int sourcefd, const char* dest);
+
+static void cp_non_recursive(int sourcefd, const char* dest);
+
 void command_cd(char* argv) {
 
     char* cmdEnd = strchr(argv, ' ');
@@ -130,8 +136,15 @@ void command_ls(char* argv) {
         }
     }
 
+    int error = 0;
+
     if (cmdEnd != NULL) {
-        chdir(cmdEnd + 1);
+        error = chdir(cmdEnd + 1);
+    }
+
+    if (error != 0) {
+        printf("The directory specified could not be opened\n");
+        return;
     }
 
     fd = open(".", O_RDONLY);
@@ -332,4 +345,79 @@ void man_chown(void) {
     printf("Usage:\n\t chown");
     setBold(0);
     printf(" FILE.\n");
+}
+
+void command_cp(char* argv) {
+
+    int recursive = 0;
+    int ans;
+
+    char* argument1 = strchr(argv, ' ');
+    if (argument1 == NULL) {
+        printf("Invalid arguments.\n");
+        return;
+    }
+
+    if (strncmp("-r", argument1 + 1, 2) == 0) {
+        recursive = 1;
+    }
+
+    char* argument2 = strchr(argument1 + 1, ' ');
+     
+    if (argument2 == NULL) {
+        printf("Invalid arguments.\n");
+        return;
+    }
+
+    argument2[0] = '\0';
+    
+    if (recursive) {
+        argument1 = strchr(argument2 + 1, ' ');
+        
+        if (argument1 == NULL) {
+            printf("Invalid arguments.\n");
+            return;
+        }
+
+        argument1[0] = '\0';
+
+        cp_wrapper(argument2 + 1, argument1 + 1, 1);
+    } else {
+        cp_wrapper(argument1 + 1, argument2 + 1, 0);
+    }
+
+}
+
+void cp_wrapper(const char* source, const char* dest, int recursive) {
+    
+    int sourcefd = open(source, O_RDONLY);
+
+    if (sourcefd == -1) {
+        printf("Error. Could not open the source.\n");
+        return;
+    }
+
+    if (recursive) {
+        cp_recursive(sourcefd, dest);
+    } else {
+        cp_non_recursive(sourcefd, dest);
+    }
+
+    close(sourcefd);
+}
+
+void cp_recursive(int sourcefd, const char* dest) {
+    
+}
+
+void cp_non_recursive(int sourcefd, const char* dest) {
+    
+}
+
+void man_cp(void) {
+    setBold(1);
+    printf("Usage:\n\t cp");
+    setBold(0);
+
+    printf(" [-r] SOURCE DEST.\n");
 }

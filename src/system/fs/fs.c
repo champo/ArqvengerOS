@@ -1,5 +1,5 @@
 #include "system/fs/fs.h"
-#include "system/mm.h"
+#include "system/mm/allocator.h"
 #include "system/kprintf.h"
 #include "system/process/process.h"
 #include "drivers/ext2/ext2.h"
@@ -189,7 +189,7 @@ int fs_unlink(struct fs_Inode* path, const char* name) {
 }
 
 int fs_symlink(struct fs_Inode* path, const char* entry, const char* to) {
-    
+
     if (fs_mknod(path, entry, INODE_LINK) != 0) {
         return -1;
     }
@@ -208,7 +208,7 @@ int fs_symlink(struct fs_Inode* path, const char* entry, const char* to) {
     int length = strlen(to);
 
     if (length != ext2_write_inode_content(file, 0, length, to)) {
-        //TODO hay que hacerle unlink al mknod?        
+        //TODO hay que hacerle unlink al mknod?
         fs_inode_close(file);
         return -1;
     }
@@ -217,7 +217,7 @@ int fs_symlink(struct fs_Inode* path, const char* entry, const char* to) {
 }
 
 char* fs_symlink_read(struct fs_Inode* symlink, int size, char* buff) {
-    
+
     if (size != ext2_read_inode_content(symlink, 0, size, buff)) {
         return NULL;
     }
@@ -258,7 +258,7 @@ int fs_mknod(struct fs_Inode* path, const char* name, int type) {
     if (fs_findentry(path, name).inode != 0) {
         return EEXIST;
     }
-    
+
     struct Process* process = scheduler_current();
 
     struct fs_Inode* nod = ext2_create_inode(fs, type, PERM_DEFAULT, process->uid, process->gid);
@@ -277,7 +277,7 @@ int fs_mkdir(struct fs_Inode* path, const char* name) {
     if (fs_findentry(path, name).inode != 0) {
         return EEXIST;
     }
-    
+
     struct Process* process = scheduler_current();
 
     struct fs_Inode* dir = ext2_dir_create(fs, PERM_DEFAULT, process->uid, process->gid);
@@ -350,9 +350,10 @@ int fs_fd_close(struct FileDescriptor* fd) {
  * @return 0.
  */
 int fs_set_own(struct fs_Inode* inode, int uid, int gid) {
-    
+
     inode->data->uid = uid;
     inode->data->gid = gid;
-    
+
     return ext2_write_inode(inode) == -1 ? EIO : 0;
 }
+
