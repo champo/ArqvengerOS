@@ -510,3 +510,44 @@ void man_cp(void) {
 
     printf(" [-r] SOURCE DEST.\n");
 }
+
+
+void command_mv(char* argv) {
+    char* source = strchr(argv, ' ');
+
+    if (source == NULL) {
+        printf("Arguments invalid.\n");
+        return;
+    }
+
+    char* dest = strchr(source + 1, ' ');
+
+    if (dest == NULL) {
+        printf("Arguments invalid.\n");
+        return;
+    }
+
+    int i;
+
+    for (i = 1; source[i] != ' '; i++){
+
+    }
+
+    source[i] = '\0';
+
+    i = rename(source + 1, dest + 1);
+
+    if (i != 0) {
+        printf("Operation unsuccesful.\n");
+    }
+}
+
+void man_mv(void) {
+    setBold(1);
+    printf("Usage:\n\t mv");
+    setBold(0);
+
+    printf(" SOURCE DEST.\n");
+}
+
+

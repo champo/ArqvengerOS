@@ -233,6 +233,24 @@ int fs_rename(struct fs_Inode* from, const char* original, struct fs_Inode* to, 
         return ENOENT;
     }
 
+    struct fs_Inode* inode = fs_inode_open(entry.inode);
+
+    if (inode == NULL) {
+        return ENOENT;
+    }
+
+    if (remove_link(inode, "..", from) == -1) {
+        fs_inode_close(inode);
+        return EIO;
+    }
+
+    if (add_link(inode, "..", to) == -1) {
+        fs_inode_close(inode);
+        return EIO;
+    }
+
+    fs_inode_close(inode);
+
     if (ext2_dir_remove(from, original) == -1) {
         return EIO;
     }
