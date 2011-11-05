@@ -25,6 +25,9 @@
 #define DOWN_ARROW_CODE 0x50
 #define RIGHT_ARROW_CODE 0x4D
 
+#define AV_PAG 0x51
+#define RE_PAG 0x49
+
 #define HOME_CODE 0x47
 #define END_CODE 0x4F
 
@@ -214,6 +217,16 @@ void process_scancode(void) {
             case END_CODE:
                 if (!isBreak && (escaped || !kbStatus.num)) {
                     addInput("\033[F", 3);
+                }
+                break;
+            case RE_PAG:
+                if (!isBreak && escaped) {
+                    tty_screen_scroll(tty_active(), -TOTAL_ROWS / 2);
+                }
+                break;
+            case AV_PAG:
+                if (!isBreak && escaped) {
+                    tty_screen_scroll(tty_active(), TOTAL_ROWS / 2);
                 }
                 break;
             default:

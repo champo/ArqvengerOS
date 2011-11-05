@@ -8,6 +8,8 @@
 
 #define WAIT_LEN 30
 
+#define BUFFER_ROWS (3 * TOTAL_ROWS)
+
 struct ScreenStatus {
     int cursorPosition;
     int escaped;
@@ -15,7 +17,10 @@ struct ScreenStatus {
     char attribute;
     char controlBuffer[CONTROL_BUFFER_LEN];
     size_t controlBufferPos;
-    char videoBuffer[2 * LINE_WIDTH * (TOTAL_ROWS + 1)];
+    int visibleLine;
+    int lastLine;
+    char videoBuffer[2 * LINE_WIDTH * (BUFFER_ROWS + 1)];
+    char* writableBuffer;
 };
 
 struct Terminal {
@@ -43,5 +48,7 @@ void tty_change(int active);
 void process_scancode(void);
 
 void tty_keyboard_init(void);
+
+void tty_screen_scroll(struct Terminal* term, int line);
 
 #endif

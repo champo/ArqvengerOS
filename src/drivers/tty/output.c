@@ -47,11 +47,13 @@ static void changeColor(struct Terminal* term, int mod1);
 
 static void change_character(struct Terminal* term, int pos, char value, char attribute);
 
-static void flip_buffer(struct Terminal* term, const char* buffer);
+static void flip_buffer(struct Terminal* term);
 
 static void update_cursor(struct Terminal* term);
 
 static size_t tty_write_to_screen(struct Terminal* term, const void* buf, size_t length);
+
+static int is_visible(struct Terminal* term, int pos);
 
 /**
  * Initialize the screen and all needed status for tty emulation.
@@ -65,6 +67,10 @@ void tty_screen_init(void) {
         status->escaped = 0;
         status->csi = 0;
 
+        status->lastLine = BUFFER_ROWS - TOTAL_ROWS;
+        status->visibleLine = BUFFER_ROWS - TOTAL_ROWS;
+        status->writableBuffer = status->videoBuffer + 2 * LINE_WIDTH * status->visibleLine;
+
         setAttribute(tty_terminal(i), COLOR_BLACK, COLOR_WHITE, 0);
 
         status->controlBufferPos = 0;
@@ -73,24 +79,48 @@ void tty_screen_init(void) {
     }
 }
 
+void tty_screen_scroll(struct Terminal* term, int line) {
+
+    term->screen.visibleLine += line;
+    if (term->screen.visibleLine < term->screen.lastLine) {
+        term->screen.visibleLine = term->screen.lastLine;
+    } else if (term->screen.visibleLine > BUFFER_ROWS - TOTAL_ROWS) {
+        term->screen.visibleLine = BUFFER_ROWS - TOTAL_ROWS;
+    }
+
+    flip_buffer(term);
+    update_cursor(term);
+}
+
+int is_visible(struct Terminal* term, int pos) {
+
+    int bufferLine = (pos / LINE_WIDTH) + (BUFFER_ROWS - TOTAL_ROWS);
+    int visibleLine = term->screen.visibleLine;
+    return bufferLine >= visibleLine && bufferLine < visibleLine + TOTAL_ROWS;
+}
+
 void change_character(struct Terminal* term, int pos, char value, char attribute) {
 
-    if (term->active) {
+    if (term->active && is_visible(term, pos)) {
         video_set_char(pos, value, attribute);
     }
 }
 
-void flip_buffer(struct Terminal* term, const char* buffer) {
+void flip_buffer(struct Terminal* term) {
 
     if (term->active) {
-        video_flip_buffer(buffer);
+        video_flip_buffer(term->screen.videoBuffer + 2 * term->screen.visibleLine * LINE_WIDTH);
     }
 }
 
 void update_cursor(struct Terminal* term) {
 
     if (term->active) {
-        video_update_cursor(term->screen.cursorPosition);
+        if (is_visible(term, term->screen.cursorPosition)) {
+            video_update_cursor(term->screen.cursorPosition);
+        } else {
+            video_update_cursor(TOTAL_ROWS * LINE_WIDTH + 1);
+        }
     }
 }
 
@@ -103,8 +133,8 @@ void tty_screen_change(void) {
 
     struct Terminal* term = tty_active();
 
-    video_flip_buffer(term->screen.videoBuffer);
-    video_update_cursor(term->screen.cursorPosition);
+    flip_buffer(term);
+    update_cursor(term);
 }
 
 /**
@@ -166,8 +196,8 @@ void setCharacter(struct Terminal* term, char c) {
 
     struct ScreenStatus* status = &term->screen;
 
-    status->videoBuffer[2*status->cursorPosition] = c;
-    status->videoBuffer[2*status->cursorPosition + 1] = status->attribute;
+    status->writableBuffer[2*status->cursorPosition] = c;
+    status->writableBuffer[2*status->cursorPosition + 1] = status->attribute;
 
     change_character(term, status->cursorPosition, c, status->attribute);
 
@@ -183,26 +213,31 @@ void scrollLine(struct Terminal* term, int delta) {
 
     struct ScreenStatus* status = &term->screen;
 
-    if (delta > TOTAL_ROWS) {
-        delta = TOTAL_ROWS;
+    if (delta > BUFFER_ROWS) {
+        delta = BUFFER_ROWS;
     } else if (delta < 1) {
         delta = 1;
     }
 
+    status->lastLine -= delta;
+    if (status->lastLine < 0) {
+        status->lastLine = 0;
+    }
+
     int i, j;
     // Move the video buffer up one line
-    for (j = 0, i = delta * 2 * LINE_WIDTH; i < 2 * LINE_WIDTH * TOTAL_ROWS; i++, j++) {
+    for (j = 0, i = delta * 2 * LINE_WIDTH; i < 2 * LINE_WIDTH * BUFFER_ROWS; i++, j++) {
         status->videoBuffer[j] = status->videoBuffer[i];
     }
 
     // Clear the lines that scrolled up
-    for (i = LINE_WIDTH * (TOTAL_ROWS - delta); i < LINE_WIDTH * TOTAL_ROWS; i++) {
+    for (i = LINE_WIDTH * (BUFFER_ROWS - delta); i < LINE_WIDTH * BUFFER_ROWS; i++) {
         status->videoBuffer[2 * i] = ' ';
         status->videoBuffer[2 * i + 1] = status->attribute;
     }
 
-    // Re-flect the changes to screen, if we're active
-    flip_buffer(term, status->videoBuffer);
+    // Reflect the changes to screen, if we're active
+    flip_buffer(term);
 }
 
 /**
@@ -282,8 +317,8 @@ void setBlank(struct Terminal* term, int start, int end) {
     while (start < end) {
         change_character(term, start, ' ', status->attribute);
 
-        status->videoBuffer[2*start] = ' ';
-        status->videoBuffer[2*start + 1] = status->attribute;
+        status->writableBuffer[2*start] = ' ';
+        status->writableBuffer[2*start + 1] = status->attribute;
         start++;
     }
 }

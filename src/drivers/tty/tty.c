@@ -77,11 +77,12 @@ void tty_run(char* unused) {
     }
 
     // Spawn the shells (this is a kernel process, so we can do this)
-    for (int i = 0; i < NUM_TERMINALS; i++) {
+    for (int i = 0; i < NUM_TERMINALS - 1; i++) {
         terminals[i].termios.canon = 1;
         terminals[i].termios.echo = 1;
         process_table_new(login, NULL, scheduler_current(), 0, i, 1);
     }
+    terminals[NUM_TERMINALS - 1].screen.cursorPosition = LINE_WIDTH * TOTAL_ROWS + 1;
 
     while (1) {
         process_scancode();
@@ -114,7 +115,7 @@ struct Terminal* tty_active(void) {
 
 struct Terminal* tty_terminal(int number) {
     if (number == NO_TERMINAL) {
-        return tty_current();
+        return tty_active();
     }
 
     return &terminals[number];
