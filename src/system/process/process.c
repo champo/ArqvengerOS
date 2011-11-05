@@ -92,36 +92,44 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         }
     }
 
-    process->mm.pagesInKernelStack = KERNEL_STACK_PAGES;
-    process->mm.kernelStackStart = allocPages(process->mm.pagesInKernelStack);
-    process->mm.esp0 = (char*)process->mm.kernelStackStart + PAGE_SIZE * process->mm.pagesInKernelStack;
-    process->mm.kernelStack = process->mm.esp0;
+    {
+        process->mm.pagesInKernelStack = KERNEL_STACK_PAGES;
+        struct Pages* mem = reserve_pages(process, process->mm.pagesInKernelStack);
+        if (mem == NULL) {
+            panic();
+        }
+
+        process->mm.esp0 = (char*)mem->start + PAGE_SIZE * process->mm.pagesInKernelStack;
+        process->mm.kernelStack = process->mm.esp0;
+    }
 
     if (kernel) {
         process->mm.pagesInHeap = 0;
-        process->mm.heap = NULL;
         process->mm.mallocContext = NULL;
     } else {
         process->mm.pagesInHeap = 256;
-        process->mm.heap = allocPages(process->mm.pagesInHeap);
-        process->mm.mallocContext = mm_create_context(process->mm.heap, process->mm.pagesInHeap * PAGE_SIZE);
+        struct Pages* mem = reserve_pages(process, process->mm.pagesInHeap);
+        if (mem == NULL) {
+            panic();
+        }
+        process->mm.mallocContext = mm_create_context(mem->start, process->mm.pagesInHeap * PAGE_SIZE);
 
         mem_check();
     }
 
     if (!kernel) {
         process->mm.pagesInStack = 256;
-        process->mm.stackStart = allocPages(process->mm.pagesInStack);
-        if (process->mm.stackStart == NULL) {
+        struct Pages* mem = reserve_pages(process, process->mm.pagesInStack);
+        if (mem == NULL) {
             panic();
         }
 
-        process->mm.esp = (char*)process->mm.stackStart + PAGE_SIZE * process->mm.pagesInStack;
+        process->mm.esp = (char*)mem->start + PAGE_SIZE * process->mm.pagesInStack;
+
         push((int**) &process->mm.esp, (int) process->args);
         push((int**) &process->mm.esp, (int) exit);
     } else {
         process->mm.pagesInStack = 0;
-        process->mm.stackStart = NULL;
         process->mm.esp = NULL;
     }
 
@@ -167,27 +175,9 @@ void exitProcess(struct Process* process) {
 
 void destroyProcess(struct Process* process) {
     process->pid = 0;
-    if (process->mm.stackStart) {
-        freePages(process->mm.stackStart, process->mm.pagesInStack);
-        process->mm.stackStart = NULL;
-    }
-
-    if (process->mm.kernelStackStart) {
-        freePages(process->mm.kernelStackStart, process->mm.pagesInKernelStack);
-        process->mm.kernelStackStart = NULL;
-        process->mm.kernelStack = NULL;
-        process->mm.esp0 = NULL;
-    }
-
-    if (process->mm.heap) {
-        mm_set_process_context();
-        mem_check();
-        mm_set_kernel_context();
-        mem_check();
-
-        freePages(process->mm.heap, process->mm.pagesInHeap);
-        process->mm.heap = NULL;
-        process->mm.mallocContext = NULL;
+    if (process->mm.reservedPages) {
+        free_pages(process->mm.reservedPages);
+        process->mm.reservedPages = NULL;
     }
 }
 

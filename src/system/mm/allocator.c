@@ -252,3 +252,33 @@ void* mm_create_context(void* heap, size_t size) {
     return ctx;
 }
 
+struct Pages* reserve_pages(struct Process* owner, int pages) {
+
+    void* start = allocPages(pages);
+    if (start == NULL) {
+        return NULL;
+    }
+
+    struct Pages* result = kalloc(sizeof(struct Pages));
+    result->next = NULL;
+    result->count = pages;
+    result->start = start;
+
+    result->next = owner->mm.reservedPages;
+    owner->mm.reservedPages = result;
+
+    return result;
+}
+
+void free_pages(struct Pages* pages) {
+
+    struct Pages* current = pages;
+    while (current) {
+        freePages(current->start, current->count);
+
+        struct Pages* next = current->next;
+        kfree(current);
+        current = next;
+    }
+}
+

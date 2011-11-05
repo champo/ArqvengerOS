@@ -3,6 +3,7 @@
 
 #include "type.h"
 #include "system/fs/fd.h"
+#include "system/mm/page.h"
 
 #define NO_TERMINAL -1
 #define MAX_OPEN_FILES 10
@@ -12,17 +13,16 @@ typedef void (*EntryPoint)(char*);
 
 struct ProcessMemory {
     void* esp;
-    void* stackStart;
     int pagesInStack;
 
-    void* heap;
     void* mallocContext;
     int pagesInHeap;
 
     void* esp0;
     void* kernelStack;
-    void* kernelStackStart;
     int pagesInKernelStack;
+
+    struct Pages* reservedPages;
 };
 
 enum ProcessStatus {
