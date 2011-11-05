@@ -447,7 +447,85 @@ int _unlink(const char* path) {
  * @param to, the new path of the file.
  * @return 0 if success, other if error.
  */
-int _rename(const char* from, const char* to) {
+int _rename(const char* source, const char* dest) {
+    
+    char* pathsource = path_directory(source);
+
+    struct fs_Inode* sourcedir = resolve_path(pathsource);
+
+    kfree(pathsource);
+
+    if (sourcedir == NULL) {
+        return -1;
+    } 
+        
+    char* pathdest = path_directory(dest);
+
+    struct fs_Inode* destdir = resolve_path(pathdest);
+
+    kfree(pathdest);
+
+    if (destdir == NULL) {
+        fs_inode_close(sourcedir);
+        return -1;
+    }
+
+    if (can_write(destdir != 0)) {
+        fs_inode_close(sourcedir);
+        fs_inode_close(destdir);
+        return -1;
+    }
+
+    char* filesource = path_file(source);
+
+    struct fs_DirectoryEntry entry = fs_findentry(sourcedir, filesource);
+
+    if (entry.inode == 0) {
+        fs_inode_close(sourcedir);
+        fs_inode_close(destdir);
+        kfree(filesource);
+        return -1;
+    }
+
+    struct fs_Inode* inode = fs_inode_open(entry.inode);
+
+    if (inode == NULL) {
+        fs_inode_close(sourcedir);
+        fs_inode_close(destdir);
+        kfree(filesource);
+        return -1;
+    }
+
+    if (can_write(inode) != 0) {
+        kfree(filesource);
+        fs_inode_close(sourcedir);
+        fs_inode_close(destdir);
+        fs_inode_close(inode);
+        return -1;
+    }
+
+    fs_inode_close(inode);
+
+    char* filedest = path_file(dest);
+
+    entry = fs_findentry(destdir, filedest);
+
+    if (entry.inode != 0) {
+        fs_inode_close(sourcedir);
+        fs_inode_close(destdir);
+        kfree(filedest);
+        kfree(filesource);
+        return -1;
+    }
+
+    int ans = fs_rename(sourcedir, filesource, destdir, filedest);
+
+    kfree(filesource);
+    kfree(filedest);
+    fs_inode_close(sourcedir);
+    fs_inode_close(destdir);
+
+    return ans;
 }
 
 /**
