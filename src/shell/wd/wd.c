@@ -12,11 +12,11 @@
 
 static void print_flag(int value, int flag, char c);
 
-static void cp_wrapper(const char* source, const char* dest, int recursive);
+static void cp_wrapper(const char* source, const char* dest, int recursive, int first);
 
-static void cp_recursive(int sourcefd, const char* dest);
+static void cp_recursive(int sourcefd, const char* source, const char* dest, struct stat data, int first);
 
-static void cp_non_recursive(int sourcefd, const char* dest);
+static void cp_non_recursive(int sourcefd, const char* dest, struct stat data);
 
 void command_cd(char* argv) {
 
@@ -381,37 +381,126 @@ void command_cp(char* argv) {
 
         argument1[0] = '\0';
 
-        cp_wrapper(argument2 + 1, argument1 + 1, 1);
+        cp_wrapper(argument2 + 1, argument1 + 1, 1, 1);
     } else {
-        cp_wrapper(argument1 + 1, argument2 + 1, 0);
+        cp_wrapper(argument1 + 1, argument2 + 1, 0, 1);
     }
 
 }
 
-void cp_wrapper(const char* source, const char* dest, int recursive) {
+void cp_wrapper(const char* source, const char* dest, int recursive, int first) {
     
     int sourcefd = open(source, O_RDONLY);
 
     if (sourcefd == -1) {
-        printf("Error. Could not open the source.\n");
+        printf("Error. Could not open the file %s.\n", source);
+        return;
+    }
+ 
+    struct stat data;
+    
+    if (stat(source, &data) == -1) {
+        printf("Opps. Something went awry, try again. Or maybe tell your sysadmin about.");
         return;
     }
 
     if (recursive) {
-        cp_recursive(sourcefd, dest);
+        cp_recursive(sourcefd, source, dest, data, first);
     } else {
-        cp_non_recursive(sourcefd, dest);
+        cp_non_recursive(sourcefd, dest, data);
     }
 
     close(sourcefd);
 }
 
-void cp_recursive(int sourcefd, const char* dest) {
+void cp_recursive(int sourcefd, const char* source, const char* dest, struct stat data, int first) {
+ 
+    struct fs_DirectoryEntry entry;  
+
+    if (data.type != INODE_DIR) {
+        if (readdir(sourcefd, &entry, 1) != 1) {
+            cp_non_recursive(sourcefd, dest, data);
+            return;
+        }
+    }
+
+    char* newsource;
+    char* newdest;
+    char* filename = path_file(source);
+
+    char* dirdest;
+    if (first) {
+     dirdest = join_paths(dest, filename);  
+    } else {
+        dirdest = dest;
+    }
+    free(filename);
+
+    mkdir(dirdest, data.mode);
+
+    int fd = open(dirdest, O_RDONLY);
+
+    if (fd == -1) {
+        printf("The directory %s could not be created.\n", dirdest);
+        if (first) {
+            free(dirdest);
+        }
+        return;
+    }
+
+    close(fd);
+
+    while (readdir(sourcefd, &entry, 1) == 1) {
+        if (strcmp(entry.name, ".") != 0 && strcmp(entry.name, "..") != 0) {
+            newsource = join_paths(source, entry.name);
+            newdest = join_paths(dirdest, entry.name);
+            cp_wrapper(newsource, newdest, 1, 0);
+            free(newsource);
+            free(newdest);
+        }
+    }
     
+    if (first) {
+        free(dirdest);
+    }
+
 }
 
-void cp_non_recursive(int sourcefd, const char* dest) {
+void cp_non_recursive(int sourcefd, const char* dest, struct stat data) {
     
+    struct fs_DirectoryEntry entry;
+
+    if (data.type == INODE_DIR || readdir(sourcefd, &entry, 1) == 1) {
+        printf("Cannot copy a directory. You may wanna try cp -r.\n");
+        return;
+    }
+
+    int fd = open(dest, O_RDONLY);
+    close(fd);
+    char buff;
+
+    if (fd != -1) {
+        if (unlink(dest) != 0) {
+            printf("The file %s already exists and it is not writeable.\n", dest);
+            return;
+        }
+    }
+
+    fd = open(dest, O_RDWR | O_CREAT, data.mode);
+    if (fd == -1) {
+        printf("Creation of the file %s failed.\n", dest);
+        return;
+    }
+    
+    while (read(sourcefd, &buff, 1) == 1) {
+        if (write(fd, &buff, 1) != 1) {
+            printf("Error copying the file %s.\n", dest);
+            close(fd);
+            return;
+        }
+    }
+
+    close(fd);
 }
 
 void man_cp(void) {
