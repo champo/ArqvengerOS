@@ -44,8 +44,8 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     fifo_init();
     scheduler_init();
 
-    struct Process* idleProcess = process_table_new(idle, NULL, NULL, 1, NO_TERMINAL, 0);
-    struct Process* shellProcess = process_table_new(tty_run, NULL, idleProcess, 1, NO_TERMINAL, 0);
+    struct Process* idleProcess = process_table_new(idle, "idle", NULL, 1, NO_TERMINAL, 0);
+    struct Process* shellProcess = process_table_new(tty_run, "tty", idleProcess, 1, NO_TERMINAL, 0);
     yield();
 
     while (1) {}

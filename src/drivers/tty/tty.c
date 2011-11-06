@@ -80,7 +80,7 @@ void tty_run(char* unused) {
     for (int i = 0; i < NUM_TERMINALS - 1; i++) {
         terminals[i].termios.canon = 1;
         terminals[i].termios.echo = 1;
-        process_table_new(login, NULL, scheduler_current(), 0, i, 1);
+        process_table_new(login, "login", scheduler_current(), 0, i, 1);
     }
     terminals[NUM_TERMINALS - 1].screen.cursorPosition = LINE_WIDTH * TOTAL_ROWS + 1;
 

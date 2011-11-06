@@ -13,16 +13,16 @@ struct User* askForLogin(void);
 void login(char* unused) {
 
     while(1) {
-        
+
         struct User* user;
         do {
             printf("login:");
         } while ((user = askForLogin()) == NULL);
 
         setProcessPersona(getpid(), user->id, user->gid[0]);
-        
-        free_user(user);        
-        run(shell, NULL, 1);
+
+        free_user(user);
+        run(shell, "shell", 1);
 
         wait();
     }
