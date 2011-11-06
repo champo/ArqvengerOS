@@ -5,7 +5,7 @@
 #include "library/string.h"
 
 #ifndef DEFAULT_LOG_LEVEL
-#define DEFAULT_LOG_LEVEL LOG_INFO
+#define DEFAULT_LOG_LEVEL LOG_DEBUG
 #endif
 
 static int logLevel = DEFAULT_LOG_LEVEL;
@@ -107,7 +107,7 @@ int log_debug(const char* format, ...) {
     va_list arg;
     va_start(arg, format);
 
-    int res = tkprintf(NO_TERMINAL, format, arg);
+    int res = tkprintf(4, format, arg);
 
     va_end(arg);
     return res;
@@ -122,7 +122,7 @@ int log_info(const char* format, ...) {
     va_list arg;
     va_start(arg, format);
 
-    int res = tkprintf(NO_TERMINAL, format, arg);
+    int res = tkprintf(4, format, arg);
 
     va_end(arg);
     return res;
@@ -137,7 +137,7 @@ int log_error(const char* format, ...) {
     va_list arg;
     va_start(arg, format);
 
-    int res = tkprintf(NO_TERMINAL, format, arg);
+    int res = tkprintf(4, format, arg);
 
     va_end(arg);
     return res;
