@@ -25,3 +25,7 @@ void task_load(struct Process* p) {
     ts->esp0 = p->mm.kernelStack;
 }
 
+unsigned int task_page_address(void) {
+    return (unsigned int) ts;
+}
+

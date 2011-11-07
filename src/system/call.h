@@ -22,6 +22,8 @@ pid_t _run(void(*EntryPoint)(char*), char* args, int active);
 
 void _exit(void);
 
+void _kill(pid_t pid);
+
 pid_t _wait(void);
 
 int _pinfo(struct ProcessInfo* data, size_t size);

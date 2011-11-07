@@ -6,6 +6,7 @@
 #include "system/interrupt/handler.h"
 #include "system/call/codes.h"
 #include "system/scheduler.h"
+#include "system/mm/pagination.h"
 
 typedef struct {
     int ds, es, fs, gs;
@@ -111,6 +112,9 @@ void signalPIC(void) {
     }
 }
 
+
+#define translate(address) mm_translate_address(scheduler_current(), (unsigned int)(address))
+
 /**
  * Interrupt 80h. Handles the system calls.
  *
@@ -121,16 +125,16 @@ void int80(registers* regs) {
     switch (regs->eax) {
 
         case _SYS_READ:
-            regs->eax = _read((unsigned int)regs->ebx, (char*)regs->ecx, (size_t)regs->edx);
+            regs->eax = _read((unsigned int)regs->ebx, (char*)translate(regs->ecx), (size_t)regs->edx);
             break;
         case _SYS_WRITE:
-            regs->eax = _write((unsigned int)regs->ebx, (const char*)regs->ecx, (size_t)regs->edx);
+            regs->eax = _write((unsigned int)regs->ebx, (const char*)translate(regs->ecx), (size_t)regs->edx);
             break;
         case _SYS_TIME:
-            regs->eax = _time(regs->ebx);
+            regs->eax = _time((time_t*)translate(regs->ebx));
             break;
         case _SYS_IOCTL:
-            regs->eax = _ioctl(regs->ebx, regs->ecx, (void*)regs->edx);
+            regs->eax = _ioctl(regs->ebx, regs->ecx, (void*)translate(regs->edx));
             break;
         case _SYS_TICKS:
             regs->eax = _getTicksSinceStart();
@@ -148,7 +152,7 @@ void int80(registers* regs) {
             regs->eax = _getppid();
             break;
         case _SYS_RUN:
-            regs->eax = _run((void(*)(char*)) regs->ebx, (char*) regs->ecx, regs->edx);
+            regs->eax = _run((EntryPoint) translate(regs->ebx), (char*) translate(regs->ecx), regs->edx);
             break;
         case _SYS_WAIT:
             regs->eax = _wait();
@@ -157,7 +161,7 @@ void int80(registers* regs) {
             _kill((pid_t) regs->ebx);
             break;
         case _SYS_PINFO:
-            regs->eax = _pinfo(regs->ebx, (size_t)regs->ecx);
+            regs->eax = _pinfo((struct ProcessInfo*)translate(regs->ebx), (size_t)regs->ecx);
             break;
         case _SYS_SLEEP:
             _sleep(regs->ebx);
@@ -172,52 +176,52 @@ void int80(registers* regs) {
             regs->eax = _close(regs->ebx);
             break;
         case _SYS_OPEN:
-            regs->eax = _open((char*)regs->ebx, regs->ecx, regs->edx);
+            regs->eax = _open((char*)translate(regs->ebx), regs->ecx, regs->edx);
             break;
         case _SYS_CREAT:
-            regs->eax = _creat((char*)regs->ebx, regs->ecx);
+            regs->eax = _creat((char*)translate(regs->ebx), regs->ecx);
             break;
         case _SYS_MKDIR:
-            regs->eax = _mkdir((const char*)regs->ebx, regs->ecx);
+            regs->eax = _mkdir((const char*)translate(regs->ebx), regs->ecx);
             break;
         case _SYS_RMDIR:
-            regs->eax = _rmdir((const char*)regs->ebx);
+            regs->eax = _rmdir((const char*)translate(regs->ebx));
             break;
         case _SYS_UNLINK:
-            regs->eax = _unlink((const char*)regs->ebx);
+            regs->eax = _unlink((const char*)translate(regs->ebx));
             break;
         case _SYS_RENAME:
-            regs->eax = _rename((const char*)regs->ebx, (const char*)regs->ecx);
+            regs->eax = _rename((const char*)translate(regs->ebx), (const char*)translate(regs->ecx));
             break;
         case _SYS_CHDIR:
-            regs->eax = _chdir((const char*)regs->ebx);
+            regs->eax = _chdir((const char*)translate(regs->ebx));
             break;
         case _SYS_GETCWD:
-            regs->eax = _getcwd((char*)regs->ebx, (size_t)regs->ecx);
+            regs->eax = _getcwd((char*)translate(regs->ebx), (size_t)regs->ecx);
             break;
         case _SYS_READDIR:
-            regs->eax = _readdir(regs->ebx, (struct fs_DirectoryEntry*)regs->ecx, regs->edx);
+            regs->eax = _readdir(regs->ebx, (struct fs_DirectoryEntry*)translate(regs->ecx), regs->edx);
             break;
         case _SYS_SETPPERSONA:
             _setProcessPersona(regs->ebx, regs->ecx, regs->edx);
             break;
         case _SYS_GETPPERSONA:
-            _getProcessPersona(regs->ebx, regs->ecx, regs->edx);
+            _getProcessPersona(regs->ebx, (int*)translate(regs->ecx), (int*) translate(regs->edx));
             break;
         case _SYS_SYMLINK:
-            regs->eax = _symlink((const char *)regs->ebx, (const char *)regs->ecx);
+            regs->eax = _symlink((const char *)translate(regs->ebx), (const char *)translate(regs->ecx));
             break;
         case _SYS_MKFIFO:
-            regs->eax = _mkfifo((const char*)regs->ebx);
+            regs->eax = _mkfifo((const char*)translate(regs->ebx));
             break;
         case _SYS_CHMOD:
-            regs->eax = _chmod(regs->ebx, (const char*)regs->ecx);
+            regs->eax = _chmod(regs->ebx, (const char*)translate(regs->ecx));
             break;
         case _SYS_STAT:
-            regs->eax = _stat((const char*)regs->ebx, (struct stat*)regs->ecx);
+            regs->eax = _stat((const char*)translate(regs->ebx), (struct stat*)translate(regs->ecx));
             break;
         case _SYS_CHOWN:
-            regs->eax = _chown((const char*)regs->ebx);
+            regs->eax = _chown((const char*)translate(regs->ebx));
             break;
     }
 }

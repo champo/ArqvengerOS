@@ -12,14 +12,14 @@ struct SegmentDescriptor {
     char access;
     char attribs;
     char base_h;
-};
+} __attribute__((packed));
 
-struct SegmentDescriptor* gdt;
+static struct SegmentDescriptor* gdt;
 
 struct GDTR {
     short limit;
     int base;
-};
+} __attribute__((packed));
 
 static void setupGDTEntry(int num, int base, int limit, short access, short gran) {
    gdt[num].base_l      = (base & 0xFFFF);
@@ -36,7 +36,7 @@ void setupGDT(void) {
     struct GDTR gdtr;
     struct TaskState* ts = task_create_tss();
 
-    gdt = kalloc(sizeof(struct SegmentDescriptor) * 6);
+    gdt = allocPages(1);
     setupGDTEntry(0, 0, 0, 0, 0);
     setupGDTEntry(1, 0, 0x000FFFFF, 0x9A, 0xC0);
     setupGDTEntry(2, 0, 0x000FFFFF, 0x92, 0xC0);
@@ -49,5 +49,9 @@ void setupGDT(void) {
 
     __asm__ volatile("lgdt (%%eax)"::"A"(&gdtr):);
     __asm__ volatile("ltr %%ax"::"a"(TASK_STATE_SEGMENT):);
+}
+
+unsigned int gdt_page_address(void) {
+    return (unsigned int) gdt;
 }
 

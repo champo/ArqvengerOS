@@ -1,41 +1,19 @@
 #ifndef __SYSTEM_MM_PAGING__
 #define __SYSTEM_MM_PAGING__
 
-struct PageDirectoryEntry {
-    unsigned int present:1;
-    unsigned int rw:1;
-    unsigned int user:1;
-    unsigned int writeThrough:1;
-    unsigned int cacheDisable:1;
-    unsigned int accessed:1;
-    unsigned int dirty:1;
-    unsigned int _pageSize:1;
-    unsigned int _ignore:4;
-    unsigned int tableAddress:20;
-} __attribute__((packed));
-
-struct PageTableEntry {
-    unsigned int present:1;
-    unsigned int rw:1;
-    unsigned int user:1;
-    unsigned int writeThrough:1;
-    unsigned int cacheDisable:1;
-    unsigned int accessed:1;
-    unsigned int dirty:1;
-    unsigned int _pat:1;
-    unsigned int _global:1;
-    unsigned int _ignore:3;
-    unsigned int pageAddress:20;
-} __attribute__((packed));
-
-struct PageDirectory {
-    struct PageDirectoryEntry entries[1024];
-};
-
-struct PageTable {
-    struct PageTableEntry entries[1024];
-};
+#include "system/process/process.h"
+#include "system/mm/page.h"
 
 void mm_pagination_init(void);
+
+void mm_pagination_set_kernel_directory(void);
+
+void mm_pagination_set_process_directory(void);
+
+void mm_pagination_map(struct Process* owner, unsigned int start, unsigned int to, int pages);
+
+void mm_pagination_clear_directory(struct PageDirectory* directory);
+
+void* mm_translate_address(struct Process* owner, unsigned int address);
 
 #endif

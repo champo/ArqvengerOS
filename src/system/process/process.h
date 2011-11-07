@@ -5,11 +5,13 @@
 #include "system/fs/fd.h"
 #include "system/mm/page.h"
 
+#define ARGV_SIZE 256
+
 #define NO_TERMINAL -1
 #define MAX_OPEN_FILES 10
 #define KERNEL_STACK_PAGES 10
 
-typedef void (*EntryPoint)(char*);
+typedef void (*EntryPoint)(char[ARGV_SIZE]);
 
 struct ProcessMemory {
     void* esp;
@@ -23,6 +25,8 @@ struct ProcessMemory {
     int pagesInKernelStack;
 
     struct Pages* reservedPages;
+
+    struct PageDirectory* directory;
 };
 
 enum ProcessStatus {
@@ -48,7 +52,7 @@ struct Process {
     struct Process* parent;
 
     EntryPoint entryPoint;
-    char args[512];
+    char args[ARGV_SIZE];
 
     int terminal;
     int active;

@@ -10,7 +10,12 @@
 #include "library/sys.h"
 #include "library/string.h"
 #include "system/gdt.h"
+#include "system/interrupt.h"
 #include "debug.h"
+#include "system/mm/pagination.h"
+#include "system/task.h"
+
+#define STACK_TOP_MAPPING (3 * 1024 * 1024 * 1024u)
 
 static int pid = 0;
 
@@ -18,7 +23,9 @@ extern void _interruptEnd(void);
 
 extern void signalPIC(void);
 
-inline static void push(int** esp, int val) {
+static void setup_page_directory(struct Process* process, int kernel);
+
+inline static void push(unsigned int** esp, unsigned int val) {
     *esp -= 1;
     **esp = val;
 }
@@ -71,7 +78,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         process->args[0] = 0;
     } else {
         int i;
-        for (i = 0; *(args + i) && i < 255; i++) {
+        for (i = 0; *(args + i) && i < ARGV_SIZE - 1; i++) {
             process->args[i] = args[i];
         }
         process->args[i] = 0;
@@ -95,9 +102,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     {
         process->mm.pagesInKernelStack = KERNEL_STACK_PAGES;
         struct Pages* mem = reserve_pages(process, process->mm.pagesInKernelStack);
-        if (mem == NULL) {
-            panic();
-        }
+        assert(mem != NULL);
 
         process->mm.esp0 = (char*)mem->start + PAGE_SIZE * process->mm.pagesInKernelStack;
         process->mm.kernelStack = process->mm.esp0;
@@ -109,57 +114,66 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     } else {
         process->mm.pagesInHeap = 256;
         struct Pages* mem = reserve_pages(process, process->mm.pagesInHeap);
-        if (mem == NULL) {
-            panic();
-        }
-        process->mm.mallocContext = mm_create_context(mem->start, process->mm.pagesInHeap * PAGE_SIZE);
+        assert(mem != NULL);
 
+        process->mm.mallocContext = mm_create_context(mem->start, process->mm.pagesInHeap * PAGE_SIZE);
         mem_check();
     }
 
     if (!kernel) {
         process->mm.pagesInStack = 256;
         struct Pages* mem = reserve_pages(process, process->mm.pagesInStack);
-        if (mem == NULL) {
-            panic();
-        }
+        assert(mem != NULL);
 
         process->mm.esp = (char*)mem->start + PAGE_SIZE * process->mm.pagesInStack;
-
-        push((int**) &process->mm.esp, (int) process->args);
-        push((int**) &process->mm.esp, (int) exit);
     } else {
         process->mm.pagesInStack = 0;
         process->mm.esp = NULL;
     }
 
+    setup_page_directory(process, kernel);
 
     int codeSegment, dataSegment;
     if (kernel) {
         codeSegment = KERNEL_CODE_SEGMENT;
         dataSegment = KERNEL_DATA_SEGMENT;
 
-        push((int**) &process->mm.esp0, (int) process->args);
-        push((int**) &process->mm.esp0, (int) exit);
-        push((int**) &process->mm.esp0, 0x202);
+        char* esp0 = (char*) process->mm.esp0 - ARGV_SIZE;
+        for (size_t i = 0; i < ARGV_SIZE; i++) {
+            esp0[i] = process->args[i];
+        }
+        process->mm.esp0 = esp0;
+
+        push((unsigned int**) &process->mm.esp0, (unsigned int) process->mm.esp0);
+        push((unsigned int**) &process->mm.esp0, (unsigned int) exit);
+        push((unsigned int**) &process->mm.esp0, 0x202);
     } else {
         codeSegment = USER_CODE_SEGMENT;
         dataSegment = USER_DATA_SEGMENT;
 
-        push((int**) &process->mm.esp0, dataSegment);
-        push((int**) &process->mm.esp0, (int) process->mm.esp);
-        push((int**) &process->mm.esp0, 0x3202);
+        char* esp = (char*) process->mm.esp - ARGV_SIZE;
+        for (size_t i = 0; i < ARGV_SIZE; i++) {
+            esp[i] = process->args[i];
+        }
+        process->mm.esp = esp;
+
+        push((unsigned int**) &process->mm.esp, STACK_TOP_MAPPING - ARGV_SIZE);
+        push((unsigned int**) &process->mm.esp, (unsigned int) exit);
+
+        push((unsigned int**) &process->mm.esp0, dataSegment);
+        push((unsigned int**) &process->mm.esp0, STACK_TOP_MAPPING - 2 * sizeof(int) - ARGV_SIZE);
+        push((unsigned int**) &process->mm.esp0, 0x3202);
     }
 
-    push((int**) &process->mm.esp0, codeSegment);
-    push((int**) &process->mm.esp0, (int) entryPoint);
-    push((int**) &process->mm.esp0, dataSegment);
-    push((int**) &process->mm.esp0, dataSegment);
-    push((int**) &process->mm.esp0, dataSegment);
-    push((int**) &process->mm.esp0, dataSegment);
-    push((int**) &process->mm.esp0, (int) _interruptEnd);
-    push((int**) &process->mm.esp0, (int) signalPIC);
-    push((int**) &process->mm.esp0, 0);
+    push((unsigned int**) &process->mm.esp0, codeSegment);
+    push((unsigned int**) &process->mm.esp0, (unsigned int) entryPoint);
+    push((unsigned int**) &process->mm.esp0, dataSegment);
+    push((unsigned int**) &process->mm.esp0, dataSegment);
+    push((unsigned int**) &process->mm.esp0, dataSegment);
+    push((unsigned int**) &process->mm.esp0, dataSegment);
+    push((unsigned int**) &process->mm.esp0, (unsigned int) _interruptEnd);
+    push((unsigned int**) &process->mm.esp0, (unsigned int) signalPIC);
+    push((unsigned int**) &process->mm.esp0, 0);
 }
 
 void exitProcess(struct Process* process) {
@@ -178,6 +192,45 @@ void destroyProcess(struct Process* process) {
     if (process->mm.reservedPages) {
         free_pages(process->mm.reservedPages);
         process->mm.reservedPages = NULL;
+    }
+}
+
+void setup_page_directory(struct Process* process, int kernel) {
+
+    struct ProcessMemory* mm = &process->mm;
+    if (kernel) {
+        mm->directory = NULL;
+        return;
+    }
+
+    struct Pages* pages = reserve_pages(process, 1);
+    assert(pages != NULL);
+
+    struct PageDirectory* directory = pages->start;
+    mm_pagination_clear_directory(directory);
+    process->mm.directory = directory;
+
+    mm_pagination_map(process, 0, 0, 1024);
+
+    unsigned int idt = idt_page_address();
+    mm_pagination_map(process, idt, idt, 1);
+
+    unsigned int gdt = gdt_page_address();
+    mm_pagination_map(process, gdt, gdt, 1);
+
+    unsigned int ts = task_page_address();
+    mm_pagination_map(process, ts, ts, 1);
+
+    unsigned int kernelStackBottom = (unsigned int) mm->kernelStack - mm->pagesInKernelStack * PAGE_SIZE;
+    mm_pagination_map(process, kernelStackBottom, kernelStackBottom, mm->pagesInKernelStack);
+
+    if (mm->mallocContext) {
+        mm_pagination_map(process, mm->mallocContext, mm->mallocContext, mm->pagesInHeap);
+    }
+
+    if (mm->esp) {
+        unsigned int stackBottom = (unsigned int) mm->esp - mm->pagesInStack * PAGE_SIZE;
+        mm_pagination_map(process, stackBottom, STACK_TOP_MAPPING - mm->pagesInStack * PAGE_SIZE, mm->pagesInStack);
     }
 }
 

@@ -1,4 +1,4 @@
-EXTERN  interruptDispatcher, mm_set_kernel_context, mm_set_process_context
+EXTERN  interruptDispatcher, mm_set_kernel_context, mm_set_process_context, mm_pagination_set_kernel_directory, mm_pagination_set_process_directory
 GLOBAL _interruptEnd
 
 ; Defines a macro that takes as an argument the interrupt number.
@@ -18,11 +18,13 @@ GLOBAL _interruptEnd
     mov fs, ax
     mov gs, ax
 
+    call mm_pagination_set_kernel_directory
     call mm_set_kernel_context
 
     call %2
 
     call mm_set_process_context
+    call mm_pagination_set_process_directory
     
     pop ds
     pop es
@@ -39,6 +41,7 @@ GLOBAL _interruptEnd
 _interruptEnd:
 
     call mm_set_process_context
+    call mm_pagination_set_process_directory
 
     pop ds
     pop es

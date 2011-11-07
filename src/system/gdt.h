@@ -9,4 +9,6 @@
 
 void setupGDT(void);
 
+unsigned int gdt_page_address(void);
+
 #endif

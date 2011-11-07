@@ -62,4 +62,6 @@ struct TaskState* task_create_tss(void);
 
 void task_load(struct Process* p);
 
+unsigned int task_page_address(void);
+
 #endif

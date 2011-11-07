@@ -93,7 +93,11 @@ void _int20Handler(void);
 void _int21Handler(void);
 void _int80Handler(void);
 
+static InterruptDescriptor* idt;
 
+unsigned int idt_page_address(void) {
+    return (unsigned int) idt;
+}
 
 /**
  * Initializes the Interrupt Descriptor Table.
@@ -102,7 +106,7 @@ void _int80Handler(void);
  */
 void setupIDT(void) {
 
-    InterruptDescriptor* idt = kalloc(sizeof(InterruptDescriptor) * 256);
+    idt = allocPages(1);
 
     // We don't actually have to keep this in memory, so it's safe to have it as a local.
     InterruptDescriptorTableRegister idtr;
