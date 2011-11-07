@@ -10,7 +10,7 @@ void mm_pagination_set_kernel_directory(void);
 
 void mm_pagination_set_process_directory(void);
 
-void mm_pagination_map(struct Process* owner, unsigned int start, unsigned int to, int pages);
+void mm_pagination_map(struct Process* owner, unsigned int start, unsigned int to, int pages, int user, int rw);
 
 void mm_pagination_clear_directory(struct PageDirectory* directory);
 

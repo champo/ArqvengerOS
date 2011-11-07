@@ -210,27 +210,27 @@ void setup_page_directory(struct Process* process, int kernel) {
     mm_pagination_clear_directory(directory);
     process->mm.directory = directory;
 
-    mm_pagination_map(process, 0, 0, 1024);
+    mm_pagination_map(process, 0, 0, 1024, 1, 1);
 
     unsigned int idt = idt_page_address();
-    mm_pagination_map(process, idt, idt, 1);
+    mm_pagination_map(process, idt, idt, 1, 0, 0);
 
     unsigned int gdt = gdt_page_address();
-    mm_pagination_map(process, gdt, gdt, 1);
+    mm_pagination_map(process, gdt, gdt, 1, 0, 0);
 
     unsigned int ts = task_page_address();
-    mm_pagination_map(process, ts, ts, 1);
+    mm_pagination_map(process, ts, ts, 1, 0, 0);
 
     unsigned int kernelStackBottom = (unsigned int) mm->kernelStack - mm->pagesInKernelStack * PAGE_SIZE;
-    mm_pagination_map(process, kernelStackBottom, kernelStackBottom, mm->pagesInKernelStack);
+    mm_pagination_map(process, kernelStackBottom, kernelStackBottom, mm->pagesInKernelStack, 0, 1);
 
     if (mm->mallocContext) {
-        mm_pagination_map(process, mm->mallocContext, mm->mallocContext, mm->pagesInHeap);
+        mm_pagination_map(process, mm->mallocContext, mm->mallocContext, mm->pagesInHeap, 1, 1);
     }
 
     if (mm->esp) {
         unsigned int stackBottom = (unsigned int) mm->esp - mm->pagesInStack * PAGE_SIZE;
-        mm_pagination_map(process, stackBottom, STACK_TOP_MAPPING - mm->pagesInStack * PAGE_SIZE, mm->pagesInStack);
+        mm_pagination_map(process, stackBottom, STACK_TOP_MAPPING - mm->pagesInStack * PAGE_SIZE, mm->pagesInStack, 1, 1);
     }
 }
 

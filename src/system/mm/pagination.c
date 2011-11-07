@@ -9,7 +9,7 @@ static void set_directory(struct PageDirectory* directory);
 
 static void setup_directory_entry(struct PageDirectoryEntry* entry, int present, unsigned int address);
 
-static void setup_table_entry(struct PageTableEntry* entry, int present, unsigned int address);
+static void setup_table_entry(struct PageTableEntry* entry, int present, unsigned int address, int user, int rw);
 
 void mm_pagination_init(void) {
 
@@ -21,7 +21,7 @@ void mm_pagination_init(void) {
 
         setup_directory_entry(&identityDirectory->entries[i], 1, (unsigned int) table);
         for (size_t j = 0; j < 1024; j++) {
-            setup_table_entry(&table->entries[j], 1, (1024 * i + j) * PAGE_SIZE);
+            setup_table_entry(&table->entries[j], 1, (1024 * i + j) * PAGE_SIZE, 0, 1);
         }
     }
 
@@ -61,11 +61,11 @@ void setup_directory_entry(struct PageDirectoryEntry* entry, int present, unsign
     entry->_ignore = 0;
 }
 
-void setup_table_entry(struct PageTableEntry* entry, int present, unsigned int address) {
+void setup_table_entry(struct PageTableEntry* entry, int present, unsigned int address, int user, int rw) {
     entry->present = present;
     entry->pageAddress = address >> 12;
-    entry->rw = 1;
-    entry->user = 1;
+    entry->rw = rw;
+    entry->user = user;
     entry->writeThrough = 0;
     entry->cacheDisable = 0;
     entry->accessed = 0;
@@ -75,7 +75,7 @@ void setup_table_entry(struct PageTableEntry* entry, int present, unsigned int a
     entry->_ignore = 0;
 }
 
-void mm_pagination_map(struct Process* owner, unsigned int start, unsigned int to, int pages) {
+void mm_pagination_map(struct Process* owner, unsigned int start, unsigned int to, int pages, int user, int rw) {
 
     struct PageDirectory* directory = owner->mm.directory;
 
@@ -95,7 +95,7 @@ void mm_pagination_map(struct Process* owner, unsigned int start, unsigned int t
             setup_directory_entry(dirEntry, 1, (unsigned int) table);
 
             for (size_t j = 0; j < 1024; j++) {
-                setup_table_entry(&table->entries[j], 0, 0);
+                setup_table_entry(&table->entries[j], 0, 0, 0, 0);
             }
         }
 
@@ -111,7 +111,7 @@ void mm_pagination_map(struct Process* owner, unsigned int start, unsigned int t
             continue;
         }
 
-        setup_table_entry(&table->entries[tableIndex], 1, start + i * PAGE_SIZE);
+        setup_table_entry(&table->entries[tableIndex], 1, start + i * PAGE_SIZE, user, rw);
     }
 }
 

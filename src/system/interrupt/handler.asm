@@ -56,7 +56,6 @@ _interruptEnd:
 %macro ISR 2 
 GLOBAL _int%1Handler   
   _int%1Handler:
-    cli
 
     ; Save the interrupt number (intNum).
     push 0
