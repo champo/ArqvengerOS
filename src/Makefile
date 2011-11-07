@@ -20,6 +20,7 @@ CFLAGS=-fno-builtin -I$(SRCDIR) -pedantic -std=c99 -fstrict-aliasing -Wall -Wext
 	-Wstrict-prototypes -Wunreachable-code -fno-builtin -nostdlib \
 	-nostartfiles -nodefaultlibs -m32
 LDFLAGS=-T $(SRCDIR)/link.ld
+NASMFLAGS=
 
 .SUFFIXES:
 .SUFFIXES: .c .o .asm .h
@@ -30,7 +31,7 @@ LDFLAGS=-T $(SRCDIR)/link.ld
 
 # Rule for ASM
 $(OBJDIR)/%-asm.o: $(SRCDIR)/%.asm
-	nasm -f aout $< -o $@
+	nasm $(NASMFLAGS) -f aout $< -o $@
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 %.c:
@@ -44,6 +45,7 @@ all: release
 
 # Debug flags
 debug: override CFLAGS += -O0 -g
+debug: override NASMFLAGS += -O0 -g
 debug: $(TARGET)
 
 # Release flags
