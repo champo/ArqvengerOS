@@ -223,6 +223,9 @@ void int80(registers* regs) {
         case _SYS_CHOWN:
             regs->eax = _chown((const char*)translate(regs->ebx));
             break;
+        case _SYS_LOG:
+            _loglevel(regs->ebx);
+            break;
     }
 }
 

@@ -7,6 +7,7 @@
 #include "system/fs/fs.h"
 #include "system/fs/inode.h"
 #include "system/fs/direntry.h"
+#include "system/kprintf.h"
 #include "library/string.h"
 #include "constants.h"
 #include "library/stdio.h"
@@ -1014,3 +1015,6 @@ int _chown(const char* file) {
     return ans;
 }
 
+void _loglevel(int level) {
+    set_log_level(level);
+}

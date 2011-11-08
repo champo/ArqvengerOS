@@ -882,3 +882,6 @@ char* join_paths(const char* cwd, const char* path) {
     return nwd;
 }
 
+void loglevel(int level) {
+    system_call(_SYS_LOG, level, 0, 0);
+}

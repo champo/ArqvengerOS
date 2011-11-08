@@ -52,7 +52,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 35
+#define NUM_COMMANDS 36
 static const Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -89,6 +89,7 @@ static const Command commands[] = {
     { &command_chown, "chown", "Changes the user and group of a file.", &man_chown, 0},
     { &command_cp, "cp", "Copy a file or directory.", &man_cp, 0},
     { &command_mv, "mv", "Move (rename) files.", &man_mv, 0}, 
+    { &command_log, "loglevel", "Change the level of the log console.", &man_log, 0},
 };
 
 static termios shellStatus = { 0, 0 };

@@ -79,4 +79,6 @@ char* path_file(const char* path);
 
 char* join_paths(const char* cwd, const char* path);
 
+void loglevel(int level);
+
 #endif

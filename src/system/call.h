@@ -68,4 +68,6 @@ int _stat(const char* path, struct stat* data);
 
 int _chown(const char* path);
 
+void _loglevel(int level);
+
 #endif

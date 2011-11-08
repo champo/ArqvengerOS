@@ -14,6 +14,7 @@
 #define     _SYS_PINFO          999
 #define     _SYS_SETPPERSONA    998
 #define     _SYS_GETPPERSONA    997
+#define     _SYS_LOG            996
 
 #define _SYS_EXIT 93
 #define _SYS_YIELD 124
