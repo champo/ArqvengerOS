@@ -121,7 +121,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     }
 
     if (!kernel) {
-        process->mm.pagesInStack = 256;
+        process->mm.pagesInStack = 16;
         struct Pages* mem = reserve_pages(process, process->mm.pagesInStack);
         assert(mem != NULL);
 

@@ -30,6 +30,9 @@ static interruptHandler table[256];
 
 #define     IN_USE_EXCEPTIONS   20
 
+#define     STACK_END           3 * 1024 * 1024 * 1024
+#define     MAX_PAGES_IN_STACK  1024
+
 static const char* exceptionTable[] = { "Divide by zero", "Debugger", "NMI", "Breakpoint", "Overflow",
                                          "Bounds", "Invalid Opcode", "Coprocesor not available",
                                          "Double fault", "Coprocessor Segment Overrun",
@@ -37,60 +40,54 @@ static const char* exceptionTable[] = { "Divide by zero", "Debugger", "NMI", "Br
                                          "Stack fault", "General Protection", "Page Fault",
                                          "Intel Reserved", "Math Fault", "Aligment Check",
                                          "Machine Check", "Floating-Point Exception"};
-
+static void int0E(registers* regs);
 static void int20(registers* regs);
 static void int21(registers* regs);
 static void int80(registers* regs);
-static void page_fault_handler(registers* regs);
-static void page_fault_error(const char* message);
 static void exceptionHandler(registers* regs);
 void interruptDispatcher(registers regs);
 
-void page_fault_handler(registers* regs) {
-
-    char* message;
-    //Identifiquemos porque estoy aca y si puedo handlearlo
-    if (regs->errCode & 1 == 1) {
-        message = "Protection fault in a page fault.";
-        page_fault_error(message);    
-    }
+void int0E(registers* regs) {
 
     struct Process* process = scheduler_current();
-    
-    if (reserve_pages(process, 1) == NULL) {
-        message = "Error. Couldn't reserve more pages for a process.";
-        page_fault_error(message);
-    }
-    
-    unsigned int start = (unsigned int)process->mm.reservedPages->start;
+
     unsigned int to = 0;
+    
+    unsigned int last = STACK_END - process->mm.pagesInStack * PAGE_SIZE;
 
     __asm__ __volatile__ ("mov %%cr2, %%eax":"=A"(to)::);
 
-    mm_pagination_map(process, start, to, 1, 3, 1);
+    int difference = last - to;
 
-    return;
-}
-
-void page_fault_error(const char* message) {
-    char* screen = (char*) 0xb8000;
-    int i = 0;
-    while (i != 2*80*25) {
-        *screen = ' ';
-        screen += 2;
-        i += 2;
-    }
-    i = 0;
-    screen = (char*) 0xb8000;
-    while ( message[i] != '\0') {
-        *screen = message[i++];
-        screen++;
-        *screen = 0x07;
-        screen++;
+    if (difference < 0) {
+        difference *= -1;
     }
 
-    disableInterrupts();
-    halt();
+    if (difference > PAGE_SIZE || regs->errCode & 1 == 1) {
+        kprintf("Protection fault in a page fault.\n");
+        process_table_kill(process);
+        return;
+    }
+
+    if (process->mm.pagesInStack > MAX_PAGES_IN_STACK) {
+        kprintf("Stack is way too big.\n");
+        process_table_kill(process);
+        return;
+    }
+
+    struct Pages* newPages = reserve_pages(process,1);
+
+    if (newPages == NULL) {
+        kprintf("Error. Couldn't reserve more pages for a process.\n");
+        process_table_kill(process);
+        return;
+    }
+    
+    unsigned int start = (unsigned int)newPages->start;
+ 
+    mm_pagination_map(process, start, to, 1, 1, 1);
+
+    process->mm.pagesInStack++;
     
     return;
 }
@@ -123,7 +120,9 @@ void setInterruptHandlerTable(void) {
     for (i = 0;i < 32;i++) {
         table[i] = &exceptionHandler;
     }
-    
+   
+    //table[14] = &int14;
+    register(0E); 
     register(20);
     register(21);
 
@@ -287,11 +286,6 @@ void int80(registers* regs) {
  *  @param regs Pointer to struct containing micro's registers.
  */
 void exceptionHandler(registers* regs){
-    if (regs->intNum == 14) {
-        page_fault_handler(regs);
-        return;
-    }
-    
     char* screen = (char*) 0xb8000;
     int i = 0;
     const char* message = "Unhandled CPU exception: ";
