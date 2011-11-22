@@ -9,14 +9,10 @@
 #define PASSWD_CHANGED  0
 
 static void parseUserLine(char* str, struct User* user, char* def_group);
-static int updateUsersFile(struct User* user, int delete);
-static void writeUserLine(FILE* fp, struct User* user);
+static int updateUsersFile(struct User* user, int delete, char* groupname);
+static void writeUserLine(FILE* fp, struct User* user, char* groupname);
 
 static char nameBuf[100];
-
-void users_init(void) {
-
-}
 
 int get_users_num(void) {
 
@@ -136,7 +132,7 @@ int change_passwd(int uid, char* old_passwd, char* new_passwd) {
     if (strcmp(user->passwd, old_passwd) == 0) {
         strcpy(user->passwd, new_passwd);
 
-        updateUsersFile(user, 0);
+        updateUsersFile(user, 0, get_groupname(user->gid[0]));
 
         free_user(user);
         return PASSWD_CHANGED;
@@ -146,7 +142,7 @@ int change_passwd(int uid, char* old_passwd, char* new_passwd) {
     }
 }
 
-int updateUsersFile(struct User* user, int delete) {
+int updateUsersFile(struct User* user, int delete, char* groupname) {
     FILE* fp = fopen("/users", "r");
     char line[200][100];
     char aux[100];
@@ -165,7 +161,7 @@ int updateUsersFile(struct User* user, int delete) {
 
         if (strcmp(user->name, aux) == 0) {
             if (!delete) {
-                writeUserLine(fp, user);
+                writeUserLine(fp, user, groupname);
                 found = 1;
             }
         } else {
@@ -174,17 +170,17 @@ int updateUsersFile(struct User* user, int delete) {
     }
 
     if (!found && !delete) {
-        writeUserLine(fp, user);
+        writeUserLine(fp, user, groupname);
     }
 
     fclose(fp);
     return 0;
 }
 
-void writeUserLine(FILE* fp, struct User* user) {
+void writeUserLine(FILE* fp, struct User* user, char* groupname) {
 
     fprintf(fp, "%s:x:%d:%d:", user->name, user->id, user->gid[0]);
-    fprintf(fp, "%s:%s\n", user->passwd, get_groupname(user->gid[0]));
+    fprintf(fp, "%s:%s\n", user->passwd, groupname);
 }
 
 int create_user(char* name, char* passwd, char* groupname) {
@@ -232,7 +228,7 @@ int create_user(char* name, char* passwd, char* groupname) {
     users[i - 1]->gid[0] = group->id;
     users[i - 1]->id = id;
 
-    updateUsersFile(users[i - 1], 0);
+    updateUsersFile(users[i - 1], 0, groupname);
 
     for (int j = 0; j < i; j++) {
         free(users[j]);
@@ -248,7 +244,7 @@ int delete_user(char* name) {
         return -1;
     }
 
-    updateUsersFile(user, 1);
+    updateUsersFile(user, 1, NULL);
 
     free(user);
     return 0;

@@ -11,7 +11,7 @@ void users(char* argv) {
     struct User* user;
     while(users < total) {
         user = get_user_by_id(i++);
-
+        
         if (user != NULL) {
             printf("name:%s uid:%d gid:%d\n", user->name, user->id, user->gid[0]);
             users++;
