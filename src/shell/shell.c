@@ -53,7 +53,7 @@ static void chooseCurrentEntry(struct Shell* self);
 static void run_command(struct Shell* self, const Command* cmd);
 
 #define NUM_COMMANDS 36
-static const Command commands[] = {
+static Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
     { &help, "help", "This command.", &manHelp, 1 },
@@ -115,10 +115,16 @@ void shell(char* unused) {
     ioctl(0, TCSETS, (void*) &shellStatus);
 
     int uid,gid;
+    struct User* user;
+    char* username;
+    
     getProcessPersona(getpid(), &uid, &gid);
-    struct User* user = get_user_by_id(uid);
-    char* username = user->name;
+    user = get_user_by_id(uid);
+    username = user->name;
     free_user(user);
+ 
+    sort_commands(commands);
+
     while (1) {
 
         cmd = nextCommand(self, username);
@@ -132,6 +138,36 @@ void shell(char* unused) {
         }
     }
 }
+
+
+/**
+ * Simple bubble sort implementation to sort the arrat of commands alphabetically.
+ *
+ * @param commands The array of Command to be sorted. 
+ */
+void sort_commands(Command* commands) {
+
+    int swapped = 1;
+    int n = NUM_COMMANDS;
+    
+    while (swapped) {
+        swapped = 0;
+        for (int i = 1; i < n; i++) {
+            
+            if (strcmp(commands[i - 1].name, commands[i].name) > 0) {
+                Command aux = commands[i - 1];
+                commands[i - 1] = commands[i];
+                commands[i] = aux;
+                swapped = 1;
+            }
+        }
+        n--;
+    }
+
+    return;
+}
+
+
 
 void run_command(struct Shell* self, const Command* cmd) {
 
