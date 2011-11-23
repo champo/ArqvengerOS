@@ -5,7 +5,6 @@
 
 struct Chunk {
     unsigned long long initialSector;
-    int sectors;
     void* buffer;
     int dirty;
     int accesses;
