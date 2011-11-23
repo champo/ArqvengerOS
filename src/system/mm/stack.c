@@ -5,7 +5,6 @@
 #include "system/mm/pagination.h"
 #include "system/mm/allocator.h"
 
-#define     STACK_END           3 * 1024 * 1024 * 1024
 #define     MAX_PAGES_IN_STACK  1024
 
 void page_fault_handler(int errCode) {
@@ -13,7 +12,7 @@ void page_fault_handler(int errCode) {
 
     unsigned int to = 0;
     
-    unsigned int last = STACK_END - process->mm.pagesInStack * PAGE_SIZE;
+    unsigned int last = STACK_TOP_MAPPING - process->mm.pagesInStack * PAGE_SIZE;
 
     __asm__ __volatile__ ("mov %%cr2, %%eax":"=A"(to)::);
 

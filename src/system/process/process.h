@@ -11,6 +11,8 @@
 #define MAX_OPEN_FILES 10
 #define KERNEL_STACK_PAGES 10
 
+#define STACK_TOP_MAPPING (3 * 1024 * 1024 * 1024u)
+
 typedef void (*EntryPoint)(char[ARGV_SIZE]);
 
 struct ProcessMemory {
