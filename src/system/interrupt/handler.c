@@ -235,6 +235,8 @@ void int80(registers* regs) {
         case _SYS_LOG:
             _loglevel(regs->ebx);
             break;
+        case _SYS_STACKSIZE:
+            regs->eax = _stacksize();
     }
 }
 

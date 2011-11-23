@@ -28,5 +28,6 @@
 #include "shell/busywait/busywait.h"
 #include "shell/logout/logout.h"
 #include "shell/loglevel/loglevel.h"
+#include "shell/stacksize/stacksize.h"
 
 #endif

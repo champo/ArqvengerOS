@@ -4,8 +4,7 @@
 #include "system/process/table.h"
 #include "system/mm/pagination.h"
 #include "system/mm/allocator.h"
-
-#define     MAX_PAGES_IN_STACK  1024
+#include "system/mm/page.h"
 
 void page_fault_handler(int errCode) {
     struct Process* process = scheduler_current();
@@ -24,7 +23,7 @@ void page_fault_handler(int errCode) {
         return;
     }
 
-    if (process->mm.pagesInStack > MAX_PAGES_IN_STACK) {
+    if (process->mm.pagesInStack >= MAX_PAGES_IN_STACK) {
         kprintf("Stack is way too big.\n");
         process_table_kill(process);
         return;
@@ -46,7 +45,7 @@ void page_fault_handler(int errCode) {
 
     int pages = process->mm.pagesInStack;
 
-    log_debug("Growing stack of %d to %d.\n", process->pid, pages * 1024);
+    log_debug("Growing stack of %d to %d.\n", process->pid, pages * PAGE_SIZE);
     log_debug("Now this stack contains %d pages.\n", pages);
 
     return;

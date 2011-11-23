@@ -70,4 +70,6 @@ int _chown(const char* path);
 
 void _loglevel(int level);
 
+int _stacksize(void);
+
 #endif
