@@ -226,6 +226,7 @@ void* allocator(size_t size, size_t* allocatedSize) {
     if (memory) {
         *allocatedSize = PAGE_SIZE * pages;
     } else {
+        log_error("Failed to allocate memory for context %u\n", get_malloc_context());
         *allocatedSize = 0;
     }
 
@@ -256,6 +257,7 @@ struct Pages* reserve_pages(struct Process* owner, int pages) {
 
     void* start = allocPages(pages);
     if (start == NULL) {
+        log_error("Failed to allocate %d pages for %d\n", pages, owner->pid);
         return NULL;
     }
 
