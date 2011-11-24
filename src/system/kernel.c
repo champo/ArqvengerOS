@@ -8,6 +8,7 @@
 #include "drivers/ata.h"
 #include "system/fifo.h"
 #include "system/mm/pagination.h"
+#include "system/cache/cache.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 
@@ -39,6 +40,7 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
     stdout = &files[1];
     stderr = &files[2];
 
+    cache_init();
     ata_init(info);
     fs_load();
     fifo_init();

@@ -1,7 +1,8 @@
 #include "drivers/ext2/internal.h"
+#include "system/cache/cache.h"
 
 int read_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, void* buffer) {
-    return ata_read(fs->firstSector + sector, sectors, buffer);
+    return cache_read(fs->firstSector + sector, sectors, buffer);
 }
 
 int read_block(struct ext2* fs, size_t block, void* buffer) {
@@ -43,7 +44,7 @@ int read_block_fragment(struct ext2* fs, size_t block, size_t offset, size_t len
 }
 
 int write_sectors(struct ext2* fs, unsigned long long sector, size_t sectors, const void* buffer) {
-    return ata_write(fs->firstSector + sector, sectors, buffer);
+    return cache_write(fs->firstSector + sector, sectors, buffer);
 }
 
 int write_block(struct ext2* fs, size_t block, const void* buffer) {
