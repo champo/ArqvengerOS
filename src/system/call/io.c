@@ -508,15 +508,26 @@ int _rename(const char* source, const char* dest) {
     fs_inode_close(inode);
 
     char* filedest = path_file(dest);
+    
 
     entry = fs_findentry(destdir, filedest);
 
     if (entry.inode != 0) {
-        fs_inode_close(sourcedir);
-        fs_inode_close(destdir);
+        inode = fs_inode_open(entry.inode);
+        if (INODE_TYPE(inode->data) != INODE_DIR) {
+            fs_inode_close(inode);
+            fs_inode_close(sourcedir);
+            fs_inode_close(destdir);
+            kfree(filedest);
+            kfree(filesource);
+            return -1;
+        } 
+        fs_inode_close(inode);
+        char* aux = path_directory(dest);
+        destdir = resolve_path(join_paths(aux, filedest));
+        kfree(aux);
         kfree(filedest);
-        kfree(filesource);
-        return -1;
+        filedest = path_file(source);
     }
 
     int ans = fs_rename(sourcedir, filesource, destdir, filedest);
