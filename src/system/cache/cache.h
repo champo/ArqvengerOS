@@ -12,4 +12,5 @@ int cache_sync(int force);
 int cache_evict(int minPages);
 
 void cache_flush(char* unused);
+
 #endif

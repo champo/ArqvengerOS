@@ -5,6 +5,7 @@
 #include "library/string.h"
 #include "system/call.h"
 #include "system/common.h"
+#include "library/sys.h"
 
 #define CACHE_SIZE (1 << 20)
 #define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
@@ -17,9 +18,20 @@ struct Chunk {
     int accesses;
     int lastWriteTime;
     int lastAccessTime;
+    struct Chunk* next;
+    struct Chunk* prev;
 };
 
+
+struct LRUList {
+    struct Chunk* first;
+    struct Chunk* last;
+};
+
+
 static struct Chunk** table = NULL;
+
+static struct LRUList list = {.first = NULL, .last = NULL};
 
 static struct Chunk* find_chunk(int index);
 
@@ -27,6 +39,14 @@ static int evict(void);
 
 static void release_chunk(int tableIndex);
 
+void cache_list_add(struct LRUList* list, struct Chunk* chunk);
+
+void cache_list_remove(struct LRUList* list, struct Chunk* chunk);
+
+/**
+ *  Cache flush process entry point.
+ *
+ */
 void cache_flush(char* unused) {
 
     while(1) {
@@ -37,6 +57,54 @@ void cache_flush(char* unused) {
     }
 }
 
+void cache_list_add(struct LRUList* list, struct Chunk* chunk) {
+
+    //We add always at the beginning
+    struct Chunk* aux = list->first;
+    list->first = chunk;
+
+    chunk->next = aux;
+    chunk->prev = NULL;
+
+    if (aux != NULL) {
+        aux->prev = list->first;
+    }
+
+    if (list->last == NULL) {
+        list->last = list->first;
+    }
+
+    return;
+}
+
+void cache_list_remove(struct LRUList* list, struct Chunk* chunk) {
+    
+    struct Chunk* curr = list->first;
+    
+    while (curr != NULL && curr->initialSector != chunk->initialSector) {
+        curr = curr->next;
+    }
+    
+    struct Chunk* next = curr->next;
+    struct Chunk* previous = curr->prev;
+
+    curr->prev = NULL;
+    curr->next = NULL;
+
+    if (previous != NULL) {
+        previous->next = next;
+    } else {
+        list->first = next;
+    }
+
+    if (next != NULL) {
+        next->prev = previous;
+    } else {
+        list->last = previous;
+    }
+
+    return;
+}
 
 
 
