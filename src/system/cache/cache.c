@@ -150,6 +150,7 @@ struct Chunk* find_chunk(int index) {
         }
     }
 
+    log_info("Loading page at sector %u into cache\n", sector);
     struct Chunk* entry = kalloc(sizeof(struct Chunk));
     entry->initialSector = sector;
     entry->buffer = allocPages(1);
@@ -188,6 +189,7 @@ int cache_sync(int force) {
             // if lastWriteTime < now then more than one second has passed
             // One second dirty is a more than reasonable time (I think :P)
             if (entry->dirty && (force || entry->lastWriteTime < now)) {
+                log_info("Flushing cache for sector %u entry\n", entry->initialSector);
                 ata_write(entry->initialSector, SECTORS_PER_PAGE, entry->buffer);
                 entry->dirty = 0;
             }
@@ -245,6 +247,7 @@ int evict(void) {
 void release_chunk(int tableIndex) {
 
     struct Chunk* entry = table[tableIndex];
+    log_info("Releasing chunk for sector %u\n", entry->initialSector);
 
     if (entry->dirty) {
         ata_write(entry->initialSector, SECTORS_PER_PAGE, entry->buffer);
