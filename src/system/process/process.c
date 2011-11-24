@@ -15,8 +15,6 @@
 #include "system/mm/pagination.h"
 #include "system/task.h"
 
-#define STACK_TOP_MAPPING (3 * 1024 * 1024 * 1024u)
-
 static int pid = 0;
 
 extern void _interruptEnd(void);

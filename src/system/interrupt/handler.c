@@ -8,6 +8,7 @@
 #include "system/scheduler.h"
 #include "system/mm/pagination.h"
 #include "system/process/process.h"
+#include "system/mm/stack.h"
 
 typedef struct {
     int ds, es, fs, gs;
@@ -30,9 +31,6 @@ static interruptHandler table[256];
 
 #define     IN_USE_EXCEPTIONS   20
 
-#define     STACK_END           3 * 1024 * 1024 * 1024
-#define     MAX_PAGES_IN_STACK  1024
-
 static const char* exceptionTable[] = { "Divide by zero", "Debugger", "NMI", "Breakpoint", "Overflow",
                                          "Bounds", "Invalid Opcode", "Coprocesor not available",
                                          "Double fault", "Coprocessor Segment Overrun",
@@ -49,46 +47,7 @@ void interruptDispatcher(registers regs);
 
 void int0E(registers* regs) {
 
-    struct Process* process = scheduler_current();
-
-    unsigned int to = 0;
-    
-    unsigned int last = STACK_END - process->mm.pagesInStack * PAGE_SIZE;
-
-    __asm__ __volatile__ ("mov %%cr2, %%eax":"=A"(to)::);
-
-    int difference = last - to;
-
-    if (difference < 0) {
-        difference *= -1;
-    }
-
-    if (difference > PAGE_SIZE || regs->errCode & 1 == 1) {
-        kprintf("Protection fault in a page fault.\n");
-        process_table_kill(process);
-        return;
-    }
-
-    if (process->mm.pagesInStack > MAX_PAGES_IN_STACK) {
-        kprintf("Stack is way too big.\n");
-        process_table_kill(process);
-        return;
-    }
-
-    struct Pages* newPages = reserve_pages(process,1);
-
-    if (newPages == NULL) {
-        kprintf("Error. Couldn't reserve more pages for a process.\n");
-        process_table_kill(process);
-        return;
-    }
-    
-    unsigned int start = (unsigned int)newPages->start;
- 
-    mm_pagination_map(process, start, to, 1, 1, 1);
-
-    process->mm.pagesInStack++;
-    
+    page_fault_handler(regs->errCode);
     return;
 }
 
@@ -121,7 +80,6 @@ void setInterruptHandlerTable(void) {
         table[i] = &exceptionHandler;
     }
    
-    //table[14] = &int14;
     register(0E); 
     register(20);
     register(21);
