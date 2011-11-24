@@ -1,12 +1,14 @@
 #include "system/cache/cache.h"
 #include "system/mm/allocator.h"
+#include "system/kprintf.h"
 #include "drivers/ata.h"
 #include "library/string.h"
 #include "system/call.h"
+#include "system/common.h"
 
 #define CACHE_SIZE (1 << 20)
 #define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
-#define TABLE_ENTRIES 256
+#define TABLE_ENTRIES 3
 
 struct Chunk {
     unsigned long long initialSector;
@@ -24,6 +26,20 @@ static struct Chunk* find_chunk(int index);
 static int evict(void);
 
 static void release_chunk(int tableIndex);
+
+void cache_flush(char* unused) {
+
+    while(1) {
+        disableInterrupts(); 
+        cache_sync(0); 
+        enableInterrupts(); 
+        sleep(1);
+    }
+}
+
+
+
+
 
 int cache_read(unsigned long long sector, int count, void* buffer) {
 
@@ -64,7 +80,6 @@ int cache_read(unsigned long long sector, int count, void* buffer) {
             counter += SECTORS_PER_PAGE;
         }
     }
-
     return 0;
 }
 
@@ -84,7 +99,7 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
         }
 
         //TODO: Uncomment me when write-back is enabled
-        //chunk->dirty = 1;
+        chunk->dirty = 1;
         chunk->accesses++;
         chunk->lastWriteTime = _time(NULL);
         chunk->lastAccessTime = chunk->lastWriteTime;
