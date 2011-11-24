@@ -8,7 +8,7 @@
 
 #define CACHE_SIZE (1 << 20)
 #define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
-#define TABLE_ENTRIES 3
+#define TABLE_ENTRIES 256
 
 struct Chunk {
     unsigned long long initialSector;
@@ -129,7 +129,7 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
     }
 
     //write-trough
-    ata_write(sector, count, buffer);
+    //ata_write(sector, count, buffer);
 
     return 0;
 }
