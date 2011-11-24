@@ -4,6 +4,8 @@
 #include "library/div64.h"
 #include "library/string.h"
 #include "type.h"
+#include "system/mm/page.h"
+#include "system/scheduler.h"
 
 /**
  *  Gets information of the processes.
@@ -44,4 +46,10 @@ int _pinfo(struct ProcessInfo* data, size_t size) {
     }
 
     return pcount;
+}
+
+int _stacksize(void) {
+    struct Process* process = scheduler_current();
+
+    return process->mm.pagesInStack * PAGE_SIZE;
 }

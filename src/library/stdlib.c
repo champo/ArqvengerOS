@@ -1,6 +1,8 @@
 #include "library/ctype.h"
 #include "library/string.h"
 #include "library/stdlib.h"
+#include "library/call.h"
+#include "system/call/codes.h"
 
 static size_t randSeed;
 
@@ -158,4 +160,8 @@ int parseoct(char* string) {
     }
 
     return ans;
+}
+
+int processStackSize(void) {
+    return system_call(_SYS_STACKSIZE, 0, 0, 0);
 }
