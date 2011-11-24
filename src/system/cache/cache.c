@@ -45,20 +45,19 @@ int cache_read(unsigned long long sector, int count, void* buffer) {
             int first = sector % SECTORS_PER_PAGE;
             int last = count > SECTORS_PER_PAGE ? SECTORS_PER_PAGE : count;
 
-            memcpy(buff + (counter * SECTOR_SIZE), ((char*)chunk->buffer) + (first * SECTOR_SIZE), SECTOR_SIZE * (last - first));
+            memcpy(buff, ((char*)chunk->buffer) + first * SECTOR_SIZE, SECTOR_SIZE * (last - first));
             counter += (last - first);
 
         } else if (block == endBlock) {
 
-            int last = (count - (sector % SECTORS_PER_PAGE)) % SECTORS_PER_PAGE;
-            memcpy(buff + (counter * SECTOR_SIZE), chunk->buffer, SECTOR_SIZE * last);
+            int last = (sector + count) % SECTORS_PER_PAGE;
+            memcpy(buff + counter * SECTOR_SIZE, chunk->buffer, SECTOR_SIZE * last);
             counter += last;
         } else {
 
-            memcpy(buff + (counter * SECTOR_SIZE), chunk->buffer, SECTOR_SIZE * SECTORS_PER_PAGE);
+            memcpy(buff + counter * SECTOR_SIZE, chunk->buffer, SECTOR_SIZE * SECTORS_PER_PAGE);
             counter += SECTORS_PER_PAGE;
         }
-
     }
 
     return 0;
@@ -87,17 +86,17 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
             int first = sector % SECTORS_PER_PAGE;
             int last = count > SECTORS_PER_PAGE ? SECTORS_PER_PAGE : count;
 
-            memcpy(((char*)chunk->buffer) + first * SECTOR_SIZE, buff + (counter * SECTOR_SIZE), SECTOR_SIZE * (last - first));
+            memcpy(((char*)chunk->buffer) + first * SECTOR_SIZE, buff, SECTOR_SIZE * (last - first));
             counter += (last - first);
 
         } else if (block == endBlock) {
 
-            int last = (count - (sector % SECTORS_PER_PAGE)) % SECTORS_PER_PAGE;
-            memcpy(chunk->buffer, buff + (counter * SECTOR_SIZE), SECTOR_SIZE * last);
+            int last = (sector + count) % SECTORS_PER_PAGE;
+            memcpy(chunk->buffer, buff + counter * SECTOR_SIZE, SECTOR_SIZE * last);
             counter += last;
         } else {
 
-            memcpy(chunk->buffer, buff + (counter * SECTOR_SIZE), SECTOR_SIZE * SECTORS_PER_PAGE);
+            memcpy(chunk->buffer, buff + counter * SECTOR_SIZE, SECTOR_SIZE * SECTORS_PER_PAGE);
             counter += SECTORS_PER_PAGE;
         }
 
@@ -112,3 +111,4 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
 struct Chunk* find_chunk(int index) {
     return NULL;
 }
+
