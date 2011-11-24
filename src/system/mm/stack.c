@@ -7,8 +7,15 @@
 #include "system/mm/page.h"
 
 void page_fault_handler(int errCode) {
+   
     struct Process* process = scheduler_current();
 
+    if (errCode & 1 == 1) {
+        kprintf("A process tried to access a page and caused a protection fault.\n");
+        process_table_kill(process);
+        return;
+    }
+    
     unsigned int to = 0;
     
     unsigned int last = STACK_TOP_MAPPING - process->mm.pagesInStack * PAGE_SIZE;
@@ -17,8 +24,8 @@ void page_fault_handler(int errCode) {
 
     int difference = last - to;
 
-    if (difference > PAGE_SIZE || errCode & 1 == 1) {
-        kprintf("Protection fault in a page fault.\n");
+    if (difference > PAGE_SIZE) {
+        kprintf("A process tried to read a non-present page entry.\n");
         process_table_kill(process);
         return;
     }
