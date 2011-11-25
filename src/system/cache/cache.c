@@ -16,10 +16,12 @@ struct Chunk {
     void* buffer;
     int dirty;
     int accesses;
-    int lastWriteTime;
+    int firstWriteTime;
     int lastAccessTime;
     struct Chunk* next;
     struct Chunk* prev;
+
+    int index;
 };
 
 
@@ -35,7 +37,7 @@ static struct LRUList cache_list = {.first = NULL, .last = NULL};
 
 static struct Chunk* find_chunk(int index);
 
-static int evict(void);
+static int evict(int minPages, int force);
 
 static void release_chunk(int tableIndex);
 
@@ -168,8 +170,12 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
 
         //TODO: Uncomment me when write-back is enabled
         mark_access(chunk);
+
+        if (!chunk->dirty) {
+            chunk->firstWriteTime = _time(NULL);
+        }
+
         chunk->dirty = 1;
-        chunk->lastWriteTime = _time(NULL);
 
         if (block == startBlock) {
 
@@ -236,8 +242,9 @@ struct Chunk* find_chunk(int index) {
     ata_read(sector, SECTORS_PER_PAGE, entry->buffer);
     entry->dirty = 0;
     entry->accesses = 0;
-    entry->lastWriteTime = 0;
+    entry->firstWriteTime = 0;
     entry->lastAccessTime = _time(NULL);
+    entry->index = firstEmpty;
     table[firstEmpty] = entry;
 
     cache_list_add(&cache_list, entry);
@@ -269,7 +276,7 @@ int cache_sync(int force) {
 
             // if lastWriteTime < now then more than one second has passed
             // One second dirty is a more than reasonable time (I think :P)
-            if (entry->dirty && (force || entry->lastWriteTime < now)) {
+            if (entry->dirty && (force || entry->firstWriteTime < now)) {
                 log_info("Flushing cache for sector %u entry\n", entry->initialSector);
                 ata_write(entry->initialSector, SECTORS_PER_PAGE, entry->buffer);
                 entry->dirty = 0;
@@ -286,40 +293,39 @@ int cache_evict(int minPages) {
     // Ideally, we'd want to evict LRU pages.
     // Right we'll just evict the first minPages.
 
-    int evicted = evict();
+    int evicted = evict(minPages, 0);
     if (evicted < minPages) {
 
         // If we didnt release enough, let's sync some pages
         // Hopefully it will free up enough memory
+        log_debug("Force a sync & try to evict more pages\n");
         cache_sync(1);
-        evicted += evict();
+        evicted += evict(minPages - evicted, 0);
 
         if (evicted < minPages) {
             // Now we start evicting agressively
-            for (int i = 0; evicted < minPages && i < TABLE_ENTRIES; i++) {
-                if (table[i]) {
-                    release_chunk(i);
-                    evicted++;
-                }
-            }
+            log_debug("Going agressive with the eviction...\n");
+            evicted += evict(minPages - evicted, 1);
         }
     }
 
     return evicted;
 }
 
-int evict(void) {
+int evict(int minPages, int force) {
 
     int now = _time(NULL);
     int evicted = 0;
 
-    for (int i = 0; i < TABLE_ENTRIES; i++) {
+    struct Chunk* entry = cache_list.first;
+    while (entry && evicted < minPages) {
 
-        struct Chunk* entry = table[i];
-        if (entry && !entry->dirty && entry->lastAccessTime < now) {
-            release_chunk(i);
+        if (!entry->dirty && (entry->lastAccessTime < now || force)) {
+            release_chunk(entry->index);
             evicted++;
         }
+
+        entry = entry->next;
     }
 
     return evicted;
