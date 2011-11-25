@@ -43,13 +43,15 @@ static void cache_list_add(struct LRUList* list, struct Chunk* chunk);
 
 static void cache_list_remove(struct LRUList* list, struct Chunk* chunk);
 
+static void mark_access(struct Chunk* chunk);
+
 /**
  *  Cache flush process entry point.
  *
  */
 void cache_flush(char* unused) {
 
-    while(1) {
+    while (1) {
         disableInterrupts();
         cache_sync(0);
         enableInterrupts();
@@ -102,8 +104,15 @@ void cache_list_remove(struct LRUList* list, struct Chunk* chunk) {
     } else {
         list->last = previous;
     }
+}
 
-    return;
+void mark_access(struct Chunk* chunk) {
+
+    chunk->accesses++;
+    chunk->lastAccessTime = _time(NULL);
+
+    cache_list_remove(&list, chunk);
+    cache_list_add(&list, chunk);
 }
 
 int cache_read(unsigned long long sector, int count, void* buffer) {
@@ -120,8 +129,7 @@ int cache_read(unsigned long long sector, int count, void* buffer) {
             return -1;
         }
 
-        chunk->accesses++;
-        chunk->lastAccessTime = _time(NULL);
+        mark_access(chunk);
 
         if (block == startBlock) {
 
@@ -164,10 +172,9 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
         }
 
         //TODO: Uncomment me when write-back is enabled
+        mark_access(chunk);
         chunk->dirty = 1;
-        chunk->accesses++;
         chunk->lastWriteTime = _time(NULL);
-        chunk->lastAccessTime = chunk->lastWriteTime;
 
         if (block == startBlock) {
 
@@ -192,9 +199,6 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
         }
 
     }
-
-    //write-trough
-    //ata_write(sector, count, buffer);
 
     return 0;
 }
