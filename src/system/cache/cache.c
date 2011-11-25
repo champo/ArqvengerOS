@@ -31,7 +31,7 @@ struct LRUList {
 
 static struct Chunk** table = NULL;
 
-static struct LRUList list = {.first = NULL, .last = NULL};
+static struct LRUList cache_list = {.first = NULL, .last = NULL};
 
 static struct Chunk* find_chunk(int index);
 
@@ -80,18 +80,13 @@ void cache_list_add(struct LRUList* list, struct Chunk* chunk) {
 }
 
 void cache_list_remove(struct LRUList* list, struct Chunk* chunk) {
+    
+    // We don't have to look for the chunk in the list as the chunk itself is a node.
+    struct Chunk* next = chunk->next;
+    struct Chunk* previous = chunk->prev;
 
-    struct Chunk* curr = list->first;
-
-    while (curr != NULL && curr->initialSector != chunk->initialSector) {
-        curr = curr->next;
-    }
-
-    struct Chunk* next = curr->next;
-    struct Chunk* previous = curr->prev;
-
-    curr->prev = NULL;
-    curr->next = NULL;
+    chunk->prev = NULL;
+    chunk->next = NULL;
 
     if (previous != NULL) {
         previous->next = next;
@@ -245,6 +240,8 @@ struct Chunk* find_chunk(int index) {
     entry->lastAccessTime = _time(NULL);
     table[firstEmpty] = entry;
 
+    cache_list_add(&cache_list, entry); 
+
     return entry;
 }
 
@@ -336,6 +333,8 @@ void release_chunk(int tableIndex) {
     if (entry->dirty) {
         ata_write(entry->initialSector, SECTORS_PER_PAGE, entry->buffer);
     }
+
+    cache_list_remove(&cache_list, entry);
 
     freePages(entry->buffer, 1);
     kfree(entry);
