@@ -39,9 +39,9 @@ static int evict(void);
 
 static void release_chunk(int tableIndex);
 
-void cache_list_add(struct LRUList* list, struct Chunk* chunk);
+static void cache_list_add(struct LRUList* list, struct Chunk* chunk);
 
-void cache_list_remove(struct LRUList* list, struct Chunk* chunk);
+static void cache_list_remove(struct LRUList* list, struct Chunk* chunk);
 
 /**
  *  Cache flush process entry point.
@@ -50,9 +50,9 @@ void cache_list_remove(struct LRUList* list, struct Chunk* chunk);
 void cache_flush(char* unused) {
 
     while(1) {
-        disableInterrupts(); 
-        cache_sync(0); 
-        enableInterrupts(); 
+        disableInterrupts();
+        cache_sync(0);
+        enableInterrupts();
         sleep(1);
     }
 }
@@ -78,13 +78,13 @@ void cache_list_add(struct LRUList* list, struct Chunk* chunk) {
 }
 
 void cache_list_remove(struct LRUList* list, struct Chunk* chunk) {
-    
+
     struct Chunk* curr = list->first;
-    
+
     while (curr != NULL && curr->initialSector != chunk->initialSector) {
         curr = curr->next;
     }
-    
+
     struct Chunk* next = curr->next;
     struct Chunk* previous = curr->prev;
 
@@ -105,9 +105,6 @@ void cache_list_remove(struct LRUList* list, struct Chunk* chunk) {
 
     return;
 }
-
-
-
 
 int cache_read(unsigned long long sector, int count, void* buffer) {
 
