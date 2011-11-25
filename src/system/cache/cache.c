@@ -80,7 +80,7 @@ void cache_list_add(struct LRUList* list, struct Chunk* chunk) {
 }
 
 void cache_list_remove(struct LRUList* list, struct Chunk* chunk) {
-    
+
     // We don't have to look for the chunk in the list as the chunk itself is a node.
     struct Chunk* next = chunk->next;
     struct Chunk* previous = chunk->prev;
@@ -106,8 +106,8 @@ void mark_access(struct Chunk* chunk) {
     chunk->accesses++;
     chunk->lastAccessTime = _time(NULL);
 
-    cache_list_remove(&list, chunk);
-    cache_list_add(&list, chunk);
+    cache_list_remove(&cache_list, chunk);
+    cache_list_add(&cache_list, chunk);
 }
 
 int cache_read(unsigned long long sector, int count, void* buffer) {
@@ -240,7 +240,7 @@ struct Chunk* find_chunk(int index) {
     entry->lastAccessTime = _time(NULL);
     table[firstEmpty] = entry;
 
-    cache_list_add(&cache_list, entry); 
+    cache_list_add(&cache_list, entry);
 
     return entry;
 }

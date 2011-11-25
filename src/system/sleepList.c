@@ -3,7 +3,7 @@
 #include "library/stdio.h"
 
 struct DeltaQueue {
-    struct Node*   first;    
+    struct Node*   first;
 };
 
 struct Node {
@@ -49,24 +49,24 @@ SleepList sleep_list_init(void) {
 }
 
 void sleep_list_add(SleepList list, struct Process* process, int ticks) {
-    
+
     struct Node* node = alloc_node();
     struct Node* curr;
     struct Node* prev;
     node->process = process;
-    
-    if (list->first == NULL || list->first->delta >= ticks) {  
+
+    if (list->first == NULL || list->first->delta >= ticks) {
         struct Node* aux = list->first;
-        
+
         list->first = node;
         list->first->delta = ticks;
         list->first->next = aux;
-        
+
         update_list(list->first->next, ticks);
 
     } else {
         curr = list->first;
-        
+
         while (curr != NULL && curr->delta <= ticks) {
             ticks -= curr->delta;
             prev = curr;
@@ -76,7 +76,7 @@ void sleep_list_add(SleepList list, struct Process* process, int ticks) {
         prev->next = node;
         node->next = curr;
         node->delta = ticks;
-        
+
         update_list(curr->next, ticks);
     }
 }
@@ -93,11 +93,15 @@ void sleep_list_update(SleepList list) {
 
     if (list->first != NULL) {
         list->first->delta--;
-    } 
+    }
 
     while (list->first != NULL && list->first->delta == 0) {
         //struct Node* aux = list->first;
+
         list->first->process->schedule.status = StatusReady;
+        list->first->process->schedule.asleep = 0;
+        scheduler_unblock(list->first->process);
+
         list->first = list->first->next;
         //TODO free_node(aux);
     }
@@ -106,7 +110,7 @@ void sleep_list_update(SleepList list) {
 void sleep_list_remove(SleepList list, struct Process* process) {
     struct Node* curr = list->first;
     struct Node* prev = list->first;
-    
+
     while (curr != NULL && curr->process->pid != process->pid) {
         prev = curr;
         curr = curr->next;

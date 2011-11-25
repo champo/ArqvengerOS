@@ -101,8 +101,17 @@ void update_cycles(void) {
 }
 
 void scheduler_sleep(struct Process* process, int seconds) {
+
     sleep_list_add(scheduler_sleep_list, process, seconds*1000/MILLISECONDS_PER_TICK);
+
     process->schedule.asleep = 1;
+
+    while (process->schedule.asleep) {
+        process->schedule.status = StatusBlocked;
+        scheduler_block(process);
+
+        scheduler_do();
+    }
 }
 
 void scheduler_tick(void) {
@@ -113,3 +122,4 @@ void scheduler_restart_sample(void) {
     prev_cycles = curr_cycles;
     curr_cycles = 0;
 }
+
