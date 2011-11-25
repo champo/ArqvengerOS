@@ -363,17 +363,17 @@ void command_cp(char* argv) {
     }
 
     char* argument2 = strchr(argument1 + 1, ' ');
-     
+
     if (argument2 == NULL) {
         printf("Invalid arguments.\n");
         return;
     }
 
     argument2[0] = '\0';
-    
+
     if (recursive) {
         argument1 = strchr(argument2 + 1, ' ');
-        
+
         if (argument1 == NULL) {
             printf("Invalid arguments.\n");
             return;
@@ -389,16 +389,16 @@ void command_cp(char* argv) {
 }
 
 void cp_wrapper(const char* source, const char* dest, int recursive, int first) {
-    
+
     int sourcefd = open(source, O_RDONLY);
 
     if (sourcefd == -1) {
         printf("Error. Could not open the file %s.\n", source);
         return;
     }
- 
+
     struct stat data;
-    
+
     if (stat(source, &data) == -1) {
         printf("Opps. Something went awry, try again. Or maybe tell your sysadmin about.");
         return;
@@ -414,8 +414,8 @@ void cp_wrapper(const char* source, const char* dest, int recursive, int first) 
 }
 
 void cp_recursive(int sourcefd, const char* source, const char* dest, struct stat data, int first) {
- 
-    struct fs_DirectoryEntry entry;  
+
+    struct fs_DirectoryEntry entry;
 
     if (data.type != INODE_DIR) {
         if (readdir(sourcefd, &entry, 1) != 1) {
@@ -430,7 +430,7 @@ void cp_recursive(int sourcefd, const char* source, const char* dest, struct sta
 
     char* dirdest;
     if (first) {
-     dirdest = join_paths(dest, filename);  
+     dirdest = join_paths(dest, filename);
     } else {
         dirdest = dest;
     }
@@ -459,7 +459,7 @@ void cp_recursive(int sourcefd, const char* source, const char* dest, struct sta
             free(newdest);
         }
     }
-    
+
     if (first) {
         free(dirdest);
     }
@@ -467,7 +467,7 @@ void cp_recursive(int sourcefd, const char* source, const char* dest, struct sta
 }
 
 void cp_non_recursive(int sourcefd, const char* dest, struct stat data) {
-    
+
     struct fs_DirectoryEntry entry;
 
     if (data.type == INODE_DIR || readdir(sourcefd, &entry, 1) == 1) {
@@ -477,7 +477,7 @@ void cp_non_recursive(int sourcefd, const char* dest, struct stat data) {
 
     int fd = open(dest, O_RDONLY);
     close(fd);
-    char buff;
+    char buff[512];
 
     if (fd != -1) {
         if (unlink(dest) != 0) {
@@ -491,9 +491,10 @@ void cp_non_recursive(int sourcefd, const char* dest, struct stat data) {
         printf("Creation of the file %s failed.\n", dest);
         return;
     }
-    
-    while (read(sourcefd, &buff, 1) == 1) {
-        if (write(fd, &buff, 1) != 1) {
+
+    int bytes;
+    while ((bytes = read(sourcefd, buff, 512)) != 0) {
+        if (write(fd, buff, bytes) != bytes) {
             printf("Error copying the file %s.\n", dest);
             close(fd);
             return;
