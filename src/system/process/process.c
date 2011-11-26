@@ -136,13 +136,13 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         struct Pages* ungetPage = reserve_pages(process, 1);
         assert(ungetPage != NULL);
         mm_pagination_map(process, (unsigned int)ungetPage->start, (unsigned int)STACK_TOP_MAPPING, 1, 1, 1);
-        FILE* unget = ungetPage->start;
+        FILE* files;
         
         for (int i = 0; i < 3; i++) {
-            unget->fd = i;
-            unget->flag = 0;
-            unget->unget = 0;
-            unget = ungetPage->start + sizeof(FILE) * (i + 1);
+            files = ungetPage->start + i * sizeof(FILE);
+            files->fd = i;
+            files->flag = 0;
+            files->unget = 0;
         }
     }
 
