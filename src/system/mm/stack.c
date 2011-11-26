@@ -7,7 +7,7 @@
 #include "system/mm/page.h"
 
 void page_fault_handler(int errCode) {
-   
+
     struct Process* process = scheduler_current();
 
     if (errCode & 1 == 1) {
@@ -15,9 +15,9 @@ void page_fault_handler(int errCode) {
         process_table_kill(process);
         return;
     }
-    
+
     unsigned int to = 0;
-    
+
     unsigned int last = STACK_TOP_MAPPING - process->mm.pagesInStack * PAGE_SIZE;
 
     __asm__ __volatile__ ("mov %%cr2, %%eax":"=A"(to)::);
@@ -43,9 +43,9 @@ void page_fault_handler(int errCode) {
         process_table_kill(process);
         return;
     }
-    
+
     unsigned int start = (unsigned int)newPages->start;
- 
+
     mm_pagination_map(process, start, to, 1, 1, 1);
 
     process->mm.pagesInStack++;

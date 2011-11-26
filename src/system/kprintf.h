@@ -6,6 +6,8 @@
 #define LOG_ERROR 1
 #define LOG_QUIET 0
 
+int tkprintf(int terminal, const char* format, ...);
+
 int kprintf(const char* format, ...);
 
 int log_debug(const char* format, ...);
