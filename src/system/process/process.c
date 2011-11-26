@@ -91,7 +91,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
 
         if (parent && parent->fdTable[i].inode) {
-            process->fdTable[i] = fs_dup(parent->fdTable[i]);
+            fs_dup(&process->fdTable[i], parent->fdTable[i]);
         } else {
             process->fdTable[i].inode = NULL;
         }

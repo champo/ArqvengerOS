@@ -38,9 +38,9 @@ int fs_set_permission(struct fs_Inode* inode, int perm);
 
 int fs_load(void);
 
-struct FileDescriptor fs_fd(struct fs_Inode* inode, int flags);
+void fs_fd(struct FileDescriptor* to, struct fs_Inode* inode, int flags);
 
-struct FileDescriptor fs_dup(struct FileDescriptor fd);
+void fs_dup(struct FileDescriptor* to, struct FileDescriptor fd);
 
 int fs_fd_close(struct FileDescriptor* fd);
 

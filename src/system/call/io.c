@@ -169,7 +169,7 @@ int _open(const char* path, int flags, int mode) {
         fd = open_sym_link(file, flags, mode);
         fs_inode_close(file);
     } else {
-        process->fdTable[fd] = fs_fd(file, flags);
+        fs_fd(&process->fdTable[fd], file, flags);
         if (flags & O_APPEND) {
             process->fdTable[fd].offset = file->data->size;
         }
@@ -449,7 +449,7 @@ int _unlink(const char* path) {
  * @return 0 if success, other if error.
  */
 int _rename(const char* source, const char* dest) {
-    
+
     char* pathsource = path_directory(source);
 
     struct fs_Inode* sourcedir = resolve_path(pathsource);
@@ -458,8 +458,8 @@ int _rename(const char* source, const char* dest) {
 
     if (sourcedir == NULL) {
         return -1;
-    } 
-        
+    }
+
     char* pathdest = path_directory(dest);
 
     struct fs_Inode* destdir = resolve_path(pathdest);
@@ -508,7 +508,7 @@ int _rename(const char* source, const char* dest) {
     fs_inode_close(inode);
 
     char* filedest = path_file(dest);
-    
+
 
     entry = fs_findentry(destdir, filedest);
 
@@ -521,7 +521,7 @@ int _rename(const char* source, const char* dest) {
             kfree(filedest);
             kfree(filesource);
             return -1;
-        } 
+        }
         fs_inode_close(inode);
         char* aux = path_directory(dest);
         destdir = resolve_path(join_paths(aux, filedest));
@@ -606,7 +606,7 @@ int _chdir(const char* path) {
     return 0;
 }
 
-       
+
 /**
  * Get the cwd.
  *
@@ -648,7 +648,7 @@ struct fs_Inode* resolve_path(const char* path) {
     }
 
     permission = can_read(curdir);
-    
+
     if (permission != 0) {
         fs_inode_close(curdir);
         return NULL;
@@ -672,7 +672,7 @@ struct fs_Inode* resolve_path(const char* path) {
         }
 
         curdir = fs_inode_open(nextdir.inode);
- 
+
         permission = can_read(curdir);
 
         if (permission != 0) {
@@ -913,7 +913,7 @@ int _chmod(int mode, const char* file) {
         kfree(filename);
         return -1;
     }
-    
+
     if (can_write(inode) != 0) {
         kfree(base);
         kfree(filename);
@@ -928,9 +928,9 @@ int _chmod(int mode, const char* file) {
     if (nextdir.inode == 0) {
         return NULL;
     }
-    
+
     inode = fs_inode_open(nextdir.inode);
-   
+
     if (can_write(inode) != 0) {
         fs_inode_close(inode);
         return -1;
@@ -996,7 +996,7 @@ int _chown(const char* file) {
         kfree(filename);
         return -1;
     }
-    
+
     if (can_write(inode) != 0) {
         kfree(base);
         kfree(filename);
@@ -1009,7 +1009,7 @@ int _chown(const char* file) {
     if (nextdir.inode == 0) {
         return NULL;
     }
-    
+
     inode = fs_inode_open(nextdir.inode);
 
     if (can_write(inode) != 0) {
@@ -1018,7 +1018,7 @@ int _chown(const char* file) {
     }
 
     struct Process* process = scheduler_current();
-    
+
     int ans = fs_set_own(inode, process->uid, process->gid);
 
     fs_inode_close(inode);

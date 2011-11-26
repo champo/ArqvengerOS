@@ -92,24 +92,21 @@ void fs_register_ops(int fileType, struct FileDescriptorOps ops) {
     opsTable[fileType] = ops;
 }
 
-struct FileDescriptor fs_fd(struct fs_Inode* inode, int flags) {
+void fs_fd(struct FileDescriptor* to, struct fs_Inode* inode, int flags) {
     inode->refCount++;
-    struct FileDescriptor res = (struct FileDescriptor) {
-        .inode = inode,
-        .offset = 0,
-        .flags = flags,
-        .ops = &opsTable[INODE_TYPE(inode->data)]
-    };
 
-    if (res.ops->open) {
-        res.ops->open(&res);
+    to->inode = inode;
+    to->offset = 0;
+    to->flags = flags;
+    to->ops = &opsTable[INODE_TYPE(inode->data)];
+
+    if (to->ops->open) {
+        to->ops->open(to);
     }
-
-    return res;
 }
 
-struct FileDescriptor fs_dup(struct FileDescriptor fd) {
-    return fs_fd(fd.inode, fd.flags);
+void fs_dup(struct FileDescriptor* to, struct FileDescriptor fd) {
+    fs_fd(to, fd.inode, fd.flags);
 }
 
 struct fs_DirectoryEntry fs_findentry(struct fs_Inode* path, const char* name) {
@@ -254,12 +251,12 @@ int fs_rename(struct fs_Inode* from, const char* original, struct fs_Inode* to, 
     if (ext2_dir_add(to, new, entry.inode) == -1) {
         return EIO;
     }
-    
+
     if (ext2_dir_remove(from, original) == -1) {
         return EIO;
     }
 
-    
+
 
     return 0;
 }
