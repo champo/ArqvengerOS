@@ -471,7 +471,7 @@ int _rename(const char* source, const char* dest) {
         return -1;
     }
 
-    if (can_write(destdir != 0)) {
+    if (can_write(destdir) != 0) {
         fs_inode_close(sourcedir);
         fs_inode_close(destdir);
         return -1;
