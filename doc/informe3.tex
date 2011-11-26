@@ -1,0 +1,251 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{t1enc}
+\usepackage[spanish]{babel}
+\usepackage[pdftex,usenames,dvipsnames]{color}
+\usepackage[pdftex]{graphicx}
+\usepackage{hyperref}
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[table]{xcolor}
+\usepackage[small,bf]{caption}
+\usepackage{float}
+\usepackage{subfig}
+\usepackage{listings}
+\usepackage{bm}
+\usepackage{times}
+\lstset{language=C}
+\lstset{showstringspaces=false}
+\lstset{basicstyle=\ttfamily,}
+
+\begin{document}
+
+
+\renewcommand{\lstlistingname}{C\'odigo Fuente}
+\lstloadlanguages{Octave} 
+\lstdefinelanguage{MyPseudoCode}[]{Octave}{
+	deletekeywords={beta,det},
+	morekeywords={repmat}
+} 
+\lstset{
+	language=MyPseudoCode,
+	stringstyle=\ttfamily,
+	showstringspaces = false,
+	basicstyle=\footnotesize\ttfamily,
+	commentstyle=\color{gray},
+	keywordstyle=\bfseries,
+	numbers=left,
+	numberstyle=\ttfamily\footnotesize,
+	stepnumber=1,                   
+	framexleftmargin=0.20cm,
+	numbersep=0.37cm,              
+	backgroundcolor=\color{white},
+	showspaces=false,
+	showtabs=false,
+	frame=l,
+	tabsize=4,
+	captionpos=b,               
+	breaklines=true,             
+	breakatwhitespace=false,      
+	mathescape=true
+}
+\begin{titlepage}
+        \thispagestyle{empty}
+        \begin{center}
+                \includegraphics{./images/itba.jpg}
+                \vfill
+                \Huge{Sistemas Operativos}\\
+                \vspace{1cm}
+                \huge{Trabajo Práctico Especial}\\
+        \end{center}
+        \vspace{2cm}
+        \large{
+                \begin{tabular}{lcrc}
+                        \textbf{Alvaro Crespo} & & 50758 & \ \ \texttt{acrespo@alu.itba.edu.ar}\\
+                        \textbf{Juan Pablo Civile} & & 50453 & \ \ \texttt{jcivile@alu.itba.edu.ar}\\
+                        \textbf{Darío Susnisky} & & 50592 & \ \ \texttt{dsusnisk@alu.itba.edu.ar}\\
+                        \\ 
+                \end{tabular}
+        }
+        \vfill
+        \flushright{29 de Noviembre del 2011}
+\end{titlepage}
+
+\setcounter{page}{1}
+
+\tableofcontents
+\newpage
+\section{Introducción}
+El trabajo práctico consistía en agregarle funcionalidad y nuevas prestaciones al sistema operativo realizado en la materia 
+Arquitectura de las Computadoras que luego fue extendido en esta misma materia. Esta nueva versión debía completar las falencias 
+del trabajo anterior (incluyendo un conjunto completo de comandos para poder manipular el \textit{file system} a gusto del 
+usuario), una unidad de paginación, \textit{stacks} y \textit{heaps} protegidos y privados para cada proceso (como desafio adicional 
+el stack debía ser dinamico) y la implementación de una memoria \textit{caché} de disco que posea métodos adecuados para su correcto 
+funcionamiento.
+
+\newpage
+\section{Breve resumen de la vieja versión de Arqvengers OS}
+El trabajo práctico fue comenzado tomando como base el trabajo hecho en la materia Arquitectura de las Computadoras y la extensión 
+realizado al mismo en esta materia.
+
+ La primer versión del trabajo consistía en un sistema operativo booteable que contaba con soporte para \textit{drivers} de
+  teclado y de video facilitando varias consolas en donde podían ejecutarse distintos comandos. 
+  A un nivel más bajo, contábamos con una rudimentaria e incompleta librería de C, así como una interfaz para realizar
+  llamadas a sistema.
+
+En nuestra segunda versión se mejoró el manejo de los procesos agregando funcionalidad multitareas con dos técnicas de 
+\textit{scheduling} diferentes. Se agregó soporte para distintos usuarios y un \textit{driver ATA} para poder contar con persistencia 
+de la información. Además se implementó un \textit{file system} que entre otras funcionalidades manejaba FIFOs, permisos, 
+archivos ocultos, \textit{links} simbolicos y directorios. En compañia de esto, nos vimos obligados a extender nuestra librería de 
+C y de proveerle al usuarios un conjunto de comandos para poder manipular el \textit{file system} y poder probar las nuevas 
+prestaciones de nuestro sistema operativo.
+
+\newpage
+
+\section{Agregados y correcciones correspondientes al trabajo previo}
+
+\newpage
+
+\section{Unidad de paginación}
+
+\subsection{Manejo de page faults}
+
+\newpage
+
+\section{Stack y heap de un proceso}
+
+\subsection{Stack dinamico}
+
+\newpage
+
+\section{Memoria caché}
+
+\subsection{Técnicas de sync}
+
+\newpage
+\section{Agregados}
+
+\subsection{Log Terminal}
+
+\subsection{Memory managment}
+Inicialmente, el Trabajo Práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
+Por supuesto, esta solución es menos que óptima, ya que genera un desperdicio de memoria e impone límites arbitrarios al sistema.
+Para evitar esto, desarrollamos un sistema de allocación de páginas de memoria.
+Y encima de este sistema, utilizamos la implementación de \textit{malloc} de Dario Sneidermanis, publicada en \href{https://github.com/esneider/malloc}{Github}.
+
+Para allocar páginas, hicimos uso de información provista por \textit{Grub} que permite saber exactamente qué zonas de memoria se pueden utilizar, 
+y cuanta memoria hay disponible.
+Esta memoria la dividimos en bloques de $4KB$, teniendo en mente la posibilidad de agregar paginación al sistema.
+Para obtener estas páginas optamos por un simple algoritmo de allocación basado en un bitmap de uso de páginas.
+
+Una característica interesante de la implementación de \textit{malloc}, es que permite tener varios contextos de memoria distintos.
+Lo que facilitó tener un contexto de memoria para el kernel, y otro para cada proceso (excepto los procesos de kernel que usan el mismo que el kernel).
+La única limitación del sistema es que los contextos de proceso tienen un tamaño fijo, mientras que el del kernel crece a medida que es necesario.
+
+\subsection{Terminal control sequences}
+Nuestra implementación de terminal soporta una gran parte de \href{http://invisible-island.net/xterm/ctlseqs/ctlseqs.html}{xterm control sequences}.
+Estas permiten manipular el cursor y el color de la pantalla desde los procesos utilizando sólo la primitiva \textit{write}.
+
+\newpage
+\section{Problemas encontrados}
+
+Durante el desarrollo de este trabajo práctico fueron surgiendo diferentes dudas y problemas. El propósito de esta
+sección es comentarlos con el fin reflejar proceso de aprendizaje.
+
+Un dilema bastante frecuente a lo largo del trabajo práctico fue lo que nos gusta llamar el problema de ``la gallina o el huevo''. Al realizar
+un desarrollo a bajo nivel que ha comenzado con pocos recursos, era habitual encontrarse con la duda de si convenía
+arrancar a implementar la lectura o la escritura de alguna prestación. Es evidente que si se hacía primero la lectura, 
+no había forma de probar su funcionamiento ya que no existía la escritura. Lo mismo sucedía a modo inverso. Si bien 
+la solución no era complicada (desarrollar todo) era incómodo y molesto a la hora de encontrar errores ya que los mismos
+podían encontrarse en cualquier lado.
+
+Varios problemas interesantes surgieron durante la creación del \textit{driver} ATA. A pesar de que se siguieron
+rigurosamente los estándares, se encontró que no todos los emuladores funcionaban de forma correcta con el mismo.
+Inclusive, detectamos que el driver no se comportaba de manera deseada al tratar con varios sectores a la vez con lo
+cual nos vimos forzados a modificar la lógica interna del driver simulando un acceso a múltiples sectores a tráves de
+varios accesos de a un sector a la vez.
+
+
+      \subsection{Comandos de shell}
+      Durante el desarrollo del file system, eventualmente llegamos al punto en el que necesitábamos implementar \textit{cd}.
+      Una vez terminaba la implementación, notamos que no funcionaba, pero todo el output de debugging indicaba que si.
+      Finalmente, nos dimos cuenta de que \textit{cd} ejecutaba en un proceso distinto al de la shell.
+      Entonces cambiaba su propio directorio, pero no el de la shell.
+      Para solucionar este problema necesitamos introducir el concepto de comandos internos de la shell.
+      Véase, comandos que se ejecutan dentro del mismo proceso que la shell.
+
+      \subsection{Scrolling}
+      Dado el alto número de comandos que presenta el ArqvengerOS, llegó un momento en el que la lista de todos ellos no entraba en una sola pantalla.
+      Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solución más simple pero igual de efectiva.
+      Los comandos que presentan grandes cantidades de información, como \textit{help} y \textit{ls}, cuando van a escribir más alla de altura de la pantalla, 
+      paginan la salida.
+      El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implementó en casos particulares y no como una utilidad genérica.
+
+      \subsection{Kernel-space y user-space}
+      Inicialmente nuestro objetivo era contar con una delimitación fuerte de que es \textit{kernel-space} y \textit{user-space}.
+      Esto es, que el kernel ejecute en ring 0 y los procesos en ring 3.
+      Pero esto resultó en una serie de excepciones del procesador.
+      Hacer los cambios de segmento entre segmentos de distintos privilegios sin ayuda de algún mecanismo especial no parece ser posible.
+
+      Idealmente, esto se solucionaría haciendo uso de Task Gates.
+      Que también permitiría tener un stack dedicado para el kernel, para uso dentro de los manejadores de interrupciones.
+      Si bien esta es la mejor solución disponible, no es trivial de implementar y sus beneficios están fuera del enfoque del trabajo práctico.
+      
+      \subsection{Cálculo de porcentaje de CPU utilizado}
+      Para completar la implementación del comando \textit{top}, se requería calcular el porcentaje de CPU utilizado por cada proceso, en un determinado
+      período de tiempo. Esta tarea no fue sencilla, por varias razones. Primero, se debe determinar que es lo que se medirá, tiempo, ticks (IRQ8) o ciclos. 
+      Segundo, se debe determinar cuándo se tomarám las mediciones o actualizarán los valores. 
+
+      En algunos primeros intentos se pensó, erronéamente, en contar ticks, o tomar las mediciones cada vez que llegara un interrupción de \textit{timmer tick} (IRQ8).
+      Pero todas esas propuestas tenían alguna falla de algún tipo: o eran aproximaciones, o sencillamente no respondían al objetivo buscado.
+
+      Finalmente, se decidió que claramente la mejor opción era contar ciclos clock (\textit{Clock Cycles}) y tomar las mediciones en cada cambio de contexto.
+      De esta forma, obtenemos un medición muchísimo más precisa, y la complejidad de implementar esta tarea no fue tan grande.
+
+\newpage     
+\section{Referencias}
+
+\begin{itemize}
+  \item Material provisto por la cátedra
+  \item The C programming language - Kernighan y Ritchie
+  \item http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+  \item http://webpages.charter.net/danrollins/techhelp/0087.HTM
+  \item http://faydoc.tripod.com/cpu/rdtsc.htm
+  \item http://stanislavs.org/helppc/
+  \item http://www.linux.it/~rubini/docs/ksys/ksys.html
+  \item http://wiki.osdev.org
+  \item http://wiki.osdev.org/Detecting\_CPU\_Speed
+  \item	http://wiki.osdev.org/CMOS\#Accessing\_CMOS\_Registers
+  \item http://wiki.osdev.org/Bootable\_CD
+  \item http://wiki.osdev.org/Boot\_sequence\#Easy\_Way\_Out
+  \item http://wiki.osdev.org/Ext2
+  \item http://wiki.osdev.org/IDE
+  \item http://wiki.osdev.org/ATA\_PIO\_Mode
+  \item http://en.wikipedia.org/wiki/System\_time\#Retrieving\_system\_time
+  \item http://en.wikipedia.org/wiki/Calculating\_the\_day\_of\_the\_week
+  \item http://cplusplus.com/
+  \item http://github.com/esneider/malloc
+  \item Unix System Programming, Second Edition - K. Haviland, D. Gray, B. Salama.
+  \item http://www.nongnu.org/ext2-doc/ext2.html
+  \item http://wiki.osdev.org/Blocking\_Process
+  \item http://forum.osdev.org/viewtopic.php?f=1\&t=21719
+  \item http://f.osdev.org/viewtopic.php?f=1\&t=18738
+  \item http://wiki.osdev.org/Context\_Switching
+  \item http://wiki.osdev.org/Scheduling\_Algorithms
+  \item http://en.wikipedia.org/wiki/Scheduling\_(computing)
+  \item http://en.wikipedia.org/wiki/Round-robin\_scheduling
+  \item http://en.wikipedia.org/wiki/Nice\_(Unix)
+  \item http://en.wikipedia.org/wiki/Htop
+  \item http://en.wikipedia.org/wiki/Top\_(Unix)
+  \item http://www.suse.de/~agruen/acl/linux-acls/online/
+  \item http://www.gnu.org/s/hello/manual/libc/Users-and-Groups.html
+  \item http://www.gnu.org/s/hello/manual/libc/User-and-Group-IDs.html\#User-and-Group-IDs
+  \item http://www.gnu.org/s/hello/manual/libc/Process-Persona.html\#Process-Persona
+  \item http://www.gnu.org/s/hello/manual/libc/User-Database.html\#User-Database
+  \item http://www.gnu.org/s/hello/manual/libc/Group-Database.html\#Group-Database
+\end{itemize}
+   
+\end{document}
