@@ -82,7 +82,9 @@ void tty_run(char* unused) {
         terminals[i].termios.echo = 1;
         process_table_new(login, "login", scheduler_current(), 0, i, 1);
     }
-    terminals[NUM_TERMINALS - 1].screen.cursorPosition = LINE_WIDTH * TOTAL_ROWS + 1;
+
+    terminals[NUM_TERMINALS - 1].termios.canon = 1;
+    terminals[NUM_TERMINALS - 1].termios.echo = 0;
 
     while (1) {
         process_scancode();
