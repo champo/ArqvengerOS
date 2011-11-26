@@ -2,8 +2,6 @@
 #define __SYSTEM_MM_PAGE__
 
 #define PAGE_SIZE (4 * 1024u)
-#define MAX_PAGES_IN_STACK  1024
-
 
 struct Pages {
     void* start;

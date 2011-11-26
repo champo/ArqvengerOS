@@ -14,7 +14,18 @@ static void putc(int terminal, char c) {
     tty_write_to_terminal(terminal, &c, 1);
 }
 
-int tkprintf(int terminal, const char* format, va_list arg);
+int vtprintf(int terminal, const char* format, va_list arg);
+
+int tkprintf(int terminal, const char* format, ...) {
+
+    va_list arg;
+    va_start(arg, format);
+
+    int res = vtprintf(NO_TERMINAL, format, arg);
+
+    va_end(arg);
+    return res;
+}
 
 /**
  *  Prints with format to the kernel given terminal.
@@ -31,7 +42,7 @@ int tkprintf(int terminal, const char* format, va_list arg);
  *
  *  @return the number of characters printed or -1 in case of failiure.
  */
-int tkprintf(int terminal, const char *format, va_list arg) {
+int vtprintf(int terminal, const char *format, va_list arg) {
 
     int i = 0;
     int symb = 0;
@@ -92,7 +103,7 @@ int kprintf(const char* format, ...) {
     va_list arg;
     va_start(arg, format);
 
-    int res = tkprintf(NO_TERMINAL, format, arg);
+    int res = vtprintf(NO_TERMINAL, format, arg);
 
     va_end(arg);
     return res;
@@ -107,7 +118,7 @@ int log_debug(const char* format, ...) {
     va_list arg;
     va_start(arg, format);
 
-    int res = tkprintf(4, format, arg);
+    int res = vtprintf(4, format, arg);
 
     va_end(arg);
     return res;
@@ -122,7 +133,7 @@ int log_info(const char* format, ...) {
     va_list arg;
     va_start(arg, format);
 
-    int res = tkprintf(4, format, arg);
+    int res = vtprintf(4, format, arg);
 
     va_end(arg);
     return res;
@@ -137,7 +148,7 @@ int log_error(const char* format, ...) {
     va_list arg;
     va_start(arg, format);
 
-    int res = tkprintf(4, format, arg);
+    int res = vtprintf(4, format, arg);
 
     va_end(arg);
     return res;

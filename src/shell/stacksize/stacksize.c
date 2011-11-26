@@ -5,6 +5,7 @@
 #include "library/ctype.h"
 #include "mcurses/mcurses.h"
 #include "system/mm/page.h"
+#include "system/mm/stack.h"
 
 static void growStack(int step, unsigned int size);
 
