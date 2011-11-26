@@ -4,6 +4,7 @@
 #include "system/panic.h"
 #include "system/scheduler.h"
 #include "system/malloc/malloc.h"
+#include "system/cache/cache.h"
 
 struct MemoryMapEntry {
     size_t size;
@@ -40,6 +41,8 @@ static void initPages(struct multiboot_info* info);
 static void reservePageMap(struct multiboot_info* info);
 
 static void* allocator(size_t size, size_t* allocatedSize);
+
+static void* find_pages(size_t pages);
 
 void initMemoryMap(struct multiboot_info* info) {
 
@@ -158,6 +161,22 @@ void kfree(void* data) {
 }
 
 void* allocPages(size_t pages) {
+
+    void* start = find_pages(pages);
+    if (start == NULL) {
+        log_debug("Not enough free memory, trying to evict pages from cache...\n");
+        if (cache_evict(pages) >= pages) {
+            return find_pages(pages);
+        }
+        log_error("Still not enough free memory, things are gonna go boom\n");
+
+        return NULL;
+    }
+
+    return start;
+}
+
+void* find_pages(size_t pages) {
 
     if (pages == 0) {
         return NULL;
