@@ -107,17 +107,49 @@ prestaciones de nuestro sistema operativo.
 
 \section{Agregados y correcciones correspondientes al trabajo previo}
 
+Además de corregir ciertos comportamientos inesperados (había ciertos problemas en el comando \textit{pwd} y con los
+\textit{links} simbolicos), era correspondiente agregar a los comandos ya presentes \textit{mv} y \textit{cp}. Este último, 
+debía aceptar la opción ``-r'' para realizar una copia recursiva entre directorios. La forma en la que estaba implementado 
+el \textit{file system} (contabamos con soporte Ext2) y los funcionalidades ya existentes hicieron de este trabajo uno sencillo.
+
 \newpage
 
 \section{Unidad de paginación}
 
 \subsection{Manejo de page faults}
 
+Trás detectar que se estaba generando una excepción de tipo \textit{page fault}, era necesario implementar un manejador de estas 
+excepciones. Dados los requerimientos del trabajo practico, solamente era necesario tomar acciones especiales en el caso de que 
+se necesite más espacio en el stack (detallado más adelante). Por suerte, se contaban con los datos necesarios para detectar en que 
+caso estaba sucediendo esto. Dentro de los registros se contaban con código de error y en el registro CR2 se encontraba la dirección 
+lógica que genero el \textit{page fault}.
+
+En los casos en que no se podía manejar la excepción o se generaba algun tipo de problema al resolverlo, se procede terminando la 
+ejecución del proceso que genero la excepción.
+
 \newpage
 
 \section{Stack y heap de un proceso}
 
+Otra de las funcionalidades agregadas en este trabajo es que cada proceso contaba con un sector en memoria para su \textit{stack} y 
+otro para su \textit{heap}. Estos sectores de memoria debían ser exclusivos para el proceso y accesibles únicamente por estos.
+
+La unidad de paginación presente en nuestro sistema operativo posibilitaban reservar páginas para cada proceso haciendo que si otro 
+proceso pretenda acceder a esta página desemboque en un \textit{page fault}. Asimismo, nuestro sistema facilitaba que las 
+páginas físicas reservadas para un proceso sean mapeadas en sectores constantes en el directorio de páginas. De este modo, 
+todos los procesos tienen su \textit{stack} comenzando siempre en los 3GB (lógicos) pero la únidad de paginación permite que las 
+páginas de cada proceso sean diferentes.
+
 \subsection{Stack dinamico}
+
+Al comenzar un proceso se reservan una cantidad de páginas para el \textit{stack} del mismo. Es posible que durante la ejecución, 
+este tamaño inicial no sea suficiente. En este caso, se tratará de acceder a la página contigua al tope del \textit{stack} derivando 
+en un \textit{page fault}. Dentro del manejador de \textit{page faults} es posible verificar estas últimas condiciones. En este caso, 
+es necesario reservar una nueva página para el proceso y mapearla en la dirección que disparó el \textit{page fault} (contenida en 
+el CR2). 
+
+Por último, es importante decidir una tamaño máximo para el \textit{stack} de un proceso para que no se abuse de las páginas 
+reservadas.
 
 \newpage
 
