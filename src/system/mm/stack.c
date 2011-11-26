@@ -11,7 +11,7 @@ void page_fault_handler(int errCode) {
     struct Process* process = scheduler_current();
 
     if (errCode & 1 == 1) {
-        kprintf("A process tried to access a page and caused a protection fault.\n");
+        tkprintf(process->terminal, "A process tried to access a page and caused a protection fault.\n");
         process_table_kill(process);
         return;
     }
@@ -25,13 +25,13 @@ void page_fault_handler(int errCode) {
     int difference = last - to;
 
     if (difference > PAGE_SIZE) {
-        kprintf("A process tried to read a non-present page entry.\n");
+        tkprintf(process->terminal, "A process tried to read a non-present page entry.\n");
         process_table_kill(process);
         return;
     }
 
     if (process->mm.pagesInStack >= MAX_PAGES_IN_STACK) {
-        kprintf("Stack is way too big.\n");
+        tkprintf(process->terminal, "Stack is way too big.\n");
         process_table_kill(process);
         return;
     }
@@ -39,7 +39,7 @@ void page_fault_handler(int errCode) {
     struct Pages* newPages = reserve_pages(process,1);
 
     if (newPages == NULL) {
-        kprintf("Error. Couldn't reserve more pages for a process.\n");
+        tkprintf(process->terminal, "Error. Couldn't reserve more pages for a process.\n");
         process_table_kill(process);
         return;
     }
