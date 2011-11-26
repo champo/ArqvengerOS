@@ -132,13 +132,17 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
 
     setup_page_directory(process, kernel);
 
-    struct Pages* ungetpage = reserve_pages(process, 1);
-    assert(ungetpage != NULL);
+    struct Pages* ungetPage;
 
-    mm_pagination_map(process, (unsigned int)ungetpage->start, (unsigned int)STACK_TOP_MAPPING, 1, 1, 1);
+    FILE* unget = STACK_TOP_MAPPING;
 
-    int* unget = STACK_TOP_MAPPING;
- 
+    if(!kernel) {
+        ungetPage = reserve_pages(process, 1);
+        assert(ungetPage != NULL);
+        mm_pagination_map(process, (unsigned int)ungetPage->start, (unsigned int)STACK_TOP_MAPPING, 1, 1, 1);
+        unget = ungetPage->start;
+    }
+    
     FILE files[3];
     for (int i = 0; i < 3; i++) {
         files[i].fd = i;
