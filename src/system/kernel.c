@@ -9,6 +9,7 @@
 #include "system/fifo.h"
 #include "system/mm/pagination.h"
 #include "system/cache/cache.h"
+#include "system/process/process.h"
 
 void kmain(struct multiboot_info* info, unsigned int magic);
 
@@ -28,17 +29,10 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
 
     setupGDT();
     setupIDT();
-
-    FILE files[3];
-    for (int i = 0; i < 3; i++) {
-        files[i].fd = i;
-        files[i].flag = 0;
-        files[i].unget = 0;
-    }
-
-    stdin = &files[0];
-    stdout = &files[1];
-    stderr = &files[2];
+    
+    stdin = STACK_TOP_MAPPING;
+    stdout = (STACK_TOP_MAPPING + sizeof(FILE));
+    stderr = (STACK_TOP_MAPPING + 2 * sizeof(FILE));
 
     cache_init();
     ata_init(info);

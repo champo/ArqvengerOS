@@ -36,7 +36,7 @@ void page_fault_handler(int errCode) {
         return;
     }
 
-    struct Pages* newPages = reserve_pages(process,1);
+    struct Pages* newPages = reserve_pages(process, 1);
 
     if (newPages == NULL) {
         tkprintf(process->terminal, "Error. Couldn't reserve more pages for a process.\n");

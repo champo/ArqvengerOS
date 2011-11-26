@@ -9,6 +9,7 @@
 #include "system/kprintf.h"
 #include "library/sys.h"
 #include "library/string.h"
+#include "library/stdio.h"
 #include "system/gdt.h"
 #include "system/interrupt.h"
 #include "debug.h"
@@ -130,6 +131,21 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     }
 
     setup_page_directory(process, kernel);
+
+    struct Pages* ungetpage = reserve_pages(process, 1);
+    assert(ungetpage != NULL);
+
+    mm_pagination_map(process, (unsigned int)ungetpage->start, (unsigned int)STACK_TOP_MAPPING, 1, 1, 1);
+
+    int* unget = STACK_TOP_MAPPING;
+ 
+    FILE files[3];
+    for (int i = 0; i < 3; i++) {
+        files[i].fd = i;
+        files[i].flag = 0;
+        files[i].unget = 0;
+        *(FILE*)(unget + i * sizeof(FILE)) = files[i];
+    }
 
     int codeSegment, dataSegment;
     if (kernel) {
