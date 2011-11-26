@@ -6,7 +6,7 @@ SRCDIR=../src
 OBJDIR=../bin
 TARGET=$(OBJDIR)/kernel.bin
 FOLDERS=. $(CHILD_FOLDERS)
-CHILD_FOLDERS=$(shell find . -type d -mindepth 1)
+CHILD_FOLDERS=$(shell find . -mindepth 1 -type d)
 ALL_OBJS=$(addprefix $(OBJDIR)/,$(foreach dir,$(FOLDERS),$(patsubst %.c, %.o, $(wildcard $(dir)/*.c)) $(patsubst %.asm, %-asm.o, $(wildcard $(dir)/*.asm))))
 INCLUDES=$(addprefix $(SRCDIR)/,$(foreach dir,$(FOLDERS), $(wildcard $(dir)/*.h)))
 
