@@ -455,7 +455,8 @@ int _rename(const char* source, const char* dest) {
     struct fs_Inode* sourcedir = resolve_path(pathsource);
 
     kfree(pathsource);
-
+    
+    //If the source directory doesn't exist, we return
     if (sourcedir == NULL) {
         return -1;
     }
@@ -466,80 +467,160 @@ int _rename(const char* source, const char* dest) {
 
     kfree(pathdest);
 
+    //If the destiny directory doesn't exist, we return
     if (destdir == NULL) {
         fs_inode_close(sourcedir);
         return -1;
     }
 
-    if (can_write(destdir) != 0) {
-        fs_inode_close(sourcedir);
-        fs_inode_close(destdir);
-        return -1;
-    }
-
     char* filesource = path_file(source);
 
-    struct fs_DirectoryEntry entry = fs_findentry(sourcedir, filesource);
+    struct fs_DirectoryEntry sourceEntry = fs_findentry(sourcedir, filesource);
 
-    if (entry.inode == 0) {
+    //If the inode specified for source, doesn't exist, we return
+    if (sourceEntry.inode == 0) {
         fs_inode_close(sourcedir);
         fs_inode_close(destdir);
         kfree(filesource);
         return -1;
     }
 
-    struct fs_Inode* inode = fs_inode_open(entry.inode);
-
-    if (inode == NULL) {
+    struct fs_Inode* sourceInode = fs_inode_open(sourceEntry.inode);
+    
+    //If for some reason we couldn't open the sorce inode, we return
+    if (sourceInode == NULL) {
         fs_inode_close(sourcedir);
         fs_inode_close(destdir);
         kfree(filesource);
         return -1;
     }
 
-    if (can_write(inode) != 0) {
+    int sourceIsDir = 0;
+
+    if (INODE_TYPE(sourceInode->data) == INODE_DIR) {
+        sourceIsDir = 1;
+    }
+
+
+    //We check if we can actually delete the current source
+    if (can_write(sourceInode) != 0) {
         kfree(filesource);
         fs_inode_close(sourcedir);
         fs_inode_close(destdir);
-        fs_inode_close(inode);
+        fs_inode_close(sourceInode);
         return -1;
     }
 
-    fs_inode_close(inode);
+    fs_inode_close(sourceInode);
 
     char* filedest = path_file(dest);
-
-
-    entry = fs_findentry(destdir, filedest);
-
+   
+    //Let's check, if we want the file in the same place as before, it is an error.
     if (strcmp(filesource, filedest) == 0 && sourcedir->number == destdir->number) {
         fs_inode_close(sourcedir);
         fs_inode_close(destdir);
         kfree(filedest);
         kfree(filesource);
-        return 0;
+        return -1;
     }
+    
+    struct fs_DirectoryEntry destEntry = fs_findentry(destdir, filedest);
 
-    if (entry.inode != 0) {
-        inode = fs_inode_open(entry.inode);
-        if (INODE_TYPE(inode->data) != INODE_DIR) {
-            fs_inode_close(inode);
-            fs_inode_close(sourcedir);
-            fs_inode_close(destdir);
+    //If the destiny inode already exists....
+    if (destEntry.inode != 0) {
+        struct fs_Inode* destInode = fs_inode_open(destEntry.inode);
+        //Well, if it is not a directory....
+        if (INODE_TYPE(destInode->data) != INODE_DIR) {
+            //We check if the source is a directory. We cannot overwrite a file with a directory...
+            if (sourceIsDir) {
+                fs_inode_close(destInode);
+                fs_inode_close(sourcedir);
+                fs_inode_close(destdir);
+                kfree(filedest);
+                kfree(filesource);
+                return -1;
+            } else {
+                //But if it is a file, we make it go away
+                fs_inode_close(destInode);
+                if (_unlink(dest) != 0) {
+                    fs_inode_close(sourcedir);
+                    fs_inode_close(destdir);
+                    kfree(filedest);
+                    kfree(filesource);
+                    return -1;
+                }
+            }
+        } else {
+            //But if it's not, we must change the destination since we will write inside this directory!
+            //Also, the name of the file will stay the same, but inside the new folder...
+            fs_inode_close(destInode);
+            char* stringDirDest = path_directory(dest);
+            char* newDirDest = join_paths(stringDirDest, filedest);
+            kfree(stringDirDest);
+            destdir = resolve_path(newDirDest);
+            char* stringFileError = join_paths(newDirDest, filesource);
             kfree(filedest);
-            kfree(filesource);
-            return -1;
+            kfree(newDirDest);
+            filedest = path_file(source);
+            
+            //Okay, so right here we are in a special hell where we must copy a file inside a directory
+            //but what if a file with the same name exists in the directory?
+            //well, if it exists almost always fails
+            //It doesn't fail if both source and destiny are regular files, in which case it makes
+            //a regular mv.
+            
+            struct fs_DirectoryEntry errorEntry = fs_findentry(destdir, filedest);
+
+            //If the inode specified, exists...
+            if (errorEntry.inode != 0) {
+                struct fs_Inode* errorInode = fs_inode_open(errorEntry.inode);
+
+                //For some reason we couldn't open the inode, we return
+                if (errorInode == NULL) {
+                    fs_inode_close(sourcedir);
+                    fs_inode_close(destdir);
+                    kfree(filedest);
+                    kfree(filesource);
+                    kfree(stringFileError);
+                    return -1;
+                }
+
+                if (!(INODE_TYPE(errorInode->data) != INODE_DIR && !sourceIsDir)) {
+                    fs_inode_close(sourcedir);
+                    fs_inode_close(destdir);
+                    fs_inode_close(errorInode);
+                    kfree(filedest);
+                    kfree(filesource);
+                    kfree(stringFileError);
+                    return -1;
+                }
+
+                fs_inode_close(errorInode);
+
+                if (_unlink(stringFileError) != 0) {
+                    kprintf("!%s!", stringFileError);
+                    fs_inode_close(sourcedir);
+                    fs_inode_close(destdir);
+                    kfree(filedest);
+                    kfree(stringFileError);
+                    kfree(filesource);
+                    return -1;
+                }
+            }
+            kfree(stringFileError);
         }
-        fs_inode_close(inode);
-        char* aux = path_directory(dest);
-        destdir = resolve_path(join_paths(aux, filedest));
-        kfree(aux);
-        kfree(filedest);
-        filedest = path_file(source);
     }
     
-    
+    //If we don't have the permissions to write in the destiny directory, we return
+    if (can_write(destdir) != 0) {
+        fs_inode_close(sourcedir);
+        fs_inode_close(destdir);
+        kfree(filesource);
+        kfree(filedest);
+        return -1;
+    }
 
+    //We actually move the thing and we return
     int ans = fs_rename(sourcedir, filesource, destdir, filedest);
 
     kfree(filesource);
