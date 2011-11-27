@@ -201,6 +201,26 @@ la sincronización, y el desalojo de ser necesario, de las páginas de la memori
 
 \subsection{Log Terminal}
 
+Decidimos habilitar una quinta terminal reservada exclusivamente usos de \textit{logging}. 
+Estos es, el sistema puede dejar registro de ciertas acciones que realiza o errores que ocurran y esta terminal permite al usuario ver este registro. De más
+está decir que está terminal es de sólo lectura, el usuario no puede escribir o realizar cambios.\\
+
+Para esto fue necesario implementar una serie funciones y tomar ciertos recaudos pero, finalmente creemos que el resultado vale la pena.
+
+Decidimos implementar 4 níveles de \textit{logging} y un comando \textit{loglevel} para que el usuario puede elegir el que desee.\\
+
+\begin{itemize}
+  \item QUIET, la terminal no mostrará ningún tipo de registro.
+  \item ERROR, se registrarán solo errores que ocurran en el sistema.
+  \item INFO, se registrará además información sobre las acciones del sistema.
+  \item DEBUG, se registrará también datos sobre depuraciones del sistema.
+\end{itemize}
+
+La decisión de implementar esta \textit{Log Terminal}, resultó muy útil tanto a la hora de testear y depurar nuestro sistema, como a la hora de demostrar al 
+usuario las distintas funcionalidades del mismo (protección de memoria, cache de disco, stack creciente de forma dinámica, etc...).
+
+
+\newpage
 \subsection{Memory managment}
 Inicialmente, el trabajo práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
 Por supuesto, esta solución es menos que óptima, ya que genera un desperdicio de memoria e impone límites arbitrarios al sistema.
@@ -253,7 +273,12 @@ varios accesos de a un sector a la vez.
       Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solución más simple pero igual de efectiva.
       Los comandos que presentan grandes cantidades de información, como \textit{help} y \textit{ls}, cuando van a escribir más alla de altura de la pantalla, 
       paginan la salida.
-      El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implementó en casos particulares y no como una utilidad genérica.
+      El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implementó en casos particulares y no como una utilidad genérica. \\
+
+      
+      Como funcionalidad extra, y dado que la forma en que implementamos las cosas nos facilitó en gran parte la tarea, ofrecemos la posibilidad de scrollear una 
+      pantalla para arriba o para abajo en todo momento usando las teclas \textit{RePag} y \textit{AvPag} respectivamente.
+      
 
       \subsection{Kernel-space y user-space}
       Inicialmente nuestro objetivo era contar con una delimitación fuerte de que es \textit{kernel-space} y \textit{user-space}.
@@ -278,6 +303,9 @@ varios accesos de a un sector a la vez.
 
 \newpage     
 \section{Referencias}
+
+Para poder realizar este trabajo, se llevo a cabo un gran proceso de investigación y aprendizaje. Estas son algunas fuentes que resultaron útiles para realizar 
+este trabajo.\\
 
 \begin{itemize}
   \item Material provisto por la cátedra
@@ -317,6 +345,10 @@ varios accesos de a un sector a la vez.
   \item http://www.gnu.org/s/hello/manual/libc/Process-Persona.html\#Process-Persona
   \item http://www.gnu.org/s/hello/manual/libc/User-Database.html\#User-Database
   \item http://www.gnu.org/s/hello/manual/libc/Group-Database.html\#Group-Database
+%Nuevos para este tp3
+  \item http://en.wikipedia.org/wiki/Cache
+  \item http://en.wikipedia.org/wiki/Cache\_algorithm
+ 
 \end{itemize}
    
 \end{document}
