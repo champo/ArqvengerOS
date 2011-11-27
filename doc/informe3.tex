@@ -171,74 +171,90 @@ cual es una operación costosa.\\
 
 Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño total de 1 Mb (256 páginas x 4 Kb).\\
 
-\subsection{Técnicas de sincronización}
+        \subsection{Técnicas de sincronización}
 
-Cuando el sistema escribe información en la caché, en algún momento debe actualizar esa información en el disco. Una parte importante de la caché es cuándo y
- cómo se sincroniza esa información que se tiene en memoria con su contraparte en disco. \\
+        Cuando el sistema escribe información en la caché, en algún momento debe actualizar esa información en el disco. Una parte importante de la caché es cuándo y
+        cómo se sincroniza esa información que se tiene en memoria con su contraparte en disco. \\
 
-Existe 2 técnicas básicas de llevar esto a cabo:
+        Existe 2 técnicas básicas de llevar esto a cabo:
 
-\begin{itemize}
-  \item \textit{write-through} (escribir a través), cada vez que se escribe a caché se escribe también a disco.
-  \item \textit{write-back} (escribir por detrás), la escritura se hace solo a caché, luego, la información modificada es escrita a disco en algún momento posterior.
-\end{itemize}
+        \begin{itemize}
+        \item \textit{write-through} (escribir a través), cada vez que se escribe a caché se escribe también a disco.
+        \item \textit{write-back} (escribir por detrás), la escritura se hace solo a caché, luego, la información modificada es escrita a disco en algún momento posterior.
+        \end{itemize}
 
-Por supuesto, la implementar la técnica de \textit{write-back} es mucho más complejo, dado que se necesita mantener un registro de que sectores han sido escritos y 
-marcarlos como \textit{dirty} (``sucios'') para que sean luego escritos a disco. La información en estos sectores es escrita a disco sólo cuando son desalojados
-de la caché. (cache eviction). \\
+        Por supuesto, la implementar la técnica de \textit{write-back} es mucho más complejo, dado que se necesita mantener un registro de que sectores han sido escritos y 
+        marcarlos como \textit{dirty} (``sucios'') para que sean luego escritos a disco. La información en estos sectores es escrita a disco sólo cuando son desalojados
+        de la caché. (cache eviction). \\
 
-Inicialmente, para probar nuestra capa de caché, implementamos la técnica de \textit{write-through}, para probar el funcionamiento de la misma. 
-Luego, extendimos su funcionalidad para implementar \textit{write-back}. \\
+        Inicialmente, para probar nuestra capa de caché, implementamos la técnica de \textit{write-through}, para probar el funcionamiento de la misma. 
+        Luego, extendimos su funcionalidad para implementar \textit{write-back}. \\
 
-El criterio que elegimos para sincronizar una página cacheada fue bastante sencillo: si una página lleva más de un segundo ``sucia'', se debe escribir a disco.
-%TODO subsubsection???
-Para controlar esta tarea, decidimos tener un proceso especial que la lleve a cabo. Este proceso simplemente espera un cantidad determinada de tiempo y realiza 
-la sincronización, y el desalojo de ser necesario, de las páginas de la memoria caché.
+        El criterio que elegimos para sincronizar una página cacheada fue bastante sencillo: si una página lleva más de un segundo ``sucia'', se debe escribir a disco.
+        %TODO subsubsection???
+        Para controlar esta tarea, decidimos tener un proceso especial que la lleve a cabo. Este proceso simplemente espera un cantidad determinada de tiempo y realiza 
+        la sincronización, y el desalojo de ser necesario, de las páginas de la memoria caché.
 
 
 \newpage
 \section{Agregados}
 
-\subsection{Log Terminal}
+        \subsection{Comandos para demostrar funcionalidad del sistema}
+        %TODO esta bien esto aca? o una subsection para cada comando?
+        
+        Para demostrar el funcionamiento de la unidad de paginación y la protección de memoria implementamos un simple comando \textit{rma} (Random Access Memory), 
+        que acceda a un sector de memoria elegido de forma aleatoria. De esta forma se puede observar como el sistema se da cuenta que (en la gran mayoría de 
+        los casos) se está intentando acceder a un sector de memoria que es ajeno al proceso que esta corriendo y no lo permitirá. Para ver más acerca de este 
+        comando se puede ver su código fuente, en el archivo /src/shell/rma/rma.c.\\
 
-Decidimos habilitar una quinta terminal reservada exclusivamente usos de \textit{logging}. 
-Estos es, el sistema puede dejar registro de ciertas acciones que realiza o errores que ocurran y esta terminal permite al usuario ver este registro. De más
-está decir que está terminal es de sólo lectura, el usuario no puede escribir o realizar cambios.\\
+        Para demostrar el crecimiento en forma dinámica del \textit{stack} de un proceso implementamos el comando \textit{stacksize}, el cual hace crecer el 
+        \textit{stack} del proceso hasta un tamaño determinado (el cual recibe como argumento) o de forma indefinida (si no se le proporciona un tamaño tope).
+        Se puede observar en la consola como el comando corre un tiempo hasta que termine abruptamente su ejecución cuando alcanza el tamaño máximo determinado 
+        o cuando sobrepasa la máxima capacidad para el \textit{stack} de un proceso. Dicha capacidad esta fijada en 1024 páginas, es decir $4 Mb$.\\
 
-Para esto fue necesario implementar una serie funciones y tomar ciertos recaudos pero, finalmente creemos que el resultado vale la pena.
+        Además, puede observarse en la \textit{Log Terminal} como el sistema va reservando páginas de forma incremental.
 
-Decidimos implementar 4 níveles de \textit{logging} y un comando \textit{loglevel} para que el usuario puede elegir el que desee.\\
+        \subsection{Log Terminal}
 
-\begin{itemize}
-  \item QUIET, la terminal no mostrará ningún tipo de registro.
-  \item ERROR, se registrarán solo errores que ocurran en el sistema.
-  \item INFO, se registrará además información sobre las acciones del sistema.
-  \item DEBUG, se registrará también datos sobre depuraciones del sistema.
-\end{itemize}
+        Decidimos habilitar una quinta terminal reservada exclusivamente usos de \textit{logging}. 
+        Estos es, el sistema puede dejar registro de ciertas acciones que realiza o errores que ocurran y esta terminal permite al usuario ver este registro. De más
+        está decir que está terminal es de sólo lectura, el usuario no puede escribir o realizar cambios.\\
 
-La decisión de implementar esta \textit{Log Terminal}, resultó muy útil tanto a la hora de testear y depurar nuestro sistema, como a la hora de demostrar al 
-usuario las distintas funcionalidades del mismo (protección de memoria, cache de disco, stack creciente de forma dinámica, etc...).
+        Para esto fue necesario implementar una serie funciones y tomar ciertos recaudos pero, finalmente creemos que el resultado vale la pena.
+
+        Decidimos implementar 4 níveles de \textit{logging} y un comando \textit{loglevel} para que el usuario puede elegir el que desee.\\
+
+        \begin{itemize}
+        \item QUIET, la terminal no mostrará ningún tipo de registro.
+        \item ERROR, se registrarán solo errores que ocurran en el sistema.
+        \item INFO, se registrará además información sobre las acciones del sistema.
+        \item DEBUG, se registrará también datos sobre depuraciones del sistema.
+        \end{itemize}
+
+        La decisión de implementar esta \textit{Log Terminal}, resultó muy útil tanto a la hora de testear y depurar nuestro sistema, como a la hora de demostrar al 
+        usuario las distintas funcionalidades del mismo (protección de memoria, cache de disco, stack creciente de forma dinámica, etc...).\\
 
 
-\newpage
-\subsection{Memory managment}
-Inicialmente, el trabajo práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
-Por supuesto, esta solución es menos que óptima, ya que genera un desperdicio de memoria e impone límites arbitrarios al sistema.
-Para evitar esto, desarrollamos un sistema de allocación de páginas de memoria.
-Y encima de este sistema, utilizamos la implementación de \textit{malloc} de Dario Sneidermanis, publicada en \href{https://github.com/esneider/malloc}{Github}.
+        \subsection{Memory managment}
+        Inicialmente, el trabajo práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
+        Por supuesto, esta solución es menos que óptima, ya que genera un desperdicio de memoria e impone límites arbitrarios al sistema.
+        Para evitar esto, desarrollamos un sistema de allocación de páginas de memoria.
+        Y encima de este sistema, utilizamos la implementación de \textit{malloc} de Dario Sneidermanis, publicada en \href{https://github.com/esneider/malloc}{Github}.
 
-Para allocar páginas, hicimos uso de información provista por \textit{Grub} que permite saber exactamente qué zonas de memoria se pueden utilizar, 
-y cuanta memoria hay disponible.
-Esta memoria la dividimos en bloques de $4KB$, teniendo en mente la posibilidad de agregar paginación al sistema.
-Para obtener estas páginas optamos por un simple algoritmo de allocación basado en un bitmap de uso de páginas.
+        Para allocar páginas, hicimos uso de información provista por \textit{Grub} que permite saber exactamente qué zonas de memoria se pueden utilizar, 
+        y cuanta memoria hay disponible.
+        Esta memoria la dividimos en bloques de $4KB$, teniendo en mente la posibilidad de agregar paginación al sistema.
+        Para obtener estas páginas optamos por un simple algoritmo de allocación basado en un bitmap de uso de páginas.
 
-Una característica interesante de la implementación de \textit{malloc}, es que permite tener varios contextos de memoria distintos.
-Lo que facilitó tener un contexto de memoria para el kernel, y otro para cada proceso (excepto los procesos de kernel que usan el mismo que el kernel).
-La única limitación del sistema es que los contextos de proceso tienen un tamaño fijo, mientras que el del kernel crece a medida que es necesario.
+        Una característica interesante de la implementación de \textit{malloc}, es que permite tener varios contextos de memoria distintos.
+        Lo que facilitó tener un contexto de memoria para el kernel, y otro para cada proceso (excepto los procesos de kernel que usan el mismo que el kernel).
+        La única limitación del sistema es que los contextos de proceso tienen un tamaño fijo, mientras que el del kernel crece a medida que es necesario.\\
 
-\subsection{Terminal control sequences}
-Nuestra implementación de terminal soporta una gran parte de \href{http://invisible-island.net/xterm/ctlseqs/ctlseqs.html}{xterm control sequences}.
-Estas permiten manipular el cursor y el color de la pantalla desde los procesos utilizando sólo la primitiva \textit{write}.
+
+        \subsection{Terminal control sequences}
+        Nuestra implementación de terminal soporta una gran parte de \href{http://invisible-island.net/xterm/ctlseqs/ctlseqs.html}{xterm control sequences}.
+        Estas permiten manipular el cursor y el color de la pantalla desde los procesos utilizando sólo la primitiva \textit{write}.
+
 
 \newpage
 \section{Problemas encontrados}
@@ -260,46 +276,47 @@ cual nos vimos forzados a modificar la lógica interna del driver simulando un a
 varios accesos de a un sector a la vez.
 
 
-      \subsection{Comandos de shell}
-      Durante el desarrollo del file system, eventualmente llegamos al punto en el que necesitábamos implementar \textit{cd}.
-      Una vez terminaba la implementación, notamos que no funcionaba, pero todo el output de debugging indicaba que si.
-      Finalmente, nos dimos cuenta de que \textit{cd} ejecutaba en un proceso distinto al de la shell.
-      Entonces cambiaba su propio directorio, pero no el de la shell.
-      Para solucionar este problema necesitamos introducir el concepto de comandos internos de la shell.
-      Véase, comandos que se ejecutan dentro del mismo proceso que la shell.
+        %TODO WTF? Que hacemo con estas subsecciones??En esta section no cuadran a donde las movemos???
+        \subsection{Comandos de shell}
+        Durante el desarrollo del file system, eventualmente llegamos al punto en el que necesitábamos implementar \textit{cd}.
+        Una vez terminaba la implementación, notamos que no funcionaba, pero todo el output de debugging indicaba que si.
+        Finalmente, nos dimos cuenta de que \textit{cd} ejecutaba en un proceso distinto al de la shell.
+        Entonces cambiaba su propio directorio, pero no el de la shell.
+        Para solucionar este problema necesitamos introducir el concepto de comandos internos de la shell.
+        Véase, comandos que se ejecutan dentro del mismo proceso que la shell.
 
-      \subsection{Scrolling}
-      Dado el alto número de comandos que presenta el ArqvengerOS, llegó un momento en el que la lista de todos ellos no entraba en una sola pantalla.
-      Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solución más simple pero igual de efectiva.
-      Los comandos que presentan grandes cantidades de información, como \textit{help} y \textit{ls}, cuando van a escribir más alla de altura de la pantalla, 
-      paginan la salida.
-      El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implementó en casos particulares y no como una utilidad genérica. \\
+        \subsection{Scrolling}
+        Dado el alto número de comandos que presenta el ArqvengerOS, llegó un momento en el que la lista de todos ellos no entraba en una sola pantalla.
+        Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solución más simple pero igual de efectiva.
+        Los comandos que presentan grandes cantidades de información, como \textit{help} y \textit{ls}, cuando van a escribir más alla de altura de la pantalla, 
+        paginan la salida.
+        El comportamiendo es muy parecido al de la utilidad \textit{more}, pero se implementó en casos particulares y no como una utilidad genérica. \\
 
-      
-      Como funcionalidad extra, y dado que la forma en que implementamos las cosas nos facilitó en gran parte la tarea, ofrecemos la posibilidad de scrollear una 
-      pantalla para arriba o para abajo en todo momento usando las teclas \textit{RePag} y \textit{AvPag} respectivamente.
-      
 
-      \subsection{Kernel-space y user-space}
-      Inicialmente nuestro objetivo era contar con una delimitación fuerte de que es \textit{kernel-space} y \textit{user-space}.
-      Esto es, que el kernel ejecute en ring 0 y los procesos en ring 3.
-      Pero esto resultó en una serie de excepciones del procesador.
-      Hacer los cambios de segmento entre segmentos de distintos privilegios sin ayuda de algún mecanismo especial no parece ser posible.
+        Como funcionalidad extra, y dado que la forma en que implementamos las cosas nos facilitó en gran parte la tarea, ofrecemos la posibilidad de scrollear una 
+        pantalla para arriba o para abajo en todo momento usando las teclas \textit{RePag} y \textit{AvPag} respectivamente.
 
-      Idealmente, esto se solucionaría haciendo uso de Task Gates.
-      Que también permitiría tener un stack dedicado para el kernel, para uso dentro de los manejadores de interrupciones.
-      Si bien esta es la mejor solución disponible, no es trivial de implementar y sus beneficios están fuera del enfoque del trabajo práctico.
-      
-      \subsection{Cálculo de porcentaje de CPU utilizado}
-      Para completar la implementación del comando \textit{top}, se requería calcular el porcentaje de CPU utilizado por cada proceso, en un determinado
-      período de tiempo. Esta tarea no fue sencilla, por varias razones. Primero, se debe determinar que es lo que se medirá, tiempo, ticks (IRQ8) o ciclos. 
-      Segundo, se debe determinar cuándo se tomarám las mediciones o actualizarán los valores. 
 
-      En algunos primeros intentos se pensó, erronéamente, en contar ticks, o tomar las mediciones cada vez que llegara un interrupción de \textit{timmer tick} (IRQ8).
-      Pero todas esas propuestas tenían alguna falla de algún tipo: o eran aproximaciones, o sencillamente no respondían al objetivo buscado.
+        \subsection{Kernel-space y user-space}
+        Inicialmente nuestro objetivo era contar con una delimitación fuerte de que es \textit{kernel-space} y \textit{user-space}.
+        Esto es, que el kernel ejecute en ring 0 y los procesos en ring 3.
+        Pero esto resultó en una serie de excepciones del procesador.
+        Hacer los cambios de segmento entre segmentos de distintos privilegios sin ayuda de algún mecanismo especial no parece ser posible.
 
-      Finalmente, se decidió que claramente la mejor opción era contar ciclos clock (\textit{Clock Cycles}) y tomar las mediciones en cada cambio de contexto.
-      De esta forma, obtenemos un medición muchísimo más precisa, y la complejidad de implementar esta tarea no fue tan grande.
+        Idealmente, esto se solucionaría haciendo uso de Task Gates.
+        Que también permitiría tener un stack dedicado para el kernel, para uso dentro de los manejadores de interrupciones.
+        Si bien esta es la mejor solución disponible, no es trivial de implementar y sus beneficios están fuera del enfoque del trabajo práctico.
+
+        \subsection{Cálculo de porcentaje de CPU utilizado}
+        Para completar la implementación del comando \textit{top}, se requería calcular el porcentaje de CPU utilizado por cada proceso, en un determinado
+        período de tiempo. Esta tarea no fue sencilla, por varias razones. Primero, se debe determinar que es lo que se medirá, tiempo, ticks (IRQ8) o ciclos. 
+        Segundo, se debe determinar cuándo se tomarám las mediciones o actualizarán los valores. 
+
+        En algunos primeros intentos se pensó, erronéamente, en contar ticks, o tomar las mediciones cada vez que llegara un interrupción de \textit{timmer tick} (IRQ8).
+        Pero todas esas propuestas tenían alguna falla de algún tipo: o eran aproximaciones, o sencillamente no respondían al objetivo buscado.
+
+        Finalmente, se decidió que claramente la mejor opción era contar ciclos clock (\textit{Clock Cycles}) y tomar las mediciones en cada cambio de contexto.
+        De esta forma, obtenemos un medición muchísimo más precisa, y la complejidad de implementar esta tarea no fue tan grande.
 
 \newpage     
 \section{Referencias}
