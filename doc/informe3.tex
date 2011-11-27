@@ -79,27 +79,27 @@
 \tableofcontents
 \newpage
 \section{Introducción}
-El trabajo práctico consistía en agregarle funcionalidad y nuevas prestaciones al sistema operativo realizado en la materia 
+El trabajo práctico consiste en agregarle funcionalidad y nuevas prestaciones al sistema operativo realizado en la materia 
 Arquitectura de las Computadoras que luego fue extendido en esta misma materia. Esta nueva versión debía completar las falencias 
 del trabajo anterior (incluyendo un conjunto completo de comandos para poder manipular el \textit{file system} a gusto del 
-usuario), una unidad de paginación, \textit{stacks} y \textit{heaps} protegidos y privados para cada proceso (como desafio adicional 
-el stack debía ser dinamico) y la implementación de una memoria \textit{caché} de disco que posea métodos adecuados para su correcto 
+usuario), una unidad de paginación, \textit{stacks} y \textit{heaps} protegidos y privados para cada proceso (como desafío adicional 
+el stack debía ser dinámico) y la implementación de una memoria \textit{caché} de disco que posea métodos adecuados para su correcto 
 funcionamiento.
 
 \newpage
 \section{Breve resumen de la vieja versión de Arqvengers OS}
 El trabajo práctico fue comenzado tomando como base el trabajo hecho en la materia Arquitectura de las Computadoras y la extensión 
-realizado al mismo en esta materia.
+realizada al mismo en esta materia.
 
- La primer versión del trabajo consistía en un sistema operativo booteable que contaba con soporte para \textit{drivers} de
-  teclado y de video facilitando varias consolas en donde podían ejecutarse distintos comandos. 
-  A un nivel más bajo, contábamos con una rudimentaria e incompleta librería de C, así como una interfaz para realizar
-  llamadas a sistema.
+La primer versión del trabajo consistía en un sistema operativo booteable que contaba con soporte para \textit{drivers} de
+ teclado y de video facilitando varias consolas en donde podían ejecutarse distintos comandos. 
+A un nivel más bajo, contábamos con una rudimentaria e incompleta librería de C, así como una interfaz para realizar 
+llamadas a sistema.
 
-En nuestra segunda versión se mejoró el manejo de los procesos agregando funcionalidad multitareas con dos técnicas de 
+En nuestra segunda versión se mejoró el manejo de los procesos agregando funcionalidad multitarea con dos técnicas de 
 \textit{scheduling} diferentes. Se agregó soporte para distintos usuarios y un \textit{driver ATA} para poder contar con persistencia 
 de la información. Además se implementó un \textit{file system} que entre otras funcionalidades manejaba FIFOs, permisos, 
-archivos ocultos, \textit{links} simbolicos y directorios. En compañia de esto, nos vimos obligados a extender nuestra librería de 
+archivos ocultos, \textit{links} simbólicos y directorios. En compañía de esto, nos vimos obligados a extender nuestra librería de 
 C y de proveerle al usuarios un conjunto de comandos para poder manipular el \textit{file system} y poder probar las nuevas 
 prestaciones de nuestro sistema operativo.
 
@@ -108,9 +108,9 @@ prestaciones de nuestro sistema operativo.
 \section{Agregados y correcciones correspondientes al trabajo previo}
 
 Además de corregir ciertos comportamientos inesperados (había ciertos problemas en el comando \textit{pwd} y con los
-\textit{links} simbolicos), era correspondiente agregar a los comandos ya presentes \textit{mv} y \textit{cp}. Este último, 
+\textit{links} simbólicos), era correspondiente agregar a los comandos ya presentes \textit{mv} y \textit{cp}. Este último, 
 debía aceptar la opción ``-r'' para realizar una copia recursiva entre directorios. La forma en la que estaba implementado 
-el \textit{file system} (contabamos con soporte Ext2) y los funcionalidades ya existentes hicieron de este trabajo uno sencillo.
+el \textit{file system} (contábamos con soporte Ext2) y los funcionalidades ya existentes hicieron de esta una tarea más que sencilla.
 
 \newpage
 
@@ -119,23 +119,23 @@ el \textit{file system} (contabamos con soporte Ext2) y los funcionalidades ya e
 \subsection{Manejo de page faults}
 
 Trás detectar que se estaba generando una excepción de tipo \textit{page fault}, era necesario implementar un manejador de estas 
-excepciones. Dados los requerimientos del trabajo practico, solamente era necesario tomar acciones especiales en el caso de que 
-se necesite más espacio en el stack (detallado más adelante). Por suerte, se contaban con los datos necesarios para detectar en que 
-caso estaba sucediendo esto. Dentro de los registros se contaban con código de error y en el registro CR2 se encontraba la dirección 
-lógica que genero el \textit{page fault}.
+excepciones. Dados los requerimientos del trabajo práctico, solamente era necesario tomar acciones especiales en el caso de que 
+se necesite más espacio en el \textit{stack} (detallado más adelante). Por suerte, se contaban con los datos necesarios para detectar en que 
+caso estaba sucediendo esto. Dentro de los registros de uso común del micro, se contaban con código de error y en el registro \textit{CR2} 
+se encontraba la dirección lógica que generó el \textit{page fault}.
 
-En los casos en que no se podía manejar la excepción o se generaba algun tipo de problema al resolverlo, se procede terminando la 
-ejecución del proceso que genero la excepción.
+En los casos en que no se puede manejar la excepción o se genera algun tipo de problema al resolverlo, se procede terminando la 
+ejecución del proceso que generó dicha excepción.
 
 \newpage
 
 \section{Stack y heap de un proceso}
 
-Otra de las funcionalidades agregadas en este trabajo es que cada proceso contaba con un sector en memoria para su \textit{stack} y 
-otro para su \textit{heap}. Estos sectores de memoria debían ser exclusivos para el proceso y accesibles únicamente por estos.
+Otra de las funcionalidades agregadas en este trabajo es que cada proceso cuenta con un sector en memoria para su \textit{stack} y 
+otro para su \textit{heap}. Estos sectores de memoria debían ser exclusivos para el proceso y accesibles únicamente por él.
 
-La unidad de paginación presente en nuestro sistema operativo posibilitaban reservar páginas para cada proceso haciendo que si otro 
-proceso pretenda acceder a esta página desemboque en un \textit{page fault}. Asimismo, nuestro sistema facilitaba que las 
+La unidad de paginación presente en nuestro sistema operativo posibilita reservar páginas para cada proceso, por lo que si otro 
+proceso pretende acceder a esta página se genera un \textit{page fault}. Asimismo, nuestro sistema facilita que las 
 páginas físicas reservadas para un proceso sean mapeadas en sectores constantes en el directorio de páginas. De este modo, 
 todos los procesos tienen su \textit{stack} comenzando siempre en los 3GB (lógicos) pero la únidad de paginación permite que las 
 páginas de cada proceso sean diferentes.
@@ -146,9 +146,9 @@ Al comenzar un proceso se reservan una cantidad de páginas para el \textit{stac
 este tamaño inicial no sea suficiente. En este caso, se tratará de acceder a la página contigua al tope del \textit{stack} derivando 
 en un \textit{page fault}. Dentro del manejador de \textit{page faults} es posible verificar estas últimas condiciones. En este caso, 
 es necesario reservar una nueva página para el proceso y mapearla en la dirección que disparó el \textit{page fault} (contenida en 
-el CR2). 
+el registro \textit{CR2}). 
 
-Por último, es importante decidir una tamaño máximo para el \textit{stack} de un proceso para que no se abuse de las páginas 
+Por último, es importante decidir un tamaño máximo para el \textit{stack} de un proceso para que no se abuse de las páginas 
 reservadas.
 
 \newpage
@@ -202,7 +202,7 @@ la sincronización, y el desalojo de ser necesario, de las páginas de la memori
 \subsection{Log Terminal}
 
 \subsection{Memory managment}
-Inicialmente, el Trabajo Práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
+Inicialmente, el trabajo práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
 Por supuesto, esta solución es menos que óptima, ya que genera un desperdicio de memoria e impone límites arbitrarios al sistema.
 Para evitar esto, desarrollamos un sistema de allocación de páginas de memoria.
 Y encima de este sistema, utilizamos la implementación de \textit{malloc} de Dario Sneidermanis, publicada en \href{https://github.com/esneider/malloc}{Github}.
