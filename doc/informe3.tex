@@ -140,7 +140,7 @@ páginas físicas reservadas para un proceso sean mapeadas en sectores constante
 todos los procesos tienen su \textit{stack} comenzando siempre en los 3GB (lógicos) pero la únidad de paginación permite que las 
 páginas de cada proceso sean diferentes.
 
-\subsection{Stack dinamico}
+\subsection{Stack dinámico}
 
 Al comenzar un proceso se reservan una cantidad de páginas para el \textit{stack} del mismo. Es posible que durante la ejecución, 
 este tamaño inicial no sea suficiente. En este caso, se tratará de acceder a la página contigua al tope del \textit{stack} derivando 
@@ -155,7 +155,46 @@ reservadas.
 
 \section{Memoria caché}
 
-\subsection{Técnicas de sync}
+Nuestro sistema operativo cuenta con una capa de caché entre \textit{ext2} y el driver \textit{ATA}. Para implementar esta capa decidimos usar una tabla 
+a nodos de una lista doblemente linkeada (\textit{Doubly-Linked List}), ordenada por el criterio \textit{LRU} (\textit{Least Recently Used}), el menos usado
+ recientemente. Cada nodo es un pedazo (\textit{chunk}) de memoria con la información inherente a él (sector inicial, \textit{flag de dirty}, 
+cantidad de accesos, última vez que fue accedido, etc...). Esta estructura de datos resulta vital para las tareas a realizar ya que permite tener una lista
+en orden constante y de acceso constante.\\
+
+Después de sobre el asunto, decidimos que estos pedazos de memoria tengan tamaño (cantidad de sectores)
+fijo y fueran simplemente páginas. Esta decisión nos facilitó el posterior trabajo.\\
+
+El comportamiento de la caché es el típico de esta tipo de memoria. Cada vez que se lee o escribe al disco, si la información no se encuentra en la caché, se
+ la almacena para accesos futuros. Luego, si se quiere volver a acceder a dicha información, estará disponible en memoria, sin necesisdad de acceder al disco, lo 
+cual es una operación costosa.\\
+
+
+Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño total de 1 Mb (256 páginas x 4 Kb).\\
+
+\subsection{Técnicas de sincronización}
+
+Cuando el sistema escribe información en la caché, en algún momento debe actualizar esa información en el disco. Una parte importante de la caché es cuándo y
+ cómo se sincroniza esa información que se tiene en memoria con su contraparte en disco. \\
+
+Existe 2 técnicas básicas de llevar esto a cabo:
+
+\begin{itemize}
+  \item \textit{write-through} (escribir a través), cada vez que se escribe a caché se escribe también a disco.
+  \item \textit{write-back} (escribir por detrás), la escritura se hace solo a caché, luego, la información modificada es escrita a disco en algún momento posterior.
+\end{itemize}
+
+Por supuesto, la implementar la técnica de \textit{write-back} es mucho más complejo, dado que se necesita mantener un registro de que sectores han sido escritos y 
+marcarlos como \textit{dirty} (``sucios'') para que sean luego escritos a disco. La información en estos sectores es escrita a disco sólo cuando son desalojados
+de la caché. (cache eviction). \\
+
+Inicialmente, para probar nuestra capa de caché, implementamos la técnica de \textit{write-through}, para probar el funcionamiento de la misma. 
+Luego, extendimos su funcionalidad para implementar \textit{write-back}. \\
+
+El criterio que elegimos para sincronizar una página cacheada fue bastante sencillo: si una página lleva más de un segundo ``sucia'', se debe escribir a disco.
+%TODO subsubsection???
+Para controlar esta tarea, decidimos tener un proceso especial que la lleve a cabo. Este proceso simplemente espera un cantidad determinada de tiempo y realiza 
+la sincronización, y el desalojo de ser necesario, de las páginas de la memoria caché.
+
 
 \newpage
 \section{Agregados}
