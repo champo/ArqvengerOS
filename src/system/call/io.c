@@ -513,6 +513,10 @@ int _rename(const char* source, const char* dest) {
     entry = fs_findentry(destdir, filedest);
 
     if (strcmp(filesource, filedest) == 0 && sourcedir->number == destdir->number) {
+        fs_inode_close(sourcedir);
+        fs_inode_close(destdir);
+        kfree(filedest);
+        kfree(filesource);
         return 0;
     }
 
