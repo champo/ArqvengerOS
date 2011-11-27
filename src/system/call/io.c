@@ -512,6 +512,10 @@ int _rename(const char* source, const char* dest) {
 
     entry = fs_findentry(destdir, filedest);
 
+    if (strcmp(filesource, filedest) == 0 && sourcedir->number == destdir->number) {
+        return 0;
+    }
+
     if (entry.inode != 0) {
         inode = fs_inode_open(entry.inode);
         if (INODE_TYPE(inode->data) != INODE_DIR) {
@@ -529,6 +533,8 @@ int _rename(const char* source, const char* dest) {
         kfree(filedest);
         filedest = path_file(source);
     }
+    
+    
 
     int ans = fs_rename(sourcedir, filesource, destdir, filedest);
 
