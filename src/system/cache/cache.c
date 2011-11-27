@@ -7,7 +7,6 @@
 #include "system/common.h"
 #include "library/sys.h"
 
-#define CACHE_SIZE (1 << 20)
 #define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
 #define TABLE_ENTRIES 256
 
