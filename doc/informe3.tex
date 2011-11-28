@@ -334,13 +334,13 @@ sección es comentarlos con el fin reflejar proceso de aprendizaje.
 
 	La manera en la que implementamos la función de la librería estándar \textit{ungetc} comprendía entre otras cosas la
 	extensión de nuestra estructura \textit{FILE}, conteniendo variables de control para el correcto funcionamiento de la función.
-	Dado que la entrada estándar, la salida estándar y la salida de errores utilizaban estan funciones, en un principio fuente		
+	Dado que la entrada estándar, la salida estándar y la salida de errores utilizaban estan funciones, en un principio fue		
 	natural implementarlas como variables externas accesibles por cualquier proceso. Con los cambios de este trabajo ya no era
 	aceptable esta implementación.
-	Como solución encontramos que cada proceso contenga dentro de su \textit{heap} las estructuras \textit{FILE} de estos flujos 
-	de información. Dado que estas estructuras contenian información adicional referente a \textit{ungetc} fue necesario 
-	reservar una página para almacenar esto. De forma arbitraria sea eligió utilizar la dirección lógica en los 3GB de memoria 
-	para almacenar esto.
+	Como solución encontramos que cada proceso contenga dentro de un area reservada de memoria las estructuras \textit{FILE} de 
+	estos flujos de información. Dado que estas estructuras contenian información adicional referente a \textit{ungetc} fue 
+	necesario reservar una página para almacenar esto. De forma arbitraria sea eligió utilizar la dirección lógica en los 3GB 
+	de memoria para almacenar esto.
 
 \newpage     
 \section{Referencias}
