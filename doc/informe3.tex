@@ -157,8 +157,22 @@ Esto nos permite bloquear a un proceso dentro de una system call (Por ejemplo re
 \section{Memory Managment Unit}
 
 \subsection{Paginacion}
+Como parte de los objetivos de esta entrega, se encuentra habilitar el uso de \textit{Paginacion}.
+Para implementar esto, comenzamos habilitando una tabla de paginas muy simple, que asigna a todas las direcciones logicas, la misma direccion fisica.
+Una vez que logramos que esto funcione, pasamos a tener una tabla de paginas por proceso de usuario, y otra para el \textit{kernel} y procesos de kernel.
+
+La tabla de \textit{kernel} es la misma que utilizamos en la primer implementacion mencionada.
+Esto permite tener acceso a toda la memoria, cosa esencial para su correcto manejo.
+
+Cada proceso de usuario tiene su propia tabla.
+En esta solo esta visible la memoria que es estrictamente necesaria para la ejecucion del proceso.
+O sea, su codigo, sus stacks, su heap y una seccion especial de variables globales (Mejor explicado en detalle en la seccion de Problemas encontrados).
+
+El cambio de tablas ocurre al principio y al final del punto de entrada de las interrupciones.
+Cuando comienzan a ejecutar se coloca la tabla de \textit{kernel} y cuando termina se coloca la del proceso a ejecutar.
 
 \subsection{Virtual addressing}
+
 
 \subsection{Stack dinámico}
 
