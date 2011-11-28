@@ -173,17 +173,23 @@ Cuando comienzan a ejecutar se coloca la tabla de \textit{kernel} y cuando termi
 
 \subsection{Virtual addressing}
 
+Al habilitar paginacion, una de las posbilidades que se tiene es utilizar \textit{Virtual Addresing}.
+Nosotros hacemos uso de esta feature para el \textit{stack} de ejecucion de procesos de usuario.
+Este \textit{stack} siempre esta dispuesto de forma tal que el proceso acceda a el entre los $ 2GB $ y $ 3GB $.
+El la primer pagina esta ubicada inmediatamente antes de la direccion de $ 3GB $.
 
 \subsection{Stack dinámico}
 
-Al comenzar un proceso se reservan una cantidad de páginas para el \textit{stack} del mismo. Es posible que durante la ejecución, 
-este tamaño inicial no sea suficiente. En este caso, se tratará de acceder a la página contigua al tope del \textit{stack} derivando 
-en un \textit{page fault}. Dentro del manejador de \textit{page faults} es posible verificar estas últimas condiciones. En este caso, 
-es necesario reservar una nueva página para el proceso y mapearla en la dirección que disparó el \textit{page fault} (contenida en 
-el registro \textit{CR2}). 
+Al comenzar un proceso se reservan una cantidad de páginas para el \textit{stack} el mismo.
+Es posible que durante la ejecución, este tamaño inicial no sea suficiente.
+Por este motivo, cuando un proceso de usuario se queda sin espacio en su stack, este es automaticamente extendido.
+Esto ocurre de manera transparente al proceso haciendo uso de \textit{Page Faults}.
 
-Por último, es importante decidir un tamaño máximo para el \textit{stack} de un proceso para que no se abuse de las páginas 
-reservadas.
+Para poder extenderlo, sin necesitar de paginas de memoria contiguas, es que decidimos colocar el \textit{stack} en una direccion de memoria logica fija.
+Haciendo uso de \textit{Virtual addressing} podemos simplemente colocar una pagina en la tabla del proceso, retornar de la interrupcion, y continuar ejecutando como si nada hubiera pasado.
+
+Por supuesto, cada proceso tiene un limite al tamaño del \textit{stack}.
+En caso de que un proceso intente utilizar mas memoria de la permitida, se lo termina.
 
 \subsection{Manejo de page faults}
 
@@ -315,6 +321,8 @@ sección es comentarlos con el fin reflejar proceso de aprendizaje.
 
         Como funcionalidad extra, y dado que la forma en que implementamos las cosas nos facilitó en gran parte la tarea, ofrecemos la posibilidad de scrollear una 
         pantalla para arriba o para abajo en todo momento usando las teclas \textit{RePag} y \textit{AvPag} respectivamente.
+
+        \subsection{argv}
 
 
 \newpage     
