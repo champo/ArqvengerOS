@@ -114,31 +114,51 @@ el \textit{file system} (contábamos con soporte Ext2) y los funcionalidades ya 
 
 \newpage
 
-\section{Unidad de paginación}
+\section{Proceso}
 
-\subsection{Manejo de page faults}
+En este TP hicimos una cantidad significativa de cambios a la estructura de proceso, y al manejo de los mismos a nivel permisos.
+Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implemtamos un verdadero \textit{User-space}.
 
-Trás detectar que se estaba generando una excepción de tipo \textit{page fault}, era necesario implementar un manejador de estas 
-excepciones. Dados los requerimientos del trabajo práctico, solamente era necesario tomar acciones especiales en el caso de que 
-se necesite más espacio en el \textit{stack} (detallado más adelante). Por suerte, se contaban con los datos necesarios para detectar en que 
-caso estaba sucediendo esto. Dentro de los registros de uso común del micro, se contaban con código de error y en el registro \textit{CR2} 
-se encontraba la dirección lógica que generó el \textit{page fault}.
+\subsection{User-space}
+Una de las principiles deficiencias de versiones anterios de este OS era la ausencia de un verdadero \textit{User-space}.
+Es decir, todos los procesos ejecutaban en ring 0 con el maximo nivel de permisos, y con acceso a toda la memoria.
+En esta entrega, esta deficiencia no existe mas.
+Esto lo logramos en 2 partes: ejecucion en ring 3 y paginacion.
+En esta seccion nos vamos a concetrar en como llegar a ring 3, y paginacion tiene su propia seccion mas adelante.
 
-En los casos en que no se puede manejar la excepción o se genera algun tipo de problema al resolverlo, se procede terminando la 
-ejecución del proceso que generó dicha excepción.
+La transicion de ring 0 a ring 3 es la piedra fundamental de la construccion de muchos aspectos de esta nueva entrega.
+Esta nos permite hacer uso de features de \textit{x86} como lo es el \textit{Task State Segment}.
+Si bien Arqvenger OS hace \textit{Software Task Switching}, es posible utilizar un \textit{TSS} sin hacer uso de \textit{Hardware Task Switching}.
+Alcanza con definir un solo \textit{Task State} y decirle al procesador que este es la tarea actual (Que no hace ninguna clase de cambio al estado actual de ejecucion).
+
+Cabe recordar que existen 2 tipos de procesos: Procesos de kernel, y procesos de usuario.
+Los procesos de usuarios son los que ejecutan en ring 3.
+Mientras que los de kernel continuan disfrutando de ejecutar en el mismo contexto que el kernel en si.
+O sea, ring 0 y con acceso a toda la memoria.
+
+\subsection{Kernel stack}
+
+Cada \textit{Task State} puede definir un \textit{esp0} que es el \textit{stack} que el microprocesador debe usar cuando se cambia de ring 3 a ring 0.
+Es decir, cuando ocurre cualquier tipo de accion que provoca un cambio de nivel privilegio (Por ejemplo una interrupcion), automaticamente el microprocesador comienza a utilizar el \textit{stack} ahi definido.
+Esta funcionalidad nos da una posibilidad muy interesante: Tener un \textit{stack} para manejo de interrupciones para cada proceso.
+
+Este \textit{stack}, conocido como \textit{kernel stack} es unico para cada proceso, y todo proceso tiene uno.
+Ahora, cabe destacar que por las caracteristicas de los procesos de kernel, estos no poseen mas que un \textit{kernel stack} y no disponen de un \textit{stack} regular.
+El \textit{kernel stack} es de tamaño fijo, con tan solo $ 4KB $ de memoria a su disposicion.
+Esta cantidad de memoria es mas que suficiente para todas las acciones del kernel.
+
+Entre las ventajas de esto se pueden resaltar la indepencia entre el estado de un proceso de usuario, y el manejo de sus interrupciones.
+Y por sobre todo, le da la capacidad al \textit{kernel} de ser \textit{reentrant}.
+Es decir, puede abandonar la ejecucion de una interrupcion causada por un proceso a mitad de camino, y continuar atendiendo a otro proceso.
+Esto nos permite bloquear a un proceso dentro de una system call (Por ejemplo read y write), y pasar la ejecucion a otro proceso sin que el primero se entere de lo sucedido.
 
 \newpage
 
-\section{Stack y heap de un proceso}
+\section{Memory Managment Unit}
 
-Otra de las funcionalidades agregadas en este trabajo es que cada proceso cuenta con un sector en memoria para su \textit{stack} y 
-otro para su \textit{heap}. Estos sectores de memoria debían ser exclusivos para el proceso y accesibles únicamente por él.
+\subsection{Paginacion}
 
-La unidad de paginación presente en nuestro sistema operativo posibilita reservar páginas para cada proceso, por lo que si otro 
-proceso pretende acceder a esta página se genera un \textit{page fault}. Asimismo, nuestro sistema facilita que las 
-páginas físicas reservadas para un proceso sean mapeadas en sectores constantes en el directorio de páginas. De este modo, 
-todos los procesos tienen su \textit{stack} comenzando siempre en los 3GB (lógicos) pero la únidad de paginación permite que las 
-páginas de cada proceso sean diferentes.
+\subsection{Virtual addressing}
 
 \subsection{Stack dinámico}
 
@@ -150,6 +170,15 @@ el registro \textit{CR2}).
 
 Por último, es importante decidir un tamaño máximo para el \textit{stack} de un proceso para que no se abuse de las páginas 
 reservadas.
+
+\subsection{Manejo de page faults}
+
+Trás detectar que se estaba generando una excepción de tipo \textit{page fault}, era necesario implementar un manejador de estas excepciones.
+Dados los requerimientos del trabajo práctico, solamente era necesario tomar acciones especiales en el caso de que se necesite más espacio en el \textit{stack}.
+Por suerte, se contaban con los datos necesarios para detectar en que caso estaba sucediendo esto.
+El micro provee a la hora de un \textit{Page Fault} un codigo de error que indicaba que tipo de fault ocurrio, y en el registro \textit{CR2} se encontraba la dirección lógica que lo generó.
+
+En los casos en que no se puede manejar la excepción o se genera algun tipo de problema al resolverlo, se procede terminando la ejecución del proceso que generó dicha excepción.
 
 \newpage
 
