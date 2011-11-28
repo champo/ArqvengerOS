@@ -124,7 +124,8 @@ Una de las principiles deficiencias de versiones anterios de este OS era la ause
 Es decir, todos los procesos ejecutaban en ring 0 con el maximo nivel de permisos, y con acceso a toda la memoria.
 En esta entrega, esta deficiencia no existe mas.
 Esto lo logramos en 2 partes: ejecucion en ring 3 y paginacion.
-En esta seccion nos vamos a concetrar en como llegar a ring 3, y paginacion tiene su propia seccion mas adelante.
+En esta seccion nos vamos a concentrar en como llegar a ring 3. 
+Paginacion tiene su propia seccion mas adelante.
 
 La transicion de ring 0 a ring 3 es la piedra fundamental de la construccion de muchos aspectos de esta nueva entrega.
 Esta nos permite hacer uso de features de \textit{x86} como lo es el \textit{Task State Segment}.
@@ -323,6 +324,11 @@ sección es comentarlos con el fin reflejar proceso de aprendizaje.
         pantalla para arriba o para abajo en todo momento usando las teclas \textit{RePag} y \textit{AvPag} respectivamente.
 
         \subsection{argv}
+        En su \textit{entry-point} todos los procesos reciben el comando de invocacion del proceso.
+        Originalmente este formaba parte de la estructura de proceso, y se simplemente se pasaba una referencia a este campo.
+        Pero al activar paginacion, y ocultar la memoria donde este dato esta contenido nos encontramos con un problema.
+        La solucion trivial es simplemente hacer accesible esta memoria al proceso, pero va en contra de la utilidad de activar paginacion en el primer lugar.
+        Finalmente, solucionamos este problema copiando el valor al principio del stack del proceso, y se pasa una referencia a este lugar al \textit{entry point}.
 
 
 \newpage     
