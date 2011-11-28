@@ -262,29 +262,6 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
 Durante el desarrollo de este trabajo práctico fueron surgiendo diferentes dudas y problemas. El propósito de esta
 sección es comentarlos con el fin reflejar proceso de aprendizaje.
 
-Un dilema bastante frecuente a lo largo del trabajo práctico fue lo que nos gusta llamar el problema de ``la gallina o el huevo''. Al realizar
-un desarrollo a bajo nivel que ha comenzado con pocos recursos, era habitual encontrarse con la duda de si convenía
-arrancar a implementar la lectura o la escritura de alguna prestación. Es evidente que si se hacía primero la lectura, 
-no había forma de probar su funcionamiento ya que no existía la escritura. Lo mismo sucedía a modo inverso. Si bien 
-la solución no era complicada (desarrollar todo) era incómodo y molesto a la hora de encontrar errores ya que los mismos
-podían encontrarse en cualquier lado.
-
-Varios problemas interesantes surgieron durante la creación del \textit{driver} ATA. A pesar de que se siguieron
-rigurosamente los estándares, se encontró que no todos los emuladores funcionaban de forma correcta con el mismo.
-Inclusive, detectamos que el driver no se comportaba de manera deseada al tratar con varios sectores a la vez con lo
-cual nos vimos forzados a modificar la lógica interna del driver simulando un acceso a múltiples sectores a tráves de
-varios accesos de a un sector a la vez.
-
-
-        %TODO WTF? Que hacemo con estas subsecciones??En esta section no cuadran a donde las movemos???
-        \subsection{Comandos de shell}
-        Durante el desarrollo del file system, eventualmente llegamos al punto en el que necesitábamos implementar \textit{cd}.
-        Una vez terminaba la implementación, notamos que no funcionaba, pero todo el output de debugging indicaba que si.
-        Finalmente, nos dimos cuenta de que \textit{cd} ejecutaba en un proceso distinto al de la shell.
-        Entonces cambiaba su propio directorio, pero no el de la shell.
-        Para solucionar este problema necesitamos introducir el concepto de comandos internos de la shell.
-        Véase, comandos que se ejecutan dentro del mismo proceso que la shell.
-
         \subsection{Scrolling}
         Dado el alto número de comandos que presenta el ArqvengerOS, llegó un momento en el que la lista de todos ellos no entraba en una sola pantalla.
         Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solución más simple pero igual de efectiva.
@@ -296,27 +273,6 @@ varios accesos de a un sector a la vez.
         Como funcionalidad extra, y dado que la forma en que implementamos las cosas nos facilitó en gran parte la tarea, ofrecemos la posibilidad de scrollear una 
         pantalla para arriba o para abajo en todo momento usando las teclas \textit{RePag} y \textit{AvPag} respectivamente.
 
-
-        \subsection{Kernel-space y user-space}
-        Inicialmente nuestro objetivo era contar con una delimitación fuerte de que es \textit{kernel-space} y \textit{user-space}.
-        Esto es, que el kernel ejecute en ring 0 y los procesos en ring 3.
-        Pero esto resultó en una serie de excepciones del procesador.
-        Hacer los cambios de segmento entre segmentos de distintos privilegios sin ayuda de algún mecanismo especial no parece ser posible.
-
-        Idealmente, esto se solucionaría haciendo uso de Task Gates.
-        Que también permitiría tener un stack dedicado para el kernel, para uso dentro de los manejadores de interrupciones.
-        Si bien esta es la mejor solución disponible, no es trivial de implementar y sus beneficios están fuera del enfoque del trabajo práctico.
-
-        \subsection{Cálculo de porcentaje de CPU utilizado}
-        Para completar la implementación del comando \textit{top}, se requería calcular el porcentaje de CPU utilizado por cada proceso, en un determinado
-        período de tiempo. Esta tarea no fue sencilla, por varias razones. Primero, se debe determinar que es lo que se medirá, tiempo, ticks (IRQ8) o ciclos. 
-        Segundo, se debe determinar cuándo se tomarám las mediciones o actualizarán los valores. 
-
-        En algunos primeros intentos se pensó, erronéamente, en contar ticks, o tomar las mediciones cada vez que llegara un interrupción de \textit{timmer tick} (IRQ8).
-        Pero todas esas propuestas tenían alguna falla de algún tipo: o eran aproximaciones, o sencillamente no respondían al objetivo buscado.
-
-        Finalmente, se decidió que claramente la mejor opción era contar ciclos clock (\textit{Clock Cycles}) y tomar las mediciones en cada cambio de contexto.
-        De esta forma, obtenemos un medición muchísimo más precisa, y la complejidad de implementar esta tarea no fue tan grande.
 
 \newpage     
 \section{Referencias}
