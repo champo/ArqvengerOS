@@ -450,6 +450,26 @@ int _unlink(const char* path) {
  */
 int _rename(const char* source, const char* dest) {
 
+    struct fs_Inode* sourceInode = resolve_path(source);
+
+    char* cwd = kalloc(1024);
+
+    _getcwd(cwd, 1024); 
+
+    struct fs_Inode* cwdInode = resolve_path(cwd);
+
+    kfree(cwd);
+
+    //We check that we are not trying to move the cwd
+    if (sourceInode->number == cwdInode->number) {
+        fs_inode_close(sourceInode);
+        fs_inode_close(cwdInode);
+        return -1;
+    }
+
+    fs_inode_close(sourceInode);
+    fs_inode_close(cwdInode);
+
     char* pathsource = path_directory(source);
 
     struct fs_Inode* sourcedir = resolve_path(pathsource);
@@ -485,7 +505,7 @@ int _rename(const char* source, const char* dest) {
         return -1;
     }
 
-    struct fs_Inode* sourceInode = fs_inode_open(sourceEntry.inode);
+    sourceInode = fs_inode_open(sourceEntry.inode);
     
     //If for some reason we couldn't open the sorce inode, we return
     if (sourceInode == NULL) {
@@ -496,6 +516,7 @@ int _rename(const char* source, const char* dest) {
     }
 
     int sourceIsDir = 0;
+    int sourceInodeNumber = sourceInode->number;
 
     if (INODE_TYPE(sourceInode->data) == INODE_DIR) {
         sourceIsDir = 1;
@@ -598,7 +619,6 @@ int _rename(const char* source, const char* dest) {
                 fs_inode_close(errorInode);
 
                 if (_unlink(stringFileError) != 0) {
-                    kprintf("!%s!", stringFileError);
                     fs_inode_close(sourcedir);
                     fs_inode_close(destdir);
                     kfree(filedest);
@@ -618,6 +638,89 @@ int _rename(const char* source, const char* dest) {
         kfree(filesource);
         kfree(filedest);
         return -1;
+    }
+
+    //If we are moving a directory, we need to check it's not into a subdirectory of itself...
+    if (sourceIsDir) {
+        if (destdir->number == sourceInodeNumber) {
+            fs_inode_close(sourcedir);
+            fs_inode_close(destdir);
+            kfree(filesource);
+            kfree(filedest);
+            return -1;
+        }
+       
+        struct fs_Inode* root = fs_root();
+
+        if (root->number == sourceInodeNumber) {
+            fs_inode_close(root);
+            fs_inode_close(sourcedir);
+            fs_inode_close(destdir);
+            kfree(filesource);
+            kfree(filedest);
+            return -1;
+        }
+
+        struct fs_DirectoryEntry subDirEntry = fs_findentry(destdir, "..");
+
+        if (subDirEntry.inode == 0) {
+            fs_inode_close(root);
+            fs_inode_close(sourcedir);
+            fs_inode_close(destdir);
+            kfree(filesource);
+            kfree(filedest);
+            return -1;
+        }
+
+        struct fs_Inode* subDirInode = fs_inode_open(subDirEntry.inode);
+
+        if (subDirInode == NULL) {
+            fs_inode_close(root);
+            fs_inode_close(sourcedir);
+            fs_inode_close(destdir);
+            kfree(filesource);
+            kfree(filedest);
+            return -1;
+        }
+
+        while (subDirInode->number != root->number) {
+            if (subDirInode->number == sourceInodeNumber) {
+                fs_inode_close(root);
+                fs_inode_close(sourcedir);
+                fs_inode_close(destdir);
+                fs_inode_close(subDirInode);
+                kfree(filesource);
+                kfree(filedest);
+                return -1;
+            }
+
+            subDirEntry = fs_findentry(subDirInode, "..");
+
+            fs_inode_close(subDirInode);
+
+            if (subDirEntry.inode == 0) {
+                fs_inode_close(root);
+                fs_inode_close(sourcedir);
+                fs_inode_close(destdir);
+                kfree(filesource);
+                kfree(filedest);
+                return -1;
+            }
+
+            subDirInode = fs_inode_open(subDirEntry.inode);
+
+            if (subDirInode == NULL) {
+                fs_inode_close(root);
+                fs_inode_close(sourcedir);
+                fs_inode_close(destdir);
+                kfree(filesource);
+                kfree(filedest);
+                return -1;
+            }
+        }
+
+        fs_inode_close(subDirInode);
+        fs_inode_close(root);
     }
 
     //We actually move the thing and we return
