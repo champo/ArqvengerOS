@@ -110,7 +110,7 @@ prestaciones de nuestro sistema operativo.
 Además de corregir ciertos comportamientos inesperados (había ciertos problemas en el comando \textit{pwd} y con los
 \textit{links} simbólicos), era correspondiente agregar a los comandos ya presentes \textit{mv} y \textit{cp}. Este último, 
 debía aceptar la opción ``-r'' para realizar una copia recursiva entre directorios. La forma en la que estaba implementado 
-el \textit{file system} (contábamos con soporte Ext2) y los funcionalidades ya existentes hicieron de esta una tarea más que sencilla.
+el \textit{file system} (contábamos con soporte Ext2) y las funcionalidades ya existentes hicieron de esta una tarea más que sencilla.
 
 \newpage
 
@@ -330,6 +330,17 @@ sección es comentarlos con el fin reflejar proceso de aprendizaje.
         La solucion trivial es simplemente hacer accesible esta memoria al proceso, pero va en contra de la utilidad de activar paginacion en el primer lugar.
         Finalmente, solucionamos este problema copiando el valor al principio del stack del proceso, y se pasa una referencia a este lugar al \textit{entry point}.
 
+	\subsection{ungetc}
+
+	La manera en la que implementamos la función de la librería estándar \textit{ungetc} comprendía entre otras cosas la
+	extensión de nuestra estructura \textit{FILE}, conteniendo variables de control para el correcto funcionamiento de la función.
+	Dado que la entrada estándar, la salida estándar y la salida de errores utilizaban estan funciones, en un principio fuente		
+	natural implementarlas como variables externas accesibles por cualquier proceso. Con los cambios de este trabajo ya no era
+	aceptable esta implementación.
+	Como solución encontramos que cada proceso contenga dentro de su \textit{heap} las estructuras \textit{FILE} de estos flujos 
+	de información. Dado que estas estructuras contenian información adicional referente a \textit{ungetc} fue necesario 
+	reservar una página para almacenar esto. De forma arbitraria sea eligió utilizar la dirección lógica en los 3GB de memoria 
+	para almacenar esto.
 
 \newpage     
 \section{Referencias}
