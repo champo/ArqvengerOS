@@ -316,7 +316,7 @@ int evict(int minPages, int force) {
     int now = _time(NULL);
     int evicted = 0;
 
-    struct Chunk* entry = cache_list.first;
+    struct Chunk* entry = cache_list.last;
     while (entry && evicted < minPages) {
 
         if (!entry->dirty && (entry->lastAccessTime < now || force)) {
@@ -324,7 +324,7 @@ int evict(int minPages, int force) {
             evicted++;
         }
 
-        entry = entry->next;
+        entry = entry->prev;
     }
 
     return evicted;

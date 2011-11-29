@@ -32,7 +32,7 @@ void page_fault_handler(int errCode) {
         return;
     }
 
-    if (process->mm.pagesInStack + PAGES_PER_INCREMENT >= MAX_PAGES_IN_STACK) {
+    if (process->mm.pagesInStack + PAGES_PER_INCREMENT > MAX_PAGES_IN_STACK) {
         tkprintf(process->terminal, "Stack is way too big.\n");
         process_table_kill(process);
         return;
@@ -53,6 +53,6 @@ void page_fault_handler(int errCode) {
 
     int pages = process->mm.pagesInStack;
 
-    log_debug("Growing stack of %d to %d (%d pages).\n", process->pid, pages * PAGE_SIZE, pages);
+    log_debug("Growing stack of process of pid %d to %d bytes (%d pages).\n", process->pid, pages * PAGE_SIZE, pages);
 }
 
