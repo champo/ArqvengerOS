@@ -224,12 +224,12 @@ Nuestro sistema operativo cuenta con una capa de caché entre \textit{ext2} y el
 a nodos de una lista doblemente linkeada (\textit{Doubly-Linked List}), ordenada por el criterio \textit{LRU} (\textit{Least Recently Used}), el menos usado
  recientemente. Cada nodo es un pedazo (\textit{chunk}) de memoria con la información inherente a él (sector inicial, \textit{flag de dirty}, 
 cantidad de accesos, última vez que fue accedido, etc...). Esta estructura de datos resulta vital para las tareas a realizar ya que permite tener una lista
-en orden constante y de acceso constante.\\
+en orden constante y de acceso constante. Esto resulta de una gran utilidad al momento de implementar el desalojo de cache (\textit{eviction}).\\
 
 Después de meditar sobre el asunto, decidimos que estos pedazos de memoria tengan tamaño (cantidad de sectores)
 fijo y fueran simplemente páginas. Esta decisión nos facilitó el posterior trabajo.\\
 
-El comportamiento de la caché es el típico de comportamiento este tipo de memoria. Cada vez que se lee o escribe al disco, si la información no se encuentra en la caché, se
+El comportamiento de la caché es el típico comportamiento de este tipo de memoria. Cada vez que se lee o escribe al disco, si la información no se encuentra en la caché, se
  la almacena para accesos futuros. Luego, si se quiere volver a acceder a dicha información, estará disponible en memoria, sin necesisdad de acceder al disco, lo 
 cual es una operación costosa.\\
 
@@ -262,6 +262,14 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
 
         \subsection{Cache eviction}
         
+        Otro aspecto de gran importancia de la memoria caché es el hecho de desalojar los pedazos de memoria para generar espacio, ya sea para cachear otros datos o porque el 
+        sistema requiere reservar mayor cantidad de memoria. Esto es lo que se conoce como \textit{cache eviction}.
+
+        Como se ha dicho previamente, es para este propósito que la estructura de datos escogida resulta una gran ventaja. El hecho de poder tener una lista que mantiene su orden en
+        tiempo constante (lo que generalmente se conoce como $O(1)$) y que a la vez cuenta con acceso en tiempo constante, proporciona una gran flexibilidad y eficiencia a la hora de 
+        buscar un bloque de memoria para desalojar. Lo que se hace es simplemente desalojar siempre el último bloque de la lista, que recordamos esta ordenada por el criterio LRU, 
+        y, por lo tanto, resulta ser el bloque menos usado recientemente.  
+                
 
 \newpage
 \section{Agregados}
