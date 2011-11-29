@@ -105,9 +105,9 @@ prestaciones de nuestro sistema operativo.
 
 \newpage
 
-\section{Agregados y correcciones correspondientes al trabajo previo}
+\section{Agregados y correcciones al trabajo previo}
 
-Además de corregir ciertos comportamientos inesperados (había ciertos problemas en el comando \textit{pwd} y con los
+Además de corregir ciertos comportamientos inesperados (había ciertos problemas en el comando \textit{passwd} y con los
 \textit{links} simbólicos), era correspondiente agregar a los comandos ya presentes \textit{mv} y \textit{cp}. Este último, 
 debía aceptar la opción ``-r'' para realizar una copia recursiva entre directorios. La forma en la que estaba implementado 
 el \textit{file system} (contábamos con soporte Ext2) y los funcionalidades ya existentes hicieron de esta una tarea más que sencilla.
@@ -116,90 +116,97 @@ el \textit{file system} (contábamos con soporte Ext2) y los funcionalidades ya 
 
 \section{Proceso}
 
-En este TP hicimos una cantidad significativa de cambios a la estructura de proceso, y al manejo de los mismos a nivel permisos.
-Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implemtamos un verdadero \textit{User-space}.
+En este trabajo práctico hicimos una cantidad significativa de cambios a la estructura de proceso, y al manejo de los mismos a nivel permisos.
+Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implemetamos un verdadero \textit{User-space}.
 
 \subsection{User-space}
-Una de las principiles deficiencias de versiones anterios de este OS era la ausencia de un verdadero \textit{User-space}.
-Es decir, todos los procesos ejecutaban en ring 0 con el maximo nivel de permisos, y con acceso a toda la memoria.
-En esta entrega, esta deficiencia no existe mas.
-Esto lo logramos en 2 partes: ejecucion en ring 3 y paginacion.
-En esta seccion nos vamos a concentrar en como llegar a ring 3. 
-Paginacion tiene su propia seccion mas adelante.
+Una de las principiles deficiencias de versiones anterios de este sistema operativo era la ausencia de un verdadero \textit{User-space}.
+Es decir, todos los procesos ejecutaban en $ring 0$ con el máximo nivel de permisos, y con acceso a toda la memoria.
+En esta entrega, esta deficiencia no existe más.
+Esto lo logramos en 2 partes: ejecución en $ring 3$ y paginación.
+En esta seccion nos vamos a concentrar en como llegar a $ring 3$. 
+Paginación tiene su propia sección más adelante.(Ver sección \ref{sec:Paginación})
 
-La transicion de ring 0 a ring 3 es la piedra fundamental de la construccion de muchos aspectos de esta nueva entrega.
+La transición de $ring 0$ a $ring 3$ es la piedra fundamental de la construcción de muchos aspectos de esta nueva entrega.
 Esta nos permite hacer uso de features de \textit{x86} como lo es el \textit{Task State Segment}.
-Si bien Arqvenger OS hace \textit{Software Task Switching}, es posible utilizar un \textit{TSS} sin hacer uso de \textit{Hardware Task Switching}.
-Alcanza con definir un solo \textit{Task State} y decirle al procesador que este es la tarea actual (Que no hace ninguna clase de cambio al estado actual de ejecucion).
+Si bien nuestro sistema operativo hace \textit{Software Task Switching} (Cambio de Tarea por Software), es posible utilizar un \textit{TSS} sin hacer uso de 
+\textit{Hardware Task Switching}, (Cambio de Tarea por Hardware).
+Alcanza con definir un solo \textit{Task State} y decirle al procesador que este es la tarea actual 
+(que no hace ninguna clase de cambio al estado actual de ejecución).
 
-Cabe recordar que existen 2 tipos de procesos: Procesos de kernel, y procesos de usuario.
-Los procesos de usuarios son los que ejecutan en ring 3.
-Mientras que los de kernel continuan disfrutando de ejecutar en el mismo contexto que el kernel en si.
-O sea, ring 0 y con acceso a toda la memoria.
+Cabe recordar que existen 2 tipos de procesos: procesos de kernel, y procesos de usuario.
+Los procesos de usuarios son los que ejecutan en $ring 3$, mientras que los procesos de kernel continúan disfrutando de ejecutar en el mismo contexto 
+que el \textit{kernel} en sí. O sea, en $ring 0$ y con acceso a toda la memoria.
 
 \subsection{Kernel stack}
 
-Cada \textit{Task State} puede definir un \textit{esp0} que es el \textit{stack} que el microprocesador debe usar cuando se cambia de ring 3 a ring 0.
-Es decir, cuando ocurre cualquier tipo de accion que provoca un cambio de nivel privilegio (Por ejemplo una interrupcion), automaticamente el microprocesador comienza a utilizar el \textit{stack} ahi definido.
-Esta funcionalidad nos da una posibilidad muy interesante: Tener un \textit{stack} para manejo de interrupciones para cada proceso.
+Cada \textit{Task State} puede definir un \textit{esp0} que es el \textit{stack} que el microprocesador debe usar cuando se cambia de $ring 3$ a $ring 0$.
+Es decir, cuando ocurre cualquier tipo de acción que provoca un cambio de nivel de privilegio (por ejemplo una interrupción), automáticamente el microprocesador 
+comienza a utilizar el \textit{stack} ahí definido.
+Esta funcionalidad nos da una posibilidad muy interesante: tener un \textit{stack} para manejo de interrupciones para cada proceso.
 
-Este \textit{stack}, conocido como \textit{kernel stack} es unico para cada proceso, y todo proceso tiene uno.
-Ahora, cabe destacar que por las caracteristicas de los procesos de kernel, estos no poseen mas que un \textit{kernel stack} y no disponen de un \textit{stack} regular.
+Este \textit{stack}, conocido como \textit{kernel stack} es único para cada proceso, y todo proceso tiene uno.
+Ahora, cabe destacar que, por las características de los procesos de kernel, estos no poseen más que un \textit{kernel stack} y no disponen de un \textit{stack} regular.
 El \textit{kernel stack} es de tamaño fijo, con tan solo $ 4KB $ de memoria a su disposicion.
-Esta cantidad de memoria es mas que suficiente para todas las acciones del kernel.
+Esta cantidad de memoria es más que suficiente para todas las acciones del \textit{kernel}.
 
 Entre las ventajas de esto se pueden resaltar la indepencia entre el estado de un proceso de usuario, y el manejo de sus interrupciones.
 Y por sobre todo, le da la capacidad al \textit{kernel} de ser \textit{reentrant}.
-Es decir, puede abandonar la ejecucion de una interrupcion causada por un proceso a mitad de camino, y continuar atendiendo a otro proceso.
-Esto nos permite bloquear a un proceso dentro de una system call (Por ejemplo read y write), y pasar la ejecucion a otro proceso sin que el primero se entere de lo sucedido.
+Es decir, puede abandonar la ejecución de una interrupción causada por un proceso a mitad de camino, y continuar atendiendo a otro proceso.
+Esto nos permite bloquear a un proceso dentro de una \textit{system call} (como por ejemplo read y write), y pasar la ejecución a otro proceso sin que el primero 
+se entere de lo sucedido.
 
 \newpage
-
 \section{Memory Managment Unit}
 
-\subsection{Paginacion}
-Como parte de los objetivos de esta entrega, se encuentra habilitar el uso de \textit{Paginacion}.
-Para implementar esto, comenzamos habilitando una tabla de paginas muy simple, que asigna a todas las direcciones logicas, la misma direccion fisica.
-Una vez que logramos que esto funcione, pasamos a tener una tabla de paginas por proceso de usuario, y otra para el \textit{kernel} y procesos de kernel.
+\subsection{Paginación}
+\label{sec:Paginación}
+Como parte de los objetivos de esta entrega, se encuentra habilitar el uso de paginación.
+Para implementar esto, comenzamos habilitando una tabla de páginas muy simple, que asigna a todas las direcciones lógicas, la misma direccion física.
+Una vez que logramos que esto funcione, pasamos a tener una tabla de páginas por proceso de usuario, y otra para el \textit{kernel} y procesos de kernel.
 
-La tabla de \textit{kernel} es la misma que utilizamos en la primer implementacion mencionada.
+La tabla de \textit{kernel} es la misma que utilizamos en la primer implementación mencionada.
 Esto permite tener acceso a toda la memoria, cosa esencial para su correcto manejo.
 
 Cada proceso de usuario tiene su propia tabla.
-En esta solo esta visible la memoria que es estrictamente necesaria para la ejecucion del proceso.
-O sea, su codigo, sus stacks, su heap y una seccion especial de variables globales (Mejor explicado en detalle en la seccion de Problemas encontrados).
+En esta sólo esta visible la memoria que es estrictamente necesaria para la ejecución del proceso.
+O sea, su código, sus \textit{stacks}, su \textit{heap} y una sección especial de variables globales (mejor explicado en detalle en la sección  
+\ref{sec:Problemas encontrados}).
 
 El cambio de tablas ocurre al principio y al final del punto de entrada de las interrupciones.
 Cuando comienzan a ejecutar se coloca la tabla de \textit{kernel} y cuando termina se coloca la del proceso a ejecutar.
 
 \subsection{Virtual addressing}
 
-Al habilitar paginacion, una de las posbilidades que se tiene es utilizar \textit{Virtual Addresing}.
-Nosotros hacemos uso de esta feature para el \textit{stack} de ejecucion de procesos de usuario.
-Este \textit{stack} siempre esta dispuesto de forma tal que el proceso acceda a el entre los $ 2GB $ y $ 3GB $.
-El la primer pagina esta ubicada inmediatamente antes de la direccion de $ 3GB $.
+Al habilitar paginación, una de las posbilidades que se tiene es utilizar \textit{Virtual Addresing}.
+Nosotros hacemos uso de esta feature para el \textit{stack} de ejecución de procesos de usuario.
+Este \textit{stack} siempre está dispuesto de forma tal que el proceso acceda a él entre los $ 2GB $ y $ 3GB $.
+La primer página esta ubicada inmediatamente antes de la dirección de $ 3GB $.
 
 \subsection{Stack dinámico}
 
-Al comenzar un proceso se reservan una cantidad de páginas para el \textit{stack} el mismo.
+Al comenzar un proceso se reservan una cantidad de páginas para el \textit{stack}.
 Es posible que durante la ejecución, este tamaño inicial no sea suficiente.
-Por este motivo, cuando un proceso de usuario se queda sin espacio en su stack, este es automaticamente extendido.
+Por este motivo, cuando un proceso de usuario se queda sin espacio en su \textit{stack}, este es automáticamente extendido.
 Esto ocurre de manera transparente al proceso haciendo uso de \textit{Page Faults}.
 
-Para poder extenderlo, sin necesitar de paginas de memoria contiguas, es que decidimos colocar el \textit{stack} en una direccion de memoria logica fija.
-Haciendo uso de \textit{Virtual addressing} podemos simplemente colocar una pagina en la tabla del proceso, retornar de la interrupcion, y continuar ejecutando como si nada hubiera pasado.
+Para poder extenderlo, sin necesitar de páginas de memoria contiguas, es que decidimos colocar el \textit{stack} en una dirección de memoria lógica fija.
+Haciendo uso de \textit{Virtual addressing} podemos simplemente colocar una página en la tabla del proceso, retornar de la interrupción, y continuar ejecutando
+ como si nada hubiera pasado.
 
-Por supuesto, cada proceso tiene un limite al tamaño del \textit{stack}.
-En caso de que un proceso intente utilizar mas memoria de la permitida, se lo termina.
+Por supuesto, cada proceso tiene un límite al tamaño del \textit{stack}.
+En caso de que un proceso intente utilizar más memoria de la permitida, se lo termina.
 
 \subsection{Manejo de page faults}
 
-Trás detectar que se estaba generando una excepción de tipo \textit{page fault}, era necesario implementar un manejador de estas excepciones.
+Trás detectar que se estaba generando una excepción de tipo \textit{Page Fault}, era necesario implementar un manejador de estas excepciones.
 Dados los requerimientos del trabajo práctico, solamente era necesario tomar acciones especiales en el caso de que se necesite más espacio en el \textit{stack}.
 Por suerte, se contaban con los datos necesarios para detectar en que caso estaba sucediendo esto.
-El micro provee a la hora de un \textit{Page Fault} un codigo de error que indicaba que tipo de fault ocurrio, y en el registro \textit{CR2} se encontraba la dirección lógica que lo generó.
+El micro provee a la hora de un \textit{Page Fault} un codigo de error que indica que tipo de fault ocurrió, y en el registro \textit{CR2} se encuentra la dirección 
+lógica que lo generó.
 
-En los casos en que no se puede manejar la excepción o se genera algun tipo de problema al resolverlo, se procede terminando la ejecución del proceso que generó dicha excepción.
+En los casos en que no se puede manejar la excepción o se genera algún tipo de problema al resolverlo, se procede terminando la ejecución del proceso que 
+generó dicha excepción.
 
 \newpage
 
@@ -219,7 +226,7 @@ El comportamiento de la caché es el típico de esta tipo de memoria. Cada vez q
 cual es una operación costosa.\\
 
 
-Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño total de 1 Mb (256 páginas x 4 Kb).\\
+Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño total de $1 MB$ (256 páginas x $4 KB$).\\
 
         \subsection{Técnicas de sincronización}
 
@@ -233,44 +240,46 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
         \item \textit{write-back} (escribir por detrás), la escritura se hace solo a caché, luego, la información modificada es escrita a disco en algún momento posterior.
         \end{itemize}
 
-        Por supuesto, la implementar la técnica de \textit{write-back} es mucho más complejo, dado que se necesita mantener un registro de que sectores han sido escritos y 
-        marcarlos como \textit{dirty} (``sucios'') para que sean luego escritos a disco. La información en estos sectores es escrita a disco sólo cuando son desalojados
-        de la caché. (cache eviction). \\
+        Por supuesto, implementar la técnica de \textit{write-back} es mucho más complejo, dado que se necesita mantener un registro de que sectores han sido escritos y 
+        marcarlos como \textit{dirty} (``sucios'') para que sean luego escritos a disco. La información en estos sectores es escrita a disco en algún momento posterior
+        según criterio de sincronización implementado o cuando son desalojados de la caché (\textit{cache eviction}). \\
 
-        Inicialmente, para probar nuestra capa de caché, implementamos la técnica de \textit{write-through}, para probar el funcionamiento de la misma. 
+        Inicialmente, implementamos la técnica de \textit{write-through},  para probar el funcionamiento de nuestra capa de caché, 
         Luego, extendimos su funcionalidad para implementar \textit{write-back}. \\
 
         El criterio que elegimos para sincronizar una página cacheada fue bastante sencillo: si una página lleva más de un segundo ``sucia'', se debe escribir a disco.
-        %TODO subsubsection???
+        
         Para controlar esta tarea, decidimos tener un proceso especial que la lleve a cabo. Este proceso simplemente espera un cantidad determinada de tiempo y realiza 
-        la sincronización, y el desalojo de ser necesario, de las páginas de la memoria caché.
+        la sincronización, y el desalojo de ser necesario, de las páginas de la memoria caché. 
 
+        \subsection{Cache eviction}
+        
 
 \newpage
 \section{Agregados}
 
         \subsection{Comandos para demostrar funcionalidad del sistema}
-        %TODO esta bien esto aca? o una subsection para cada comando?
         
         Para demostrar el funcionamiento de la unidad de paginación y la protección de memoria implementamos un simple comando \textit{rma} (Random Access Memory), 
-        que acceda a un sector de memoria elegido de forma aleatoria. De esta forma se puede observar como el sistema se da cuenta que (en la gran mayoría de 
+        que accede a un sector de memoria elegido de forma aleatoria. De esta forma se puede observar como el sistema se da cuenta que (en la gran mayoría de 
         los casos) se está intentando acceder a un sector de memoria que es ajeno al proceso que esta corriendo y no lo permitirá. Para ver más acerca de este 
-        comando se puede ver su código fuente, en el archivo /src/shell/rma/rma.c.\\
+        comando se puede ver su código fuente, en el archivo \textit{/src/shell/rma/rma.c}.\\
 
         Para demostrar el crecimiento en forma dinámica del \textit{stack} de un proceso implementamos el comando \textit{stacksize}, el cual hace crecer el 
         \textit{stack} del proceso hasta un tamaño determinado (el cual recibe como argumento) o de forma indefinida (si no se le proporciona un tamaño tope).
         Se puede observar en la consola como el comando corre un tiempo hasta que termine abruptamente su ejecución cuando alcanza el tamaño máximo determinado 
-        o cuando sobrepasa la máxima capacidad para el \textit{stack} de un proceso. Dicha capacidad esta fijada en 1024 páginas, es decir $4 Mb$.\\
+        o cuando sobrepasa la máxima capacidad para el \textit{stack} de un proceso. Dicha capacidad esta fijada en 1024 páginas, es decir $4 MB$.\\
 
-        Además, puede observarse en la \textit{Log Terminal} como el sistema va reservando páginas de forma incremental.
+        Además, puede observarse en la \textit{Log Terminal} como el sistema va reservando páginas de forma incremental.\\
+
+        Para ver más acerca de este comando se puede ver su código fuente, en el archivo \textit{/src/shell/stacksize/stacksize.c}.\\
+
 
         \subsection{Log Terminal}
 
-        Decidimos habilitar una quinta terminal reservada exclusivamente usos de \textit{logging}. 
+        Decidimos habilitar una quinta terminal reservada exclusivamente para usos de \textit{logging}. 
         Estos es, el sistema puede dejar registro de ciertas acciones que realiza o errores que ocurran y esta terminal permite al usuario ver este registro. De más
         está decir que está terminal es de sólo lectura, el usuario no puede escribir o realizar cambios.\\
-
-        Para esto fue necesario implementar una serie funciones y tomar ciertos recaudos pero, finalmente creemos que el resultado vale la pena.
 
         Decidimos implementar 4 níveles de \textit{logging} y un comando \textit{loglevel} para que el usuario puede elegir el que desee.\\
 
@@ -286,7 +295,7 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
 
 
         \subsection{Memory managment}
-        Inicialmente, el trabajo práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del kernel.
+        Inicialmente, el trabajo práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del \textit{kernel}.
         Por supuesto, esta solución es menos que óptima, ya que genera un desperdicio de memoria e impone límites arbitrarios al sistema.
         Para evitar esto, desarrollamos un sistema de allocación de páginas de memoria.
         Y encima de este sistema, utilizamos la implementación de \textit{malloc} de Dario Sneidermanis, publicada en \href{https://github.com/esneider/malloc}{Github}.
@@ -297,8 +306,9 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
         Para obtener estas páginas optamos por un simple algoritmo de allocación basado en un bitmap de uso de páginas.
 
         Una característica interesante de la implementación de \textit{malloc}, es que permite tener varios contextos de memoria distintos.
-        Lo que facilitó tener un contexto de memoria para el kernel, y otro para cada proceso (excepto los procesos de kernel que usan el mismo que el kernel).
-        La única limitación del sistema es que los contextos de proceso tienen un tamaño fijo, mientras que el del kernel crece a medida que es necesario.\\
+        Lo que facilitó tener un contexto de memoria para el \textit{kernel}, y otro para cada proceso (excepto los procesos de kernel que usan el mismo 
+        que el \textit{kernel}).
+        La única limitación del sistema es que los contextos de proceso tienen un tamaño fijo, mientras que el del  \textit{kernel} crece a medida que es necesario.\\
 
 
         \subsection{Terminal control sequences}
@@ -308,12 +318,13 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
 
 \newpage
 \section{Problemas encontrados}
+\label{sec:Problemas encontrados}
 
 Durante el desarrollo de este trabajo práctico fueron surgiendo diferentes dudas y problemas. El propósito de esta
 sección es comentarlos con el fin reflejar proceso de aprendizaje.
 
         \subsection{Scrolling}
-        Dado el alto número de comandos que presenta el ArqvengerOS, llegó un momento en el que la lista de todos ellos no entraba en una sola pantalla.
+        Dado el alto número de comandos que presenta nuestro sistema operativo, llegó un momento en el que la lista de todos ellos no entraba en una sola pantalla.
         Como implementar scrolling vertical en la terminal presenta un desafio importante, optamos por una solución más simple pero igual de efectiva.
         Los comandos que presentan grandes cantidades de información, como \textit{help} y \textit{ls}, cuando van a escribir más alla de altura de la pantalla, 
         paginan la salida.
@@ -323,12 +334,12 @@ sección es comentarlos con el fin reflejar proceso de aprendizaje.
         Como funcionalidad extra, y dado que la forma en que implementamos las cosas nos facilitó en gran parte la tarea, ofrecemos la posibilidad de scrollear una 
         pantalla para arriba o para abajo en todo momento usando las teclas \textit{RePag} y \textit{AvPag} respectivamente.
 
-        \subsection{argv}
-        En su \textit{entry-point} todos los procesos reciben el comando de invocacion del proceso.
-        Originalmente este formaba parte de la estructura de proceso, y se simplemente se pasaba una referencia a este campo.
-        Pero al activar paginacion, y ocultar la memoria donde este dato esta contenido nos encontramos con un problema.
-        La solucion trivial es simplemente hacer accesible esta memoria al proceso, pero va en contra de la utilidad de activar paginacion en el primer lugar.
-        Finalmente, solucionamos este problema copiando el valor al principio del stack del proceso, y se pasa una referencia a este lugar al \textit{entry point}.
+        \subsection{Argv}
+        En su \textit{entry-point} todos los procesos reciben el comando de invocación que los creó (por ejemplo ``cat myexaple'' o ``shell'').
+        Originalmente este formaba parte de la estructura de proceso, y simplemente se pasaba una referencia a este campo.
+        Pero al activar paginación, y ocultar la memoria donde este dato está contenido nos encontramos con un problema.
+        La solución trivial es simplemente hacer accesible esta memoria al proceso, pero va en contra de la utilidad de activar paginación en el primer lugar.
+        Finalmente, solucionamos este problema copiando el valor al principio del stack del proceso, y pasando una referencia a este lugar al \textit{entry point}.
 
 
 \newpage     
