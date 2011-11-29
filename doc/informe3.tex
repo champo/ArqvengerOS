@@ -117,15 +117,16 @@ el \textit{file system} (contábamos con soporte Ext2) y las funcionalidades ya 
 \section{Proceso}
 
 En este trabajo práctico hicimos una cantidad significativa de cambios a la estructura de proceso, y al manejo de los mismos a nivel permisos.
-Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implemetamos un verdadero \textit{User-space}.
+Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implementamos un verdadero \textit{User-space}.
 
 \subsection{User-space}
-Una de las principiles deficiencias de versiones anterios de este sistema operativo era la ausencia de un verdadero \textit{User-space}.
+Una de las principales deficiencias de versiones anteriores de este sistema operativo era la ausencia de un verdadero \textit{User-space}.
 Es decir, todos los procesos ejecutaban en $ring 0$ con el máximo nivel de permisos, y con acceso a toda la memoria.
 En esta entrega, esta deficiencia no existe más.
 Esto lo logramos en 2 partes: ejecución en $ring 3$ y paginación.
-En esta seccion nos vamos a concentrar en como llegar a $ring 3$. 
+En esta seccion nos vamos a concentrar en las ventajas de ejecutar en $ring 3$. 
 Paginación tiene su propia sección más adelante.(Ver sección \ref{sec:Paginación})
+
 
 La transición de $ring 0$ a $ring 3$ es la piedra fundamental de la construcción de muchos aspectos de esta nueva entrega.
 Esta nos permite hacer uso de features de \textit{x86} como lo es el \textit{Task State Segment}.
@@ -366,6 +367,9 @@ incluyendo las tablas de páginas de cada proceso al comenzar.
 Por otra parte, al contrario de las expectativas el uso de una memoria caché no acelera la ejecución sino que la ralentiza. Esto se
 debe a que nuestro sistema operativo ya contaba con un capa simil caché a nivel Ext2. 
 
+Con la adicion de paginacion y \textit{User-space}, el SO quedo mas completo y robusto.
+Si bien quedan algunos problemas de seguridad que solucionar, los procesos ejecutan en contextos totalmente aislados.
+
 \newpage     
 \section{Referencias}
 
@@ -414,6 +418,7 @@ este trabajo.\\
   \item http://en.wikipedia.org/wiki/Cache
   \item http://en.wikipedia.org/wiki/Cache\_algorithm
   \item http://en.wikipedia.org/wiki/Page\_cache 
+  \item Intel IA32 Software Developer vol. 3
 \end{itemize}
    
 \end{document}
