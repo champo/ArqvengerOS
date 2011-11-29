@@ -8,7 +8,7 @@
 #include "library/sys.h"
 
 #define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
-#define TABLE_ENTRIES 256
+#define TABLE_ENTRIES 8
 
 struct Chunk {
     unsigned long long initialSector;
