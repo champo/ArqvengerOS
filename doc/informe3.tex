@@ -250,8 +250,7 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
 \section{Agregados}
 
         \subsection{Comandos para demostrar funcionalidad del sistema}
-        %TODO esta bien esto aca? o una subsection para cada comando?
-        
+             
         Para demostrar el funcionamiento de la unidad de paginación y la protección de memoria implementamos un simple comando \textit{rma} (Random Access Memory), 
         que acceda a un sector de memoria elegido de forma aleatoria. De esta forma se puede observar como el sistema se da cuenta que (en la gran mayoría de 
         los casos) se está intentando acceder a un sector de memoria que es ajeno al proceso que esta corriendo y no lo permitirá. Para ver más acerca de este 
@@ -261,6 +260,7 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
         \textit{stack} del proceso hasta un tamaño determinado (el cual recibe como argumento) o de forma indefinida (si no se le proporciona un tamaño tope).
         Se puede observar en la consola como el comando corre un tiempo hasta que termine abruptamente su ejecución cuando alcanza el tamaño máximo determinado 
         o cuando sobrepasa la máxima capacidad para el \textit{stack} de un proceso. Dicha capacidad esta fijada en 1024 páginas, es decir $4 Mb$.\\
+	Es interesante mencionar que la forma de hacer crecer el \textit{stack} es un con una simple recursión.
 
         Además, puede observarse en la \textit{Log Terminal} como el sistema va reservando páginas de forma incremental.
 
