@@ -1,13 +1,11 @@
 #include "shell/adduser/adduser.h"
+#include "shell/utils.h"
 #include "system/accessControlList/users.h"
 #include "system/accessControlList/groups.h"
-#include "system/call/ioctl/keyboard.h"
 #include "library/string.h"
 #include "library/stdio.h"
 #include "drivers/videoControl.h"
 #include "mcurses/mcurses.h"
-
-#define cleanbuffer() while(getchar()!='\n')
 
 
 void adduser(char* argv) {
@@ -20,8 +18,6 @@ void adduser(char* argv) {
     struct User* user;
     struct Group* group;
 
-    termios oldTermios;
-    termios passwdTermios = {1 , 0};
 
     printf("\n");
 
@@ -30,10 +26,10 @@ void adduser(char* argv) {
             printf("-Username invalid or already taken\n");
             printf("-Please choose another\n");
         }
-        printf("Login name for new user []:");
-        scanf("%s",username);
-        cleanbuffer();
+
+        askForInput("Login name for new user []:", username);
         first = 0;
+
     } while(strcmp(username,"") == 0 ||  (user = get_user_by_name(username)) != NULL);
 
     free_user(user);
@@ -45,9 +41,8 @@ void adduser(char* argv) {
             printf("-Group '%s' does not exists\n", groupname);
             printf("-Please choose another\n");
         }
-        printf("Initial group [ users ]:");
-        scanf("%s", groupname);
-        cleanbuffer();
+
+        askForInput("Initial group [ users ]:", groupname);
 
         if (strcmp(groupname, "") == 0) {
             strcpy(groupname, "users");
@@ -62,13 +57,11 @@ void adduser(char* argv) {
     printf("Login name: %s\n", username);
     printf("UID: [ Next available ]\n");
     printf("Initial group: %s\n", groupname);
-
     printf("\n");
+
     do {
-        printf("This is it... if you want to bail out, type quit. Otherwise, press\n");
-        printf("ENTER to go ahead and make the account.\n");
-        scanf("%s", proceed);
-        cleanbuffer();
+        askForInput("This is it... if you want to bail out, type quit. Otherwise, press\n"
+                "ENTER to go ahead and make the account.\n", proceed);
 
     } while (strcmp(proceed, "quit") != 0 && strcmp(proceed, "") != 0);
 
@@ -78,16 +71,7 @@ void adduser(char* argv) {
 
     printf("\n\nCreating new account...\n");
 
-    printf("Password:");
-
-    ioctl(0, TCGETS, (void*) &oldTermios);
-    ioctl(0, TCSETS, (void*) &passwdTermios);
-
-    scanf("%s", passwd);
-    cleanbuffer();
-
-    ioctl(0, TCSETS, (void*) &oldTermios);
-    printf("\n");
+    askForPasswd("Password:", passwd);
 
     uid = create_user(username, passwd, groupname);
 

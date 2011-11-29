@@ -1,13 +1,12 @@
 #include "shell/passwd/passwd.h"
+#include "shell/utils.h"
 #include "system/accessControlList/users.h"
 #include "library/stdio.h"
 #include "mcurses/mcurses.h"
 #include "library/string.h"
 #include "drivers/videoControl.h"
-#include "system/call/ioctl/keyboard.h"
 #include "library/sys.h"
 
-#define cleanbuffer() while(getchar()!='\n')
 
 void passwd(char* argv) {
 
@@ -17,8 +16,6 @@ void passwd(char* argv) {
     char username[200];
     int uid, gid;
     struct User* me;
-    termios oldTermios;
-    termios passwdTermios = {1 , 0};
 
     getProcessPersona(getpid(), &uid, &gid);
     me = get_user_by_id(uid);
@@ -27,19 +24,7 @@ void passwd(char* argv) {
 
     printf("Changing password for %s\n", username);
 
-    printf("(current) password:");
-
-    ioctl(0, TCGETS, (void*) &oldTermios);
-    ioctl(0, TCSETS, (void*) &passwdTermios);
-    
-    scanf("%s", old_passwd);
-    cleanbuffer();
-
-    ioctl(0, TCSETS, (void*) &oldTermios);
-    printf("\n");
-
-
-    //printf("I AM %s uid: %d gid: %d\n",me->name, me->id, me->gid[0]);
+    askForPasswd("(current) password:", old_passwd);
 
     if (strcmp(old_passwd, me->passwd) != 0) {
         printf("passwd: Authentication failure\n");
@@ -47,27 +32,8 @@ void passwd(char* argv) {
         return;
     }
     
-    printf("Enter new password:");
-    
-    ioctl(0, TCGETS, (void*) &oldTermios);
-    ioctl(0, TCSETS, (void*) &passwdTermios);
-    
-    scanf("%s", new_passwd1);
-    cleanbuffer();
-    
-    ioctl(0, TCSETS, (void*) &oldTermios);
-    printf("\n");
-
-    printf("Retype new password:");
-
-    ioctl(0, TCGETS, (void*) &oldTermios);
-    ioctl(0, TCSETS, (void*) &passwdTermios);
-    
-    scanf("%s", new_passwd2);
-    cleanbuffer();
-    
-    ioctl(0, TCSETS, (void*) &oldTermios);
-    printf("\n");
+    askForPasswd("Enter new password:", new_passwd1);
+    askForPasswd("Retype new password:", new_passwd2);
 
     if (strcmp(new_passwd1, new_passwd2) != 0) {
         printf("Sorry, passwords do not match\n");
@@ -90,8 +56,6 @@ void manPasswd(void) {
 
     printf("[ LOGIN ]\n");  
 
-    //TOO MUCH???
-    
     setBold(1);
     printf("DESCRIPTION\n");
     setBold(0);

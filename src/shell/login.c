@@ -5,8 +5,8 @@
 #include "system/accessControlList/users.h"
 #include "system/call/ioctl/keyboard.h"
 #include "shell/shell.h"
+#include "shell/utils.h"
 
-#define cleanbuffer() while(getchar()!='\n')
 
 struct User* askForLogin(void);
 
@@ -15,9 +15,7 @@ void login(char* unused) {
     while(1) {
 
         struct User* user;
-        do {
-            printf("login:");
-        } while ((user = askForLogin()) == NULL);
+        while ((user = askForLogin()) == NULL);
 
         setProcessPersona(getpid(), user->id, user->gid[0]);
 
@@ -34,23 +32,13 @@ struct User* askForLogin(void) {
     int promptLen = strlen("login");
     char passwd[MAX_PASSWD_LEN];
     char username[MAX_USERNAME_LEN];
-    termios passwdTermios = {1 , 0};
     termios userTermios = {1, 1};
 
-    scanf("%s", username);
-    cleanbuffer();
+    askForInput("Login:", username);
 
-    printf("Password:");
+    askForPasswd("Password:", passwd);
 
-    ioctl(0, TCGETS, (void*) &userTermios);
-    ioctl(0, TCSETS, (void*) &passwdTermios);
-
-    scanf("%s", passwd);
-    cleanbuffer();
-
-    ioctl(0, TCSETS, (void*) &userTermios);
-
-    printf("\n\n");
+    printf("\n");
 
     struct User* user = get_user_by_name(username);
 
@@ -59,7 +47,9 @@ struct User* askForLogin(void) {
             return user;
         }
     }
+
     printf("Login incorrect\n");
+
     return NULL;
 
 }
