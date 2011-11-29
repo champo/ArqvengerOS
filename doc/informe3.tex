@@ -245,7 +245,7 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
         marcarlos como \textit{dirty} (``sucios'') para que sean luego escritos a disco. La información en estos sectores es escrita a disco en algún momento posterior
         según criterio de sincronización implementado o cuando son desalojados de la caché (\textit{cache eviction}). \\
 
-        Inicialmente, implementamos la técnica de \textit{write-through},  para probar el funcionamiento de nuestra capa de caché, 
+        Inicialmente, implementamos la técnica de \textit{write-through},  para probar el funcionamiento de nuestra capa de caché.
         Luego, extendimos su funcionalidad para implementar \textit{write-back}. \\
 
         El criterio que elegimos para sincronizar una página cacheada fue bastante sencillo: si una página lleva más de un segundo ``sucia'', se debe escribir a disco.
@@ -293,28 +293,6 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
 
         La decisión de implementar esta \textit{Log Terminal}, resultó muy útil tanto a la hora de testear y depurar nuestro sistema, como a la hora de demostrar al 
         usuario las distintas funcionalidades del mismo (protección de memoria, cache de disco, stack creciente de forma dinámica, etc...).\\
-
-
-        \subsection{Memory managment}
-        Inicialmente, el trabajo práctico contaba con múltiples arrays de tamaño estático para guardar todos los datos internos del \textit{kernel}.
-        Por supuesto, esta solución es menos que óptima, ya que genera un desperdicio de memoria e impone límites arbitrarios al sistema.
-        Para evitar esto, desarrollamos un sistema de allocación de páginas de memoria.
-        Y encima de este sistema, utilizamos la implementación de \textit{malloc} de Dario Sneidermanis, publicada en \href{https://github.com/esneider/malloc}{Github}.
-
-        Para allocar páginas, hicimos uso de información provista por \textit{Grub} que permite saber exactamente qué zonas de memoria se pueden utilizar, 
-        y cuanta memoria hay disponible.
-        Esta memoria la dividimos en bloques de $4KB$, teniendo en mente la posibilidad de agregar paginación al sistema.
-        Para obtener estas páginas optamos por un simple algoritmo de allocación basado en un bitmap de uso de páginas.
-
-        Una característica interesante de la implementación de \textit{malloc}, es que permite tener varios contextos de memoria distintos.
-        Lo que facilitó tener un contexto de memoria para el \textit{kernel}, y otro para cada proceso (excepto los procesos de kernel que usan el mismo 
-        que el \textit{kernel}).
-        La única limitación del sistema es que los contextos de proceso tienen un tamaño fijo, mientras que el del  \textit{kernel} crece a medida que es necesario.\\
-
-
-        \subsection{Terminal control sequences}
-        Nuestra implementación de terminal soporta una gran parte de \href{http://invisible-island.net/xterm/ctlseqs/ctlseqs.html}{xterm control sequences}.
-        Estas permiten manipular el cursor y el color de la pantalla desde los procesos utilizando sólo la primitiva \textit{write}.
 
 
 \newpage
