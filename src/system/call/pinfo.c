@@ -34,7 +34,7 @@ int _pinfo(struct ProcessInfo* data, size_t size) {
             data[pcount].timeStart = process->timeStart;
 
             if (*process->args != 0) {
-                int index = process->args - strchr(process->args, ' ') + 1;
+                int index = strchr(process->args, ' ') - process->args + 1;
                 strncpy(data[pcount].name, process->args, index);
                 data[pcount].name[index + 1] = '\0';
             } else {
