@@ -117,7 +117,7 @@ el \textit{file system} (contábamos con soporte Ext2) y las funcionalidades ya 
 \section{Proceso}
 
 En este TP hicimos una cantidad significativa de cambios a la estructura de proceso, y al manejo de los mismos a nivel permisos.
-Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implemtamos un verdadero \textit{User-space}.
+Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implementamos un verdadero \textit{User-space}.
 
 \subsection{User-space}
 Una de las principiles deficiencias de versiones anterios de este OS era la ausencia de un verdadero \textit{User-space}.
@@ -353,6 +353,9 @@ incluyendo las tablas de páginas de cada proceso al comenzar.
 
 Por otra parte, al contrario de las expectativas el uso de una memoria caché no acelera la ejecución sino que la ralentiza. Esto se
 debe a que nuestro sistema operativo ya contaba con un capa simil caché a nivel Ext2. 
+
+Con la adicion de paginacion y \textit{User-space}, el SO quedo mas completo y robusto.
+Si bien quedan algunos problemas de seguridad que solucionar, los procesos ejecutan en contextos totalmente aislados.
 
 \newpage     
 \section{Referencias}
