@@ -98,10 +98,16 @@ llamadas a sistema.
 
 En nuestra segunda versión se mejoró el manejo de los procesos agregando funcionalidad multitarea con dos técnicas de 
 \textit{scheduling} diferentes. Se agregó soporte para distintos usuarios y un \textit{driver ATA} para poder contar con persistencia 
-de la información. Además se implementó un \textit{file system} que entre otras funcionalidades manejaba FIFOs, permisos, 
+de información. Además se implementó un \textit{file system} que entre otras funcionalidades manejaba FIFOs, permisos, 
 archivos ocultos, \textit{links} simbólicos y directorios. En compañía de esto, nos vimos obligados a extender nuestra librería de 
 C y de proveerle al usuarios un conjunto de comandos para poder manipular el \textit{file system} y poder probar las nuevas 
-prestaciones de nuestro sistema operativo.
+prestaciones de nuestro sistema operativo. 
+
+Además el sistema ya contaba con un manejo de memoria bastante avanzado, con un \textit{heap} individual por proceso y una implementación
+funcional de \textit{malloc}.
+
+Como hay requisitos de este trabajo práctico que fueron desarrollados en versiones anteriores, no son incluidos en este informe ya que fueron
+objeto de informes anteriores. Ante cualquier duda sobre estos temas referirse a ellos y/o contactarnos.
 
 \newpage
 
@@ -115,6 +121,7 @@ el \textit{file system} (contábamos con soporte Ext2) y las funcionalidades ya 
 \newpage
 
 \section{Proceso}
+\label{sec:Proceso}
 
 En este trabajo práctico hicimos una cantidad significativa de cambios a la estructura de proceso, y al manejo de los mismos a nivel permisos.
 Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implementamos un verdadero \textit{User-space}.
@@ -212,17 +219,17 @@ generó dicha excepción.
 \newpage
 
 \section{Memoria caché}
-
+\label{sec:Memoria caché}
 Nuestro sistema operativo cuenta con una capa de caché entre \textit{ext2} y el driver \textit{ATA}. Para implementar esta capa decidimos usar una tabla 
 a nodos de una lista doblemente linkeada (\textit{Doubly-Linked List}), ordenada por el criterio \textit{LRU} (\textit{Least Recently Used}), el menos usado
  recientemente. Cada nodo es un pedazo (\textit{chunk}) de memoria con la información inherente a él (sector inicial, \textit{flag de dirty}, 
 cantidad de accesos, última vez que fue accedido, etc...). Esta estructura de datos resulta vital para las tareas a realizar ya que permite tener una lista
 en orden constante y de acceso constante.\\
 
-Después de sobre el asunto, decidimos que estos pedazos de memoria tengan tamaño (cantidad de sectores)
+Después de meditar sobre el asunto, decidimos que estos pedazos de memoria tengan tamaño (cantidad de sectores)
 fijo y fueran simplemente páginas. Esta decisión nos facilitó el posterior trabajo.\\
 
-El comportamiento de la caché es el típico de esta tipo de memoria. Cada vez que se lee o escribe al disco, si la información no se encuentra en la caché, se
+El comportamiento de la caché es el típico de comportamiento este tipo de memoria. Cada vez que se lee o escribe al disco, si la información no se encuentra en la caché, se
  la almacena para accesos futuros. Luego, si se quiere volver a acceder a dicha información, estará disponible en memoria, sin necesisdad de acceder al disco, lo 
 cual es una operación costosa.\\
 
@@ -342,17 +349,17 @@ sección es comentarlos con el fin reflejar proceso de aprendizaje.
         La solución trivial es simplemente hacer accesible esta memoria al proceso, pero va en contra de la utilidad de activar paginación en el primer lugar.
         Finalmente, solucionamos este problema copiando el valor al principio del stack del proceso, y pasando una referencia a este lugar al \textit{entry point}.
 
-	\subsection{ungetc}
+	    \subsection{ungetc}
 
-	La manera en la que implementamos la función de la librería estándar \textit{ungetc} comprendía entre otras cosas la
-	extensión de nuestra estructura \textit{FILE}, conteniendo variables de control para el correcto funcionamiento de la función.
-	Dado que la entrada estándar, la salida estándar y la salida de errores utilizaban estan funciones, en un principio fue		
-	natural implementarlas como variables externas accesibles por cualquier proceso. Con los cambios de este trabajo ya no era
-	aceptable esta implementación.
-	Como solución encontramos que cada proceso contenga dentro de un area reservada de memoria las estructuras \textit{FILE} de 
-	estos flujos de información. Dado que estas estructuras contenian información adicional referente a \textit{ungetc} fue 
-	necesario reservar una página para almacenar esto. De forma arbitraria sea eligió utilizar la dirección lógica en los 3GB 
-	de memoria para almacenar esto.
+	    La manera en la que implementamos la función de la librería estándar \textit{ungetc} comprendía entre otras cosas la
+	    extensión de nuestra estructura \textit{FILE}, conteniendo variables de control para el correcto funcionamiento de la función.
+	    Dado que la entrada estándar, la salida estándar y la salida de errores utilizaban estan funciones, en un principio fue		
+	    natural implementarlas como variables externas accesibles por cualquier proceso. Con los cambios de este trabajo ya no era
+	    aceptable esta implementación.
+	    Como solución encontramos que cada proceso contenga dentro de un área reservada de memoria las estructuras \textit{FILE} de 
+	    estos flujos de información. Dado que estas estructuras contenían información adicional referente a \textit{ungetc} fue 
+	    necesario reservar una página para almacenar esto. De forma arbitraria sea eligió utilizar la dirección lógica en los $3GB$ 
+	    de memoria para almacenar esto.
 
 \newpage
 
@@ -365,10 +372,21 @@ Esto es debido a la activación de la unidad de paginación ya que requiere rese
 incluyendo las tablas de páginas de cada proceso al comenzar. 
 
 Por otra parte, al contrario de las expectativas el uso de una memoria caché no acelera la ejecución sino que la ralentiza. Esto se
-debe a que nuestro sistema operativo ya contaba con un capa simil caché a nivel Ext2. 
+debe a que nuestro sistema operativo ya contaba con un capa simil caché a nivel \textit{ext2}. 
 
-Con la adicion de paginacion y \textit{User-space}, el SO quedo mas completo y robusto.
+Con la adición de paginación y \textit{User-space}, el sistema operativo quedó más completo y robusto.
 Si bien quedan algunos problemas de seguridad que solucionar, los procesos ejecutan en contextos totalmente aislados.
+Por ejemplo, uno de los problemas por resolver es que utilizando \textit{read} y \textit{write} un proceso de usuario puede leer y escribir cualquier dirección de memoria.
+Esto permite por ejemplo acceso a información de otros procesos y ejecución de código arbitrario con permisos de \textit{kernel}.
+
+Con respecto al tema de la caché, cabe remarcar que dado el criterio para el desalojo (\textit{eviction}) escogido, LRU, la estructura de datos que decidimos usar mostró ser una 
+excelente decisión dada la flexibilidad que ofrece al poder mantener el orden y poder acceder a un elemento en tiempo constante. La estructura de datos de la que estamos hablando es 
+la tabla de punteros a nodos de una lista doblemente linkeada. (Ver sección \ref{Memoria caché}).
+
+Uno de los puntos más fuertes de este trabajo práctico es el hecho de poder manejar los \textit{Page Faults} debido a un crecimiento del \textit{stack}. Esto es gracias a la decisión 
+de diseño de tener un \textit{kernel stack} por proceso, destinado al manejo de interrupciones, lo que es posible debido al uso de un \textit{TSS}, como ya se explicó en la sección 
+\ref{sec:Proceso}.
+
 
 \newpage     
 \section{Referencias}
