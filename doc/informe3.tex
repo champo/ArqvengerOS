@@ -110,7 +110,7 @@ prestaciones de nuestro sistema operativo.
 Además de corregir ciertos comportamientos inesperados (había ciertos problemas en el comando \textit{passwd} y con los
 \textit{links} simbólicos), era correspondiente agregar a los comandos ya presentes \textit{mv} y \textit{cp}. Este último, 
 debía aceptar la opción ``-r'' para realizar una copia recursiva entre directorios. La forma en la que estaba implementado 
-el \textit{file system} (contábamos con soporte Ext2) y los funcionalidades ya existentes hicieron de esta una tarea más que sencilla.
+el \textit{file system} (contábamos con soporte Ext2) y las funcionalidades ya existentes hicieron de esta una tarea más que sencilla.
 
 \newpage
 
@@ -259,7 +259,7 @@ Nuestra tabla tiene 256 entradas por lo que nuestra caché tiene un tamaño tota
 \section{Agregados}
 
         \subsection{Comandos para demostrar funcionalidad del sistema}
-        
+             
         Para demostrar el funcionamiento de la unidad de paginación y la protección de memoria implementamos un simple comando \textit{rma} (Random Access Memory), 
         que accede a un sector de memoria elegido de forma aleatoria. De esta forma se puede observar como el sistema se da cuenta que (en la gran mayoría de 
         los casos) se está intentando acceder a un sector de memoria que es ajeno al proceso que esta corriendo y no lo permitirá. Para ver más acerca de este 
@@ -341,6 +341,30 @@ sección es comentarlos con el fin reflejar proceso de aprendizaje.
         La solución trivial es simplemente hacer accesible esta memoria al proceso, pero va en contra de la utilidad de activar paginación en el primer lugar.
         Finalmente, solucionamos este problema copiando el valor al principio del stack del proceso, y pasando una referencia a este lugar al \textit{entry point}.
 
+	\subsection{ungetc}
+
+	La manera en la que implementamos la función de la librería estándar \textit{ungetc} comprendía entre otras cosas la
+	extensión de nuestra estructura \textit{FILE}, conteniendo variables de control para el correcto funcionamiento de la función.
+	Dado que la entrada estándar, la salida estándar y la salida de errores utilizaban estan funciones, en un principio fue		
+	natural implementarlas como variables externas accesibles por cualquier proceso. Con los cambios de este trabajo ya no era
+	aceptable esta implementación.
+	Como solución encontramos que cada proceso contenga dentro de un area reservada de memoria las estructuras \textit{FILE} de 
+	estos flujos de información. Dado que estas estructuras contenian información adicional referente a \textit{ungetc} fue 
+	necesario reservar una página para almacenar esto. De forma arbitraria sea eligió utilizar la dirección lógica en los 3GB 
+	de memoria para almacenar esto.
+
+\newpage
+
+\section{Conclusiones}
+
+Durante el desarrollo de este trabajo práctico pudimos sacar distintas conclusiones.
+
+Por un lado, es notable que el sistema operativo tarda un tiempo considerable en comenzar en comparación con la versión previa.
+Esto es debido a la activación de la unidad de paginación ya que requiere reservar memoria e inicializar ciertas estructuras, 
+incluyendo las tablas de páginas de cada proceso al comenzar. 
+
+Por otra parte, al contrario de las expectativas el uso de una memoria caché no acelera la ejecución sino que la ralentiza. Esto se
+debe a que nuestro sistema operativo ya contaba con un capa simil caché a nivel Ext2. 
 
 \newpage     
 \section{Referencias}
