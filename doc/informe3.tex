@@ -120,11 +120,11 @@ En este TP hicimos una cantidad significativa de cambios a la estructura de proc
 Principalmente mejoramos el manejo de la memoria asignada a cada proceso, y implementamos un verdadero \textit{User-space}.
 
 \subsection{User-space}
-Una de las principiles deficiencias de versiones anterios de este OS era la ausencia de un verdadero \textit{User-space}.
+Una de las principales deficiencias de versiones anterios de este OS era la ausencia de un verdadero \textit{User-space}.
 Es decir, todos los procesos ejecutaban en ring 0 con el maximo nivel de permisos, y con acceso a toda la memoria.
 En esta entrega, esta deficiencia no existe mas.
 Esto lo logramos en 2 partes: ejecucion en ring 3 y paginacion.
-En esta seccion nos vamos a concentrar en como llegar a ring 3. 
+En esta seccion nos vamos a concentrar en las ventajas de ejecutar en ring 3. 
 Paginacion tiene su propia seccion mas adelante.
 
 La transicion de ring 0 a ring 3 es la piedra fundamental de la construccion de muchos aspectos de esta nueva entrega.
