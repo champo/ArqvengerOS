@@ -29,10 +29,12 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
 
     setupGDT();
     setupIDT();
-    
+
     stdin = STACK_TOP_MAPPING;
     stdout = (STACK_TOP_MAPPING + sizeof(FILE));
     stderr = (STACK_TOP_MAPPING + 2 * sizeof(FILE));
+
+    tty_early_init();
 
     cache_init();
     ata_init(info);

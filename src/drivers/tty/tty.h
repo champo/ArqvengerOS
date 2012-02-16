@@ -10,6 +10,8 @@ size_t tty_write(const void* buf, size_t length);
 
 void tty_run(char* unused);
 
+void tty_early_init(void);
+
 size_t tty_read(void* buffer, size_t count);
 
 int ioctlKeyboard(int cmd, void* argp);

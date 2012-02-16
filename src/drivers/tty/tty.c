@@ -19,15 +19,16 @@ static size_t op_read(struct FileDescriptor* fd, void* buffer, size_t len);
 
 static int op_ioctl(struct FileDescriptor* fd, int cmd, void* argp);
 
+void tty_early_init(void) {
+    tty_screen_init();
+
+    terminals[activeTerminal].active = 1;
+    tty_write("\033[1;1H\033[2J", 10);
+}
+
 void tty_run(char* unused) {
 
-    tty_screen_init();
     tty_keyboard_init();
-
-    activeTerminal = 0;
-    terminals[activeTerminal].active = 1;
-
-    tty_write("\033[1;1H\033[2J", 10);
 
     fs_register_ops(INODE_CHARDEV, (struct FileDescriptorOps) {
             .open = NULL,
