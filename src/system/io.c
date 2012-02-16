@@ -24,3 +24,14 @@ inline unsigned char inB(unsigned short port) {
 inline void outB(unsigned short port, unsigned char data) {
     __asm__ volatile ("outb %0, %1" : : "a"(data), "Nd"(port));
 }
+
+unsigned int inD(unsigned short port) {
+    unsigned int ret;
+    __asm__ volatile ("inl %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}
+
+void outD(unsigned short port, unsigned int data) {
+    __asm__ volatile ("outl %0, %1" : : "a"(data), "Nd"(port));
+}
+
