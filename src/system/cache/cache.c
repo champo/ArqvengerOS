@@ -6,6 +6,9 @@
 #include "system/call.h"
 #include "system/common.h"
 #include "library/sys.h"
+#include "system/processQueue.h"
+#include "system/process/table.h"
+#include "system/scheduler.h"
 
 #define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
 #define TABLE_ENTRIES 8
@@ -17,18 +20,21 @@ struct Chunk {
     int accesses;
     int firstWriteTime;
     int lastAccessTime;
+
+    int available;
+    int evicting;
+    struct ProcessQueue waitQueue;
+
     struct Chunk* next;
     struct Chunk* prev;
 
     int index;
 };
 
-
 struct LRUList {
     struct Chunk* first;
     struct Chunk* last;
 };
-
 
 static struct Chunk** table = NULL;
 
@@ -38,13 +44,17 @@ static struct Chunk* find_chunk(int index);
 
 static int evict(int minPages, int force);
 
-static void release_chunk(int tableIndex);
+static int release_chunk(int tableIndex);
 
 static void cache_list_add(struct LRUList* list, struct Chunk* chunk);
 
 static void cache_list_remove(struct LRUList* list, struct Chunk* chunk);
 
 static void mark_access(struct Chunk* chunk);
+
+static void wake_all(struct ProcessQueue* queue);
+
+static void block(struct ProcessQueue* queue, struct Process* process);
 
 /**
  *  Cache flush process entry point.
@@ -167,7 +177,6 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
             return -1;
         }
 
-        //TODO: Uncomment me when write-back is enabled
         mark_access(chunk);
 
         if (!chunk->dirty) {
@@ -211,9 +220,25 @@ struct Chunk* find_chunk(int index) {
     for (int i = 0; i < TABLE_ENTRIES; i++) {
 
         if (table[i]) {
+
             if (table[i]->initialSector == sector) {
+
+                struct Process* process = scheduler_current();
+
+                if (table[i]->evicting) {
+                    // We cancel the eviction, since this resource is needed
+                    table[i]->evicting = 0;
+                }
+
+                // Wait until the resource is available
+                while (!table[i]->available) {
+                    block(&table[i]->waitQueue, process);
+                }
+                process->schedule.ioWait = 0;
+
                 return table[i];
             }
+
         } else if (firstEmpty == -1) {
             firstEmpty = i;
         }
@@ -235,19 +260,25 @@ struct Chunk* find_chunk(int index) {
     }
 
     log_info("Loading page at sector %u into cache\n", sector);
+
     struct Chunk* entry = kalloc(sizeof(struct Chunk));
     entry->initialSector = sector;
     entry->buffer = allocPages(1);
-    ata_read(sector, SECTORS_PER_PAGE, entry->buffer);
-    log_info("Loaded page at sector %u\n", sector);
     entry->dirty = 0;
     entry->accesses = 0;
     entry->firstWriteTime = 0;
     entry->lastAccessTime = _time(NULL);
     entry->index = firstEmpty;
+    entry->available = 0;
+    entry->evicting = 0;
+    entry->waitQueue.first = NULL;
+    entry->waitQueue.last = NULL;
     table[firstEmpty] = entry;
 
     cache_list_add(&cache_list, entry);
+
+    ata_read(sector, SECTORS_PER_PAGE, entry->buffer);
+    entry->available = 1;
 
     return entry;
 }
@@ -278,8 +309,14 @@ int cache_sync(int force) {
             // One second dirty is a more than reasonable time (I think :P)
             if (entry->dirty && (force || entry->firstWriteTime < now)) {
                 log_info("Flushing cache for sector %u entry\n", entry->initialSector);
+
+                entry->available = 0;
                 ata_write(entry->initialSector, SECTORS_PER_PAGE, entry->buffer);
+
+                entry->available = 1;
                 entry->dirty = 0;
+
+                wake_all(&entry->waitQueue);
             }
         }
     }
@@ -321,8 +358,7 @@ int evict(int minPages, int force) {
     while (entry && evicted < minPages) {
 
         if (!entry->dirty && (entry->lastAccessTime < now || force)) {
-            release_chunk(entry->index);
-            evicted++;
+            evicted += release_chunk(entry->index);
         }
 
         entry = entry->prev;
@@ -331,20 +367,50 @@ int evict(int minPages, int force) {
     return evicted;
 }
 
-void release_chunk(int tableIndex) {
+int release_chunk(int tableIndex) {
 
     struct Chunk* entry = table[tableIndex];
-    log_info("Releasing chunk for sector %u\n", entry->initialSector);
 
+    entry->evicting = 1;
     if (entry->dirty) {
+        entry->available = 0;
         ata_write(entry->initialSector, SECTORS_PER_PAGE, entry->buffer);
     }
 
-    cache_list_remove(&cache_list, entry);
+    wake_all(&entry->waitQueue);
 
-    freePages(entry->buffer, 1);
-    kfree(entry);
+    if (entry->evicting) {
+        log_info("Releasing chunk for sector %u\n", entry->initialSector);
+        cache_list_remove(&cache_list, entry);
 
-    table[tableIndex] = NULL;
+        freePages(entry->buffer, 1);
+        kfree(entry);
+
+        table[tableIndex] = NULL;
+
+        return 1;
+    } else {
+        entry->available = 1;
+        return 0;
+    }
+}
+
+void wake_all(struct ProcessQueue* queue) {
+    struct Process* process = process_queue_pop(queue);
+
+    while (process != NULL) {
+        process_table_unblock(process);
+        process = process_queue_pop(queue);
+    }
+}
+
+void block(struct ProcessQueue* queue, struct Process* process) {
+
+    process_queue_push(queue, process);
+
+    process->schedule.ioWait = 1;
+    process_table_block(process);
+
+    scheduler_do();
 }
 
