@@ -239,6 +239,7 @@ struct Chunk* find_chunk(int index) {
     entry->initialSector = sector;
     entry->buffer = allocPages(1);
     ata_read(sector, SECTORS_PER_PAGE, entry->buffer);
+    log_info("Loaded page at sector %u\n", sector);
     entry->dirty = 0;
     entry->accesses = 0;
     entry->firstWriteTime = 0;

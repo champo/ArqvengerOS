@@ -29,8 +29,6 @@ void tty_early_init(void) {
 
 void tty_run(char* unused) {
 
-    tty_keyboard_init();
-
     fs_register_ops(INODE_CHARDEV, (struct FileDescriptorOps) {
             .open = NULL,
             .write = op_write,
@@ -49,6 +47,16 @@ void tty_run(char* unused) {
     if (res != 0 && res != EEXIST) {
         panic();
     }
+
+    /*
+     * Due to the hackish use of mknod (needs it's system call, yes)
+     * We *can't* enable DMA before this point.
+     * Doing so causes the OS to assume it's doing disk IO in an interrupt,
+     * which cleary it's not, and thus, block the process to never wake it up.
+     *
+     * So please, do not touch the next line unless you're really sure of it.
+     */
+    ata_enable_dma();
 
     open("/tty", O_RDONLY);
     open("/tty", O_WRONLY);
@@ -92,6 +100,9 @@ void tty_run(char* unused) {
 
     terminals[NUM_TERMINALS - 1].termios.canon = 1;
     terminals[NUM_TERMINALS - 1].termios.echo = 0;
+
+    tty_keyboard_init();
+
 
     while (1) {
         process_scancode();

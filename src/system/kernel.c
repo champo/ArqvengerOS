@@ -44,7 +44,8 @@ void kmain(struct multiboot_info* info, unsigned int magic) {
 
     struct Process* idleProcess = process_table_new(idle, "idle", NULL, 1, NO_TERMINAL, 0);
     struct Process* shellProcess = process_table_new(tty_run, "tty", idleProcess, 1, NO_TERMINAL, 0);
-    struct Process* cacheProcess = process_table_new(cache_flush, "cache_flush",idleProcess, 1, NO_TERMINAL, 0);
+    struct Process* cacheProcess = process_table_new(cache_flush, "cache_flush", idleProcess, 1, NO_TERMINAL, 0);
+
     yield();
 
     while (1) {}

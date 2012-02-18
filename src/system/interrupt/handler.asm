@@ -80,6 +80,7 @@ ISR 80, interruptDispatcher
 
 ISR 20, interruptDispatcher
 ISR 21, interruptDispatcher
+ISR 2E, interruptDispatcher
 
 ; Definition of exceptions Handlers
 ERR_ISR 00, interruptDispatcher

@@ -1,4 +1,5 @@
 #include "drivers/keyboard.h"
+#include "drivers/ata.h"
 #include "system/tick.h"
 #include "system/call.h"
 #include "system/io.h"
@@ -42,6 +43,7 @@ static void int0E(registers* regs);
 static void int20(registers* regs);
 static void int21(registers* regs);
 static void int80(registers* regs);
+static void int2E(registers* regs);
 static void exceptionHandler(registers* regs);
 void interruptDispatcher(registers regs);
 
@@ -70,19 +72,24 @@ void int21(registers* regs ) {
     keyboard_read();
 }
 
+void int2E(registers* regs) {
+    ata_irq();
+}
+
 /**
  * Register interrupts in the handler table.
  *
  */
 void setInterruptHandlerTable(void) {
-    int i;
-    for (i = 0;i < 32;i++) {
+
+    for (int i = 0; i < 32; i++) {
         table[i] = &exceptionHandler;
     }
-   
-    register(0E); 
+
+    register(0E);
     register(20);
     register(21);
+    register(2E);
 
     register(80);
 }
