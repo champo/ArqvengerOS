@@ -6,6 +6,7 @@
 #include "system/process/table.h"
 #include "system/scheduler.h"
 #include "system/fs/fs.h"
+#include "system/fs/fd.h"
 #include "shell/login.h"
 #include "library/stdio.h"
 #include "system/accessControlList/users.h"
