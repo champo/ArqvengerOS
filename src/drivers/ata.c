@@ -8,6 +8,7 @@
 #include "drivers/pci.h"
 #include "system/kprintf.h"
 #include "system/io.h"
+#include "system/interrupt.h"
 
 struct DriveInfo {
     size_t len;
@@ -100,6 +101,8 @@ void ata_enable_dma(void) {
         read = ata_dma_read;
         write = ata_dma_write;
         irq = ata_dma_irq;
+
+        interrupt_enable_disk();
     }
 }
 
@@ -107,4 +110,6 @@ void ata_disable_dma(void) {
     read = ata_pio_read;
     write = ata_pio_write;
     irq = NULL;
+
+    interrupt_disable_disk();
 }

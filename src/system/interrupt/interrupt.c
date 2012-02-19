@@ -161,6 +161,15 @@ void setupIDT(void) {
     setInterruptHandlerTable();
 
     /* Enable the interrupts we need in the PIC. */
+    interrupt_disable_disk();
+}
+
+void interrupt_disable_disk(void) {
+    outB(0x21,0xFC);
+    outB(0xA1,0xFF);
+}
+
+void interrupt_enable_disk(void) {
     outB(0x21, 0xF8);
     outB(0xA1, 0xBF);
 }
