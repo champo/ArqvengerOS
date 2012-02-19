@@ -1,5 +1,6 @@
 #include "system/fs/fs.h"
 #include "system/mm/allocator.h"
+#include "system/lock/mutex.h"
 #include "system/kprintf.h"
 #include "system/process/process.h"
 #include "drivers/ext2/ext2.h"
@@ -65,6 +66,7 @@ void free_inode(struct fs_Inode* inode) {
 
 void fs_inode_close(struct fs_Inode* inode) {
 
+    mutex_release(&inode->lock);
     inode->refCount--;
     if (inode->refCount == 0) {
 
@@ -164,26 +166,14 @@ int fs_rmdir(struct fs_Inode* path, const char* name) {
     return res;
 }
 
-int fs_unlink(struct fs_Inode* path, const char* name) {
+int fs_unlink(struct fs_Inode* path, const char* name, struct fs_Inode* inode) {
 
-    struct fs_DirectoryEntry entry = fs_findentry(path, name);
-    if (!entry.inode) {
-        return ENOENT;
-    }
-
-    struct fs_Inode* inode = fs_inode_open(entry.inode);
-    if (inode == NULL) {
-        return EIO;
-    }
     if (INODE_TYPE(inode->data) == INODE_DIR) {
         fs_inode_close(inode);
         return EISDIR;
     }
 
-    int res = remove_link(path, name, inode);
-    fs_inode_close(inode);
-
-    return res;
+    return remove_link(path, name, inode);
 }
 
 int fs_symlink(struct fs_Inode* path, const char* entry, const char* to) {

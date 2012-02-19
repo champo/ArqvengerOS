@@ -2,7 +2,6 @@
 #define __SYSTEM_FS_FD__
 
 #include "system/fs/direntry.h"
-#include "system/fs/inode.h"
 
 struct FileDescriptor;
 

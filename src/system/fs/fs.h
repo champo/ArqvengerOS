@@ -22,7 +22,7 @@ int fs_mkdir(struct fs_Inode* path, const char* name);
 
 int fs_rmdir(struct fs_Inode* path, const char* name);
 
-int fs_unlink(struct fs_Inode* path, const char* name);
+int fs_unlink(struct fs_Inode* path, const char* name, struct fs_Inode* inode);
 
 int fs_symlink(struct fs_Inode* path, const char* entry, const char* to);
 

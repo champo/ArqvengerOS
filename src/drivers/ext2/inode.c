@@ -1,6 +1,7 @@
 #include "drivers/ext2/inode.h"
 #include "drivers/ext2/superblock.h"
 #include "drivers/ext2/blockGroup.h"
+#include "system/lock/mutex.h"
 #include "system/mm/allocator.h"
 #include "system/fs/inode.h"
 #include "system/call.h"
@@ -116,6 +117,8 @@ struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
     size_t tableBlock = offsetInTable / fs->blockSize;
 
     struct fs_Inode* fs_inode = kalloc(sizeof(struct fs_Inode));
+    mutex_init(&fs_inode->lock);
+
     fs_inode->data = kalloc(sizeof(struct ext2_Inode));
     fs_inode->fileSystem = fs;
     fs_inode->number = number;

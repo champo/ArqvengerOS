@@ -1,4 +1,5 @@
 #include "system/call.h"
+#include "system/lock/mutex.h"
 #include "drivers/keyboard.h"
 #include "drivers/tty/tty.h"
 #include "system/process/table.h"
@@ -197,6 +198,8 @@ int _creat(const char* path, int mode) {
         return -1;
     }
 
+    mutex_lock(&directory->lock);
+
     if (can_write(directory) != 0) {
         kfree(base);
         kfree(filename);
@@ -214,7 +217,6 @@ int _creat(const char* path, int mode) {
 
     struct fs_DirectoryEntry fileEntry = fs_findentry(directory, filename);
 
-    fs_inode_close(directory);
     kfree(base);
     kfree(filename);
 
@@ -223,6 +225,12 @@ int _creat(const char* path, int mode) {
     }
 
     struct fs_Inode* file = fs_inode_open(fileEntry.inode);
+
+    // Since we want to ensure the file exists when we return, and close releases the lock
+    // we close it after we have the file in our hands
+    fs_inode_close(directory);
+
+    mutex_lock(&file->lock);
     if (fs_set_permission(file, mode) != 0) {
         fs_inode_close(file);
         return -1;
@@ -401,42 +409,49 @@ int _unlink(const char* path) {
     char* filename = path_file(path);
 
     struct fs_Inode* parent = resolve_path(base);
-    if (parent == NULL) {
-        kfree(base);
-        kfree(filename);
+    kfree(base);
 
+    if (parent == NULL) {
+        kfree(filename);
         return -1;
     }
+
+    mutex_lock(&parent->lock);
 
     if (can_write(parent) != 0) {
-        kfree(base);
         kfree(filename);
         fs_inode_close(parent);
         return -1;
     }
 
-    struct fs_DirectoryEntry nextdir = fs_findentry(parent, filename);
+    struct fs_DirectoryEntry entry = fs_findentry(parent, filename);
 
-    if (nextdir.inode == 0) {
+    if (entry.inode == 0) {
+        kfree(filename);
         fs_inode_close(parent);
-        return -1;
+        return ENOENT;
     }
 
+    struct fs_Inode* file = fs_inode_open(entry.inode);
+    if (file == NULL) {
+        kfree(filename);
+        fs_inode_close(parent);
+        return EIO;
+    }
 
-    struct fs_Inode* file = fs_inode_open(nextdir.inode);
+    mutex_lock(&file->lock);
 
     if (can_write(file) != 0) {
+        kfree(filename);
         fs_inode_close(parent);
         fs_inode_close(file);
         return -1;
     }
 
-    fs_inode_close(file);
+    int res = fs_unlink(parent, filename, file);
 
-    int res = fs_unlink(parent, filename);
-
-    kfree(base);
     kfree(filename);
+    fs_inode_close(file);
     fs_inode_close(parent);
 
     return res;
