@@ -11,6 +11,8 @@
 
 static struct ext2* fs;
 
+static struct Mutex tableLock;
+
 static struct fs_Inode *inodeTable[MAX_OPEN_INODES];
 
 // There's only 16 file types supported by ext2
@@ -24,6 +26,7 @@ static int add_link(struct fs_Inode* path, const char* name, struct fs_Inode* in
 
 struct fs_Inode* fs_inode_open(size_t inode) {
 
+    mutex_lock(&tableLock);
     for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
         if (inodeTable[i]) {
             if (inodeTable[i]->refCount <= 0) {
@@ -35,26 +38,32 @@ struct fs_Inode* fs_inode_open(size_t inode) {
     for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
         if (inodeTable[i] != NULL && inodeTable[i]->number == inode) {
             inodeTable[i]->refCount++;
+            mutex_lock(&(inodeTable[i]->lock));
+            mutex_release(&tableLock);
             return inodeTable[i];
         }
     }
 
-    //TODO: I need locking to avoid duplicate inodes
+    //TODO: I need finer grained locking
     struct fs_Inode* node = ext2_read_inode(fs, inode);
-    node->extra = NULL;
     if (node == NULL) {
+        mutex_release(&tableLock);
         return NULL;
     }
 
+    node->extra = NULL;
     node->refCount = 1;
     for (size_t i = 0; i < MAX_OPEN_INODES; i++) {
         if (inodeTable[i] == NULL) {
             inodeTable[i] = node;
+            mutex_lock(&node->lock);
+            mutex_release(&tableLock);
             return node;
         }
     }
 
     free_inode(node);
+    mutex_release(&tableLock);
 
     return NULL;
 }
@@ -85,8 +94,10 @@ struct fs_Inode* fs_root(void) {
 }
 
 int fs_load(void) {
+    mutex_init(&tableLock);
     fs = ext2_load(0);
-    fs_inode_open(2);
+    struct fs_Inode* root = fs_inode_open(2);
+    mutex_release(&root->lock);
 
     return 0;
 }

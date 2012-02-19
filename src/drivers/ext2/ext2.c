@@ -1,4 +1,5 @@
 #include "drivers/ext2/ext2.h"
+#include "system/lock/mutex.h"
 #include "drivers/ext2/internal.h"
 #include "drivers/ext2/superblock.h"
 #include "drivers/ext2/blockGroup.h"
@@ -95,7 +96,10 @@ struct ext2* ext2_load(unsigned long long startSector) {
 
 size_t inode_write(struct FileDescriptor* fd, const void* buffer, size_t len) {
 
+    mutex_lock(&fd->inode->lock);
     int res = ext2_write_inode_content(fd->inode, fd->offset, len, buffer);
+    mutex_release(&fd->inode->lock);
+
     if (res == -1) {
         return 0;
     } else {
@@ -106,7 +110,10 @@ size_t inode_write(struct FileDescriptor* fd, const void* buffer, size_t len) {
 
 size_t inode_read(struct FileDescriptor* fd, void* buffer, size_t len) {
 
+    mutex_lock(&fd->inode->lock);
     int res = ext2_read_inode_content(fd->inode, fd->offset, len, buffer);
+    mutex_release(&fd->inode->lock);
+
     if (res == -1) {
         return 0;
     } else {
@@ -117,12 +124,14 @@ size_t inode_read(struct FileDescriptor* fd, void* buffer, size_t len) {
 
 struct fs_DirectoryEntry readdir(struct FileDescriptor* fd) {
 
+    mutex_lock(&fd->inode->lock);
     struct DirectoryEntry entry;
     do {
         entry = ext2_dir_read(fd->inode, fd->offset);
         fd->offset += entry.entryLength;
     } while (entry.entryLength != 0 && entry.inode == 0);
 
+    mutex_release(&fd->inode->lock);
     if (entry.entryLength == 0) {
         return (struct fs_DirectoryEntry) {
             .inode = 0,

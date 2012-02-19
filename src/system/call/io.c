@@ -103,8 +103,6 @@ int _open(const char* path, int flags, int mode) {
     char* base = path_directory(path);
     char* filename = path_file(path);
 
-    int purpose;
-
     struct fs_Inode* directory = resolve_path(base);
     if (directory == NULL) {
         kfree(base);
@@ -135,12 +133,13 @@ int _open(const char* path, int flags, int mode) {
         }
     }
 
-    fs_inode_close(directory);
 
     kfree(base);
     kfree(filename);
 
     struct fs_Inode* file = fs_inode_open(fileEntry.inode);
+    fs_inode_close(directory);
+
     int gid, uid, file_gid, file_uid;
 
     file_uid = file->data->uid;
@@ -164,18 +163,17 @@ int _open(const char* path, int flags, int mode) {
         }
     }
 
-    //Pasamos los permisos
-
     if (INODE_TYPE(file->data) == INODE_LINK) {
         fd = open_sym_link(file, flags, mode);
-        fs_inode_close(file);
     } else {
         fs_fd(&process->fdTable[fd], file, flags);
         if (flags & O_APPEND) {
             process->fdTable[fd].offset = file->data->size;
         }
-        fs_inode_close(file);
     }
+
+    fs_inode_close(file);
+
     return fd;
 }
 
@@ -197,8 +195,6 @@ int _creat(const char* path, int mode) {
         kfree(filename);
         return -1;
     }
-
-    mutex_lock(&directory->lock);
 
     if (can_write(directory) != 0) {
         kfree(base);
@@ -230,7 +226,6 @@ int _creat(const char* path, int mode) {
     // we close it after we have the file in our hands
     fs_inode_close(directory);
 
-    mutex_lock(&file->lock);
     if (fs_set_permission(file, mode) != 0) {
         fs_inode_close(file);
         return -1;
@@ -416,8 +411,6 @@ int _unlink(const char* path) {
         return -1;
     }
 
-    mutex_lock(&parent->lock);
-
     if (can_write(parent) != 0) {
         kfree(filename);
         fs_inode_close(parent);
@@ -438,8 +431,6 @@ int _unlink(const char* path) {
         fs_inode_close(parent);
         return EIO;
     }
-
-    mutex_lock(&file->lock);
 
     if (can_write(file) != 0) {
         kfree(filename);
@@ -872,7 +863,6 @@ struct fs_Inode* resolve_path(const char* path) {
         index++;
         entry[i] = '\0';
 
-
         struct fs_DirectoryEntry nextdir = fs_findentry(curdir, entry);
         fs_inode_close(curdir);
 
@@ -881,6 +871,9 @@ struct fs_Inode* resolve_path(const char* path) {
         }
 
         curdir = fs_inode_open(nextdir.inode);
+        if (curdir == NULL) {
+            return NULL;
+        }
 
         permission = can_read(curdir);
 
