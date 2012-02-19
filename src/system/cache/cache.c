@@ -9,6 +9,8 @@
 #include "system/processQueue.h"
 #include "system/process/table.h"
 #include "system/scheduler.h"
+#include "library/call.h"
+#include "system/call/codes.h"
 
 #define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
 #define TABLE_ENTRIES 8
@@ -63,9 +65,7 @@ static void block(struct ProcessQueue* queue, struct Process* process);
 void cache_flush(char* unused) {
 
     while (1) {
-        disableInterrupts();
-        cache_sync(0);
-        enableInterrupts();
+        system_call(_SYS_CACHE_SYNC, 0, 0, 0);
         sleep(1);
     }
 }

@@ -43,4 +43,6 @@
 #define _SYS_MKFIFO 0xFA
 #define _SYS_STAT 106
 
+#define _SYS_CACHE_SYNC -1
+
 #endif

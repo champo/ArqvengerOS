@@ -10,6 +10,7 @@
 #include "system/mm/pagination.h"
 #include "system/process/process.h"
 #include "system/mm/stack.h"
+#include "system/cache/cache.h"
 
 typedef struct {
     int ds, es, fs, gs;
@@ -244,6 +245,12 @@ void int80(registers* regs) {
             break;
         case _SYS_STACKSIZE:
             regs->eax = _stacksize();
+            break;
+        case _SYS_CACHE_SYNC:
+            if (scheduler_current()->kernel) {
+                cache_sync(0);
+            }
+            break;
     }
 }
 
