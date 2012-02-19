@@ -17,6 +17,9 @@ void mutex_init(struct Mutex* mutex) {
 void mutex_lock(struct Mutex* mutex) {
 
     struct Process* me = scheduler_current();
+    if (me == NULL) {
+        return;
+    }
 
     if (mutex->owner == me) {
         mutex->levels++;
@@ -34,7 +37,7 @@ void mutex_lock(struct Mutex* mutex) {
 
 void mutex_release(struct Mutex* mutex) {
 
-    if (mutex->owner != scheduler_current()) {
+    if (mutex->owner != scheduler_current() || mutex->levels == 0) {
         // We'll just ignore release calls that have no effect
         return;
     }
