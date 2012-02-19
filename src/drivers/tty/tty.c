@@ -48,6 +48,7 @@ void tty_run(char* unused) {
     if (res != 0 && res != EEXIST) {
         panic();
     }
+    fs_inode_close(root);
 
     /*
      * Due to the hackish use of mknod (needs it's system call, yes)
