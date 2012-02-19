@@ -17,4 +17,6 @@ int ata_write(unsigned long long sector, int count, const void* buffer);
 
 void ata_enable_dma(void);
 
+void ata_disable_dma(void);
+
 #endif

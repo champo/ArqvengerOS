@@ -454,7 +454,7 @@ int _rename(const char* source, const char* dest) {
 
     char* cwd = kalloc(1024);
 
-    _getcwd(cwd, 1024); 
+    _getcwd(cwd, 1024);
 
     struct fs_Inode* cwdInode = resolve_path(cwd);
 
@@ -475,7 +475,7 @@ int _rename(const char* source, const char* dest) {
     struct fs_Inode* sourcedir = resolve_path(pathsource);
 
     kfree(pathsource);
-    
+
     //If the source directory doesn't exist, we return
     if (sourcedir == NULL) {
         return -1;
@@ -506,7 +506,7 @@ int _rename(const char* source, const char* dest) {
     }
 
     sourceInode = fs_inode_open(sourceEntry.inode);
-    
+
     //If for some reason we couldn't open the sorce inode, we return
     if (sourceInode == NULL) {
         fs_inode_close(sourcedir);
@@ -535,7 +535,7 @@ int _rename(const char* source, const char* dest) {
     fs_inode_close(sourceInode);
 
     char* filedest = path_file(dest);
-   
+
     //Let's check, if we want the file in the same place as before, it is an error.
     if (strcmp(filesource, filedest) == 0 && sourcedir->number == destdir->number) {
         fs_inode_close(sourcedir);
@@ -544,7 +544,7 @@ int _rename(const char* source, const char* dest) {
         kfree(filesource);
         return -1;
     }
-    
+
     struct fs_DirectoryEntry destEntry = fs_findentry(destdir, filedest);
 
     //If the destiny inode already exists....
@@ -583,13 +583,13 @@ int _rename(const char* source, const char* dest) {
             kfree(filedest);
             kfree(newDirDest);
             filedest = path_file(source);
-            
+
             //Okay, so right here we are in a special hell where we must copy a file inside a directory
             //but what if a file with the same name exists in the directory?
             //well, if it exists almost always fails
             //It doesn't fail if both source and destiny are regular files, in which case it makes
             //a regular mv.
-            
+
             struct fs_DirectoryEntry errorEntry = fs_findentry(destdir, filedest);
 
             //If the inode specified, exists...
@@ -630,7 +630,7 @@ int _rename(const char* source, const char* dest) {
             kfree(stringFileError);
         }
     }
-    
+
     //If we don't have the permissions to write in the destiny directory, we return
     if (can_write(destdir) != 0) {
         fs_inode_close(sourcedir);
@@ -649,7 +649,7 @@ int _rename(const char* source, const char* dest) {
             kfree(filedest);
             return -1;
         }
-       
+
         struct fs_Inode* root = fs_root();
 
         if (root->number == sourceInodeNumber) {

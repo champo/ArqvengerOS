@@ -38,6 +38,7 @@ struct fs_Inode* fs_inode_open(size_t inode) {
         }
     }
 
+    //TODO: I need locking to avoid duplicate inodes
     struct fs_Inode* node = ext2_read_inode(fs, inode);
     node->extra = NULL;
     if (node == NULL) {

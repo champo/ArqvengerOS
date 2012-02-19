@@ -103,3 +103,8 @@ void ata_enable_dma(void) {
     }
 }
 
+void ata_disable_dma(void) {
+    read = ata_pio_read;
+    write = ata_pio_write;
+    irq = NULL;
+}

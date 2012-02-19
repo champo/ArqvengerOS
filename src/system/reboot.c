@@ -2,6 +2,7 @@
 #include "system/common.h"
 #include "system/io.h"
 #include "system/cache/cache.h"
+#include "drivers/ata.h"
 
 #define INTERFACE_PORT 0x64
 #define IO_PORT 0x60
@@ -23,6 +24,7 @@ void reboot(void) {
 
     // We use the keyboard controller to reset the CPU
     disableInterrupts();
+    ata_disable_dma();
     cache_sync(1);
 
     // We need to consume everything in the keyboard buffers
