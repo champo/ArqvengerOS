@@ -175,7 +175,7 @@ int ata_dma_read(unsigned long long sector, int count, void* buffer) {
     return count;
 }
 
-int ata_dma_write(unsigned long long sector, int count, void* buffer) {
+int ata_dma_write(unsigned long long sector, int count, const void* buffer) {
 
     enqueue_task(sector, count, buffer, 1);
     return count;
