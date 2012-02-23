@@ -16,4 +16,8 @@ void mm_pagination_clear_directory(struct PageDirectory* directory);
 
 void* mm_translate_address(struct Process* owner, unsigned int address);
 
+int mm_pagination_is_dirty(const void* page);
+
+void mm_pagination_clean(const void* page);
+
 #endif

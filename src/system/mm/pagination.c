@@ -11,6 +11,9 @@ static void setup_directory_entry(struct PageDirectoryEntry* entry, int present,
 
 static void setup_table_entry(struct PageTableEntry* entry, int present, unsigned int address, int user, int rw);
 
+#define DIRECTORY_INDEX(address) ((((unsigned int) address) >> 22) & 0x3FF)
+#define TABLE_INDEX(address) ((((unsigned int) address) >> 12) & 0x3FF)
+
 void mm_pagination_init(void) {
 
     identityDirectory = allocPages(1);
@@ -83,8 +86,8 @@ void mm_pagination_map(struct Process* owner, unsigned int start, unsigned int t
 
         unsigned int destination = to + i * PAGE_SIZE;
 
-        int directoryIndex = (destination >> 22) & 0x3FF;
-        int tableIndex = (destination >> 12) & 0x3FF;
+        int directoryIndex = DIRECTORY_INDEX(destination);
+        int tableIndex = TABLE_INDEX(destination);
 
         struct PageDirectoryEntry* dirEntry = &directory->entries[directoryIndex];
         if (!dirEntry->present) {
@@ -128,8 +131,8 @@ void* mm_translate_address(struct Process* owner, unsigned int address) {
         return address;
     }
 
-    int directoryIndex = (address >> 22) & 0x3FF;
-    int tableIndex = (address >> 12) & 0x3FF;
+    int directoryIndex = DIRECTORY_INDEX(address);
+    int tableIndex = TABLE_INDEX(address);
 
     struct PageDirectoryEntry* dirEntry = &owner->mm.directory->entries[directoryIndex];
     if (dirEntry->present) {
@@ -140,5 +143,31 @@ void* mm_translate_address(struct Process* owner, unsigned int address) {
     }
 
     return NULL;
+}
+
+int mm_pagination_is_dirty(const void* page) {
+
+    struct PageDirectoryEntry* dir = &identityDirectory->entries[DIRECTORY_INDEX(page)];
+    if (!dir->present) {
+        return 0;
+    }
+
+    int tableIndex = TABLE_INDEX(page);
+    struct PageTable* table = (struct PageTable*) (dir->tableAddress << 12);
+    return table->entries[tableIndex].present && table->entries[tableIndex].dirty;
+}
+
+void mm_pagination_clean(const void* page) {
+
+    struct PageDirectoryEntry* dir = &identityDirectory->entries[DIRECTORY_INDEX(page)];
+    if (!dir->present) {
+        return;
+    }
+
+    int tableIndex = TABLE_INDEX(page);
+    struct PageTable* table = (struct PageTable*) (dir->tableAddress << 12);
+    if (table->entries[tableIndex].present && table->entries[tableIndex].dirty) {
+        table->entries[tableIndex].dirty = 0;
+    }
 }
 

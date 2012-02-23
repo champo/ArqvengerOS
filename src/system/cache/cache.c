@@ -1,66 +1,45 @@
 #include "system/cache/cache.h"
 #include "system/mm/allocator.h"
+#include "system/mm/pagination.h"
 #include "system/kprintf.h"
 #include "drivers/ata.h"
-#include "library/string.h"
-#include "system/call.h"
 #include "system/common.h"
 #include "library/sys.h"
-#include "system/processQueue.h"
-#include "system/process/table.h"
-#include "system/scheduler.h"
 #include "library/call.h"
 #include "system/call/codes.h"
 
 #define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
-#define TABLE_ENTRIES 8
-
-struct Chunk {
-    unsigned long long initialSector;
-    void* buffer;
-    int dirty;
-    int accesses;
-    int firstWriteTime;
-    int lastAccessTime;
-
-    int available;
-    int evicting;
-    struct ProcessQueue waitQueue;
-
-    struct Chunk* next;
-    struct Chunk* prev;
-
-    int index;
-};
+#define TABLE_ENTRIES 32
 
 struct LRUList {
-    struct Chunk* first;
-    struct Chunk* last;
+    struct CacheReference* first;
+    struct CacheReference* last;
 };
 
-static struct Chunk** table = NULL;
+static struct Mutex tableLock;
+
+static struct CacheReference** table = NULL;
 
 static struct LRUList cache_list = {.first = NULL, .last = NULL};
 
-static struct Chunk* find_chunk(int index);
+static struct CacheReference* freezer;
+
+static struct CacheReference* evicted = NULL;
+
+static struct CacheReference* find_chunk(unsigned long long sector);
 
 static int evict(int minPages, int force);
 
 static int release_chunk(int tableIndex);
 
-static void cache_list_add(struct LRUList* list, struct Chunk* chunk);
+static void* reserve_page(void);
 
-static void cache_list_remove(struct LRUList* list, struct Chunk* chunk);
+static void cache_list_add(struct LRUList* list, struct CacheReference* chunk);
 
-static void mark_access(struct Chunk* chunk);
-
-static void wake_all(struct ProcessQueue* queue);
-
-static void block(struct ProcessQueue* queue, struct Process* process);
+static void cache_list_remove(struct LRUList* list, struct CacheReference* chunk);
 
 /**
  *  Cache flush process entry point.
- *
  */
 void cache_flush(char* unused) {
 
@@ -70,10 +49,10 @@ void cache_flush(char* unused) {
     }
 }
 
-void cache_list_add(struct LRUList* list, struct Chunk* chunk) {
+void cache_list_add(struct LRUList* list, struct CacheReference* chunk) {
 
     //We add always at the beginning
-    struct Chunk* aux = list->first;
+    struct CacheReference* aux = list->first;
     list->first = chunk;
 
     chunk->next = aux;
@@ -86,15 +65,13 @@ void cache_list_add(struct LRUList* list, struct Chunk* chunk) {
     if (list->last == NULL) {
         list->last = list->first;
     }
-
-    return;
 }
 
-void cache_list_remove(struct LRUList* list, struct Chunk* chunk) {
+void cache_list_remove(struct LRUList* list, struct CacheReference* chunk) {
 
     // We don't have to look for the chunk in the list as the chunk itself is a node.
-    struct Chunk* next = chunk->next;
-    struct Chunk* previous = chunk->prev;
+    struct CacheReference* next = chunk->next;
+    struct CacheReference* previous = chunk->prev;
 
     chunk->prev = NULL;
     chunk->next = NULL;
@@ -112,146 +89,42 @@ void cache_list_remove(struct LRUList* list, struct Chunk* chunk) {
     }
 }
 
-void mark_access(struct Chunk* chunk) {
+struct CacheReference* find_chunk(unsigned long long sector) {
 
-    chunk->accesses++;
-    chunk->lastAccessTime = _time(NULL);
-
-    cache_list_remove(&cache_list, chunk);
-    cache_list_add(&cache_list, chunk);
-}
-
-int cache_read(unsigned long long sector, int count, void* buffer) {
-
-    char* buff = (char*) buffer;
-    struct Chunk* chunk;
-    int startBlock = sector / SECTORS_PER_PAGE;
-    int endBlock = (sector + count) / SECTORS_PER_PAGE;
-    int counter = 0;
-
-    for (int block = startBlock; block <= endBlock; block++) {
-
-        if ((chunk = find_chunk(block)) == NULL) {
-            return -1;
-        }
-
-        mark_access(chunk);
-
-        if (block == startBlock) {
-
-            int first = sector % SECTORS_PER_PAGE;
-            int sectors = count;
-            if (sectors + first > SECTORS_PER_PAGE) {
-                sectors = SECTORS_PER_PAGE - first;
-            }
-
-            memcpy(buff, ((char*)chunk->buffer) + first * SECTOR_SIZE, SECTOR_SIZE * sectors);
-            counter += sectors;
-
-        } else if (block == endBlock) {
-
-            int last = (sector + count) % SECTORS_PER_PAGE;
-            memcpy(buff + counter * SECTOR_SIZE, chunk->buffer, SECTOR_SIZE * last);
-            counter += last;
-        } else {
-
-            memcpy(buff + counter * SECTOR_SIZE, chunk->buffer, SECTOR_SIZE * SECTORS_PER_PAGE);
-            counter += SECTORS_PER_PAGE;
-        }
-    }
-    return 0;
-}
-
-
-int cache_write(unsigned long long sector, int count, void* buffer) {
-
-    char* buff = (char*) buffer;
-    struct Chunk* chunk;
-    int startBlock = sector / SECTORS_PER_PAGE;
-    int endBlock = (sector + count) / SECTORS_PER_PAGE;
-    int counter = 0;
-
-    for (int block = startBlock; block <= endBlock; block++) {
-
-        if ((chunk = find_chunk(block)) == NULL) {
-            return -1;
-        }
-
-        mark_access(chunk);
-
-        if (!chunk->dirty) {
-            chunk->firstWriteTime = _time(NULL);
-        }
-
-        chunk->dirty = 1;
-
-        if (block == startBlock) {
-
-            int first = sector % SECTORS_PER_PAGE;
-            int sectors = count;
-            if (sectors + first > SECTORS_PER_PAGE) {
-                sectors = SECTORS_PER_PAGE - first;
-            }
-
-            memcpy(((char*)chunk->buffer) + first * SECTOR_SIZE, buff, SECTOR_SIZE * sectors);
-            counter += sectors;
-
-        } else if (block == endBlock) {
-
-            int last = (sector + count) % SECTORS_PER_PAGE;
-            memcpy(chunk->buffer, buff + counter * SECTOR_SIZE, SECTOR_SIZE * last);
-            counter += last;
-        } else {
-
-            memcpy(chunk->buffer, buff + counter * SECTOR_SIZE, SECTOR_SIZE * SECTORS_PER_PAGE);
-            counter += SECTORS_PER_PAGE;
-        }
-
-    }
-
-    return 0;
-}
-
-struct Chunk* find_chunk(int index) {
-
-    unsigned int sector = index * SECTORS_PER_PAGE;
+    mutex_lock(&tableLock);
     int firstEmpty = -1;
-
     for (int i = 0; i < TABLE_ENTRIES; i++) {
 
         if (table[i]) {
-
-            if (table[i]->initialSector == sector) {
-
-                struct Process* process = scheduler_current();
-
-                if (table[i]->evicting) {
-                    // We cancel the eviction, since this resource is needed
-                    table[i]->evicting = 0;
-                }
-
-                // Wait until the resource is available
-                while (!table[i]->available) {
-                    block(&table[i]->waitQueue, process);
-                }
-                process->schedule.ioWait = 0;
-
+            if (table[i]->sector == sector) {
+                mutex_release(&tableLock);
                 return table[i];
             }
-
         } else if (firstEmpty == -1) {
             firstEmpty = i;
         }
     }
 
+    struct CacheReference* entry = evicted;
+    while (entry) {
+
+        if (entry->sector == sector) {
+            mutex_release(&tableLock);
+            return entry;
+        }
+
+        entry = entry->next;
+    }
+
     if (firstEmpty == -1) {
+
         if (cache_evict(1) < 1) {
             log_error("Failed to evict enough pages... Something is gonna go awry.");
+            mutex_release(&tableLock);
             return NULL;
         }
 
         for (int i = 0; i < TABLE_ENTRIES; i++) {
-
             if (!table[i]) {
                 firstEmpty = i;
                 break;
@@ -259,33 +132,39 @@ struct Chunk* find_chunk(int index) {
         }
     }
 
-    log_info("Loading page at sector %u into cache\n", sector);
+    log_info("Loading page at sector %u into cache at %d\n", sector, firstEmpty);
 
-    struct Chunk* entry = kalloc(sizeof(struct Chunk));
-    entry->initialSector = sector;
-    entry->buffer = allocPages(1);
-    entry->dirty = 0;
-    entry->accesses = 0;
-    entry->firstWriteTime = 0;
-    entry->lastAccessTime = _time(NULL);
-    entry->index = firstEmpty;
-    entry->available = 0;
+    entry = kalloc(sizeof(struct CacheReference));
+    entry->sector = sector;
+    entry->count = SECTORS_PER_PAGE;
+    entry->page = reserve_page();
+
+    entry->refs = 0;
+    entry->atime = _time(NULL);
+
     entry->evicting = 0;
-    entry->waitQueue.first = NULL;
-    entry->waitQueue.last = NULL;
-    table[firstEmpty] = entry;
+    entry->frozen = 0;
+    mutex_init(&entry->lock);
+
+    entry->index = firstEmpty;
+
+    mutex_lock(&entry->lock);
 
     cache_list_add(&cache_list, entry);
+    table[firstEmpty] = entry;
+    mutex_release(&tableLock);
 
-    ata_read(sector, SECTORS_PER_PAGE, entry->buffer);
-    entry->available = 1;
+    ata_read(sector, SECTORS_PER_PAGE, entry->page);
+    mutex_release(&entry->lock);
 
     return entry;
 }
 
 int cache_init(void) {
 
-    table = kalloc(sizeof(struct Chunk*) * TABLE_ENTRIES);
+    mutex_init(&tableLock);
+
+    table = kalloc(sizeof(struct CacheReference*) * TABLE_ENTRIES);
     if (table == NULL) {
         return -1;
     }
@@ -299,36 +178,33 @@ int cache_init(void) {
 
 int cache_sync(int force) {
 
-    int now = _time(NULL);
+    mutex_lock(&tableLock);
     for (int i = 0; i < TABLE_ENTRIES; i++) {
 
-        struct Chunk* entry = table[i];
+        struct CacheReference* entry = table[i];
         if (entry) {
 
-            // if lastWriteTime < now then more than one second has passed
-            // One second dirty is a more than reasonable time (I think :P)
-            if (entry->dirty && (force || entry->firstWriteTime < now)) {
-                log_info("Flushing cache for sector %u entry\n", entry->initialSector);
+            //FIXME: As is, every call to sync writes *every* dirty page
+            if (mm_pagination_is_dirty(entry->page)) {
 
-                entry->available = 0;
-                ata_write(entry->initialSector, SECTORS_PER_PAGE, entry->buffer);
+                log_info("Flushing cache for sector %u entry\n", entry->sector);
+                mutex_release(&tableLock);
+                mutex_lock(&entry->lock);
 
-                entry->available = 1;
-                entry->dirty = 0;
+                ata_write(entry->sector, SECTORS_PER_PAGE, entry->page);
+                mm_pagination_clean(entry->page);
 
-                wake_all(&entry->waitQueue);
+                mutex_release(&entry->lock);
+                mutex_lock(&tableLock);
             }
         }
     }
+    mutex_release(&tableLock);
 
     return 0;
 }
 
 int cache_evict(int minPages) {
-
-
-    // Ideally, we'd want to evict LRU pages.
-    // Right we'll just evict the first minPages.
 
     int evicted = evict(minPages, 0);
     if (evicted < minPages) {
@@ -354,10 +230,10 @@ int evict(int minPages, int force) {
     int now = _time(NULL);
     int evicted = 0;
 
-    struct Chunk* entry = cache_list.last;
+    struct CacheReference* entry = cache_list.last;
     while (entry && evicted < minPages) {
 
-        if (!entry->dirty && (entry->lastAccessTime < now || force)) {
+        if ((!mm_pagination_is_dirty(entry->page) && entry->atime < now) || force) {
             evicted += release_chunk(entry->index);
         }
 
@@ -369,48 +245,162 @@ int evict(int minPages, int force) {
 
 int release_chunk(int tableIndex) {
 
-    struct Chunk* entry = table[tableIndex];
+    struct CacheReference* entry = table[tableIndex];
+    kprintf("Contemplating to release chunk for sector %u\n", entry->sector);
 
+    mutex_lock(&entry->lock);
+
+    void* page = entry->page;
+    entry->page = NULL;
     entry->evicting = 1;
-    if (entry->dirty) {
-        entry->available = 0;
-        ata_write(entry->initialSector, SECTORS_PER_PAGE, entry->buffer);
+    if (mm_pagination_is_dirty(page)) {
+        ata_write(entry->sector, SECTORS_PER_PAGE, page);
     }
 
-    wake_all(&entry->waitQueue);
-
     if (entry->evicting) {
-        log_info("Releasing chunk for sector %u\n", entry->initialSector);
+        log_info("Releasing chunk for sector %u\n", entry->sector);
+        kprintf("Releasing chunk for sector %u\n", entry->sector);
+
+        freePages(page, 1);
+        entry->evicting = 0;
+
+        mutex_lock(&tableLock);
         cache_list_remove(&cache_list, entry);
-
-        freePages(entry->buffer, 1);
-        kfree(entry);
-
         table[tableIndex] = NULL;
+        mutex_release(&tableLock);
+
+        mutex_release(&entry->lock);
+
+        if (entry->refs == 0) {
+            kfree(entry);
+        } else {
+            entry->next = evicted;
+            evicted = entry;
+
+            if (entry->next) {
+                entry->next->prev = entry;
+            }
+        }
 
         return 1;
     } else {
-        entry->available = 1;
+
+        entry->page = page;
+        mutex_release(&entry->lock);
+
         return 0;
     }
 }
 
-void wake_all(struct ProcessQueue* queue) {
-    struct Process* process = process_queue_pop(queue);
+struct CacheReference* cache_get(unsigned long long sector) {
 
-    while (process != NULL) {
-        process_table_unblock(process);
-        process = process_queue_pop(queue);
+    sector -= sector % SECTORS_PER_PAGE;
+    struct CacheReference* ref = find_chunk(sector);
+    if (ref == NULL) {
+        return NULL;
     }
+
+    ref->refs++;
+    cache_repopulate(ref);
+    return ref;
 }
 
-void block(struct ProcessQueue* queue, struct Process* process) {
+void cache_repopulate(struct CacheReference* ref) {
 
-    process_queue_push(queue, process);
+    if (ref->evicting) {
+        // If we are lucky, we might just avoid eviction
+        ref->evicting = 0;
+    }
 
-    process->schedule.ioWait = 1;
-    process_table_block(process);
+    mutex_lock(&ref->lock);
 
-    scheduler_do();
+    if (!ref->page) {
+
+        mutex_lock(&tableLock);
+        int i;
+        for (i = 0; i < TABLE_ENTRIES; i++) {
+            if (!table[i]) {
+                break;
+            }
+        }
+
+        if (i == TABLE_ENTRIES) {
+
+            if (cache_evict(1) < 1) {
+                // Screwed
+                mutex_release(&ref->lock);
+                mutex_release(&tableLock);
+                return;
+            }
+
+            for (i = 0; i < TABLE_ENTRIES; i++) {
+                if (!table[i]) {
+                    break;
+                }
+            }
+        }
+
+        ref->page = reserve_page();
+        if (ref->page != NULL) {
+
+            table[i] = ref;
+            if (ref->next) {
+                ref->next->prev = ref->prev;
+            }
+
+            if (ref->prev) {
+                ref->prev->next = ref->next;
+            } else {
+                evicted = ref->next;
+            }
+
+            mutex_release(&tableLock);
+
+            ata_read(ref->sector, SECTORS_PER_PAGE, ref->page);
+        } else {
+            mutex_release(&tableLock);
+        }
+    }
+
+    mutex_release(&ref->lock);
+}
+
+void cache_release(struct CacheReference* ref) {
+    ref->refs--;
+}
+
+void cache_access(struct CacheReference* ref) {
+    ref->atime = _time(NULL);
+
+    cache_list_remove(&cache_list, ref);
+    cache_list_add(&cache_list, ref);
+}
+
+void* reserve_page(void) {
+
+    void* page = allocPages(1);
+    if (page == NULL && cache_evict(1) > 0) {
+        page = allocPages(1);
+    }
+
+    return page;
+}
+
+void cache_freeze(struct CacheReference* ref) {
+
+    if (ref->frozen) {
+        return;
+    }
+
+    mutex_lock(&ref->lock);
+
+    cache_list_remove(&cache_list, ref);
+
+    ref->next = freezer;
+    freezer = ref;
+
+    ref->frozen = 1;
+
+    mutex_release(&ref->lock);
 }
 
