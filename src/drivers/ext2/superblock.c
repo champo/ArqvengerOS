@@ -1,25 +1,26 @@
 #include "drivers/ext2/superblock.h"
 #include "system/mm/allocator.h"
+#include "system/cache/cache.h"
+#include "debug.h"
 
 int ext2_superblock_init(struct ext2* fs) {
 
-    struct Superblock* superblock;
-    if ((superblock = kalloc(SUPERBLOCK_SIZE)) == NULL) {
-        return -1;
-    }
+    struct CacheReference* ref = cache_get(SUPERBLOCK_START);
+#if SUPERBLOCK_START + SUPERBLOCK_SECTOR > SECTORS_PER_PAGE
+#error
+#endif
 
-    if (read_sectors(fs, SUPERBLOCK_START, SUPERBLOCK_SECTORS, superblock) != 0) {
-        return -1;
-    }
+    assert(ref);
+    assert(ref->page);
 
-    fs->sb = superblock;
+    cache_freeze(ref);
+    fs->sb = (char*) ref->page + SECTOR_SIZE * SUPERBLOCK_START;
 
     return 0;
 }
 
 int ext2_superblock_end(struct ext2* fs) {
-    ext2_superblock_write(fs);
-    //TODO Free Superblock
+    cache_sync(1);
     return 0;
 }
 
@@ -28,6 +29,6 @@ int ext2_get_total_block_groups(struct Superblock* superblock) {
 }
 
 int ext2_superblock_write(struct ext2* fs) {
-    return write_sectors(fs, SUPERBLOCK_START, SUPERBLOCK_SECTORS, fs->sb);
+    return 0;
 }
 

@@ -2,6 +2,7 @@
 #define __SYSTEM_CACHE_CACHE__
 
 #include "system/lock/mutex.h"
+#define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
 
 struct CacheReference {
     unsigned long long sector;

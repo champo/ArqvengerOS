@@ -8,7 +8,6 @@
 #include "library/call.h"
 #include "system/call/codes.h"
 
-#define SECTORS_PER_PAGE (PAGE_SIZE / SECTOR_SIZE)
 #define TABLE_ENTRIES 32
 
 struct LRUList {

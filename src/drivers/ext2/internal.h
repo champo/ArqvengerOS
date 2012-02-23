@@ -52,11 +52,6 @@ struct BlockGroupDescriptor {
     unsigned char padding[14];
 };
 
-struct BlockGroupInfo {
-    size_t firstDataBlock;
-    size_t lastDataBlock;
-};
-
 #define BLOCK_BUFFER_COUNT 10
 
 struct ext2 {
