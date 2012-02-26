@@ -309,6 +309,11 @@ void add_malloc_buffer ( void* memory, size_t size ) {
     if ( size < 2 * sizeof( struct bound ) + MIN_FREE_CHUNK_SIZE )
         return;
 
+    /* useful for debugging */
+    #ifdef MASK_NEW_MEMORY_BYTE
+        memset(memory, MASK_NEW_MEMORY_BYTE, size);
+    #endif
+
     bound  = memory;
 
     bound->header.status = INUSE_STATUS;
