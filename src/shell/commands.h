@@ -30,6 +30,5 @@
 #include "shell/loglevel/loglevel.h"
 #include "shell/rma/rma.h"
 #include "shell/stacksize/stacksize.h"
-#include "shell/atto/atto.h"
 
 #endif

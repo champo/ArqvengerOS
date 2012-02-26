@@ -52,7 +52,7 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
-#define NUM_COMMANDS 39
+#define NUM_COMMANDS 38
 static Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
     { &man, "man", "Display information about command execution.", &manMan, 1 },
@@ -92,7 +92,6 @@ static Command commands[] = {
     { &command_log, "loglevel", "Change the level of the log console.", &man_log, 0},
     { &stacksize, "stacksize", "Create a process that will grow its stack as indicated.", &manstacksize, 0},
     { &rma, "rma", "Access a random memory location.", &man_rma, 0},
-    { &atto, "atto", "Minimal file editor.", &man_atto, 0}
 };
 
 static termios shellStatus = { 0, 0 };
