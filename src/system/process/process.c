@@ -87,6 +87,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
     process->schedule.status = StatusReady;
     process->schedule.inWait = 0;
     process->schedule.ioWait = 0;
+    process->schedule.asleep = 0;
     process->schedule.done = 0;
 
     for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
@@ -97,6 +98,8 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
             process->fdTable[i].inode = NULL;
         }
     }
+
+    process->mm.reservedPages = NULL;
 
     {
         process->mm.pagesInKernelStack = KERNEL_STACK_PAGES;
@@ -137,7 +140,7 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         assert(ungetPage != NULL);
         mm_pagination_map(process, (unsigned int)ungetPage->start, (unsigned int)STACK_TOP_MAPPING, 1, 1, 1);
         FILE* files;
-        
+
         for (int i = 0; i < 3; i++) {
             files = ungetPage->start + i * sizeof(FILE);
             files->fd = i;
