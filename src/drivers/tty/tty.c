@@ -1,4 +1,5 @@
 #include "drivers/tty/tty.h"
+#include "system/common.h"
 #include "drivers/tty/status.h"
 #include "shell/shell.h"
 #include "type.h"
@@ -77,12 +78,17 @@ void tty_run(char* unused) {
         close(fd);
     }
 
+
     // Spawn the shells (this is a kernel process, so we can do this)
+    // We need to disable interrupts to avoid any potential concurrency that might happen
+    // This is, after all, a process, and it can be interrupted by hardware interrupts
+    disableInterrupts();
     for (int i = 0; i < NUM_TERMINALS - 1; i++) {
         terminals[i].termios.canon = 1;
         terminals[i].termios.echo = 1;
         process_table_new(login, "login", scheduler_current(), 0, i, 1);
     }
+    enableInterrupts();
 
     terminals[NUM_TERMINALS - 1].termios.canon = 1;
     terminals[NUM_TERMINALS - 1].termios.echo = 0;
