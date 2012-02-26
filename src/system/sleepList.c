@@ -96,20 +96,20 @@ void sleep_list_update(SleepList list) {
     }
 
     while (list->first != NULL && list->first->delta == 0) {
-        //struct Node* aux = list->first;
+        struct Node* aux = list->first;
 
         list->first->process->schedule.status = StatusReady;
         list->first->process->schedule.asleep = 0;
         scheduler_unblock(list->first->process);
 
         list->first = list->first->next;
-        //TODO free_node(aux);
+        free_node(aux);
     }
 }
 
 void sleep_list_remove(SleepList list, struct Process* process) {
     struct Node* curr = list->first;
-    struct Node* prev = list->first;
+    struct Node* prev = NULL;
 
     while (curr != NULL && curr->process->pid != process->pid) {
         prev = curr;
@@ -117,9 +117,18 @@ void sleep_list_remove(SleepList list, struct Process* process) {
     }
 
     if (curr != NULL) {
-        prev->next = curr->next;
-        curr->next->delta += curr->delta;
-        //TODO free(curr)
+
+        if (prev) {
+            prev->next = curr->next;
+        } else {
+            list->first = curr->next;
+        }
+
+        if (curr->next) {
+            curr->next->delta += curr->delta;
+        }
+
+        free_node(curr);
     }
 }
 
