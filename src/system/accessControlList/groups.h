@@ -3,7 +3,7 @@
 
 #define MAX_GROUPNAME_LEN   32
 #define MAX_GROUP_MEMBERS   128
-#define MAX_GROUPS  128
+#define MAX_GROUPS  1
 
 struct Group {
     char name[MAX_GROUPNAME_LEN];
