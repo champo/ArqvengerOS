@@ -81,7 +81,6 @@ void parseGroupLine(char* line, struct Group* group) {
         aux[nextComma - buf] = '\0';
 
         group->members[i] = get_user_by_name(aux);
-        group->num_members = i+1;
         buf = nextComma + 1;
         i++;
     }
@@ -89,9 +88,10 @@ void parseGroupLine(char* line, struct Group* group) {
     if (strcmp(buf, "") != 0) {
         //if buf is not empty there's a last member
         strcpy(aux, buf);
-        group->members[i] = get_user_by_name(aux);
-        group->num_members = i+1;
+        group->members[i++] = get_user_by_name(aux);
     }
+
+    group->num_members = i;
 }
 
 
