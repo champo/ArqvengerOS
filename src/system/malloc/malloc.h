@@ -11,6 +11,14 @@
 
 
 /**
+ * If defined, mask all new memory with this byte
+ *
+ * Useful for debugging
+ *
+ *  #define MASK_NEW_MEMORY_BYTE 0x77
+ */
+
+/**
  * Creates a new malloc context in the given memory buffer. Uses the remaining
  * memory for allocations
  *

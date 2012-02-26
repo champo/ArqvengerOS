@@ -88,7 +88,7 @@ static Command commands[] = {
     { &logout, "logout", "Logs out of the shell.", &manLogout, 1},
     { &command_chown, "chown", "Changes the user and group of a file.", &man_chown, 0},
     { &command_cp, "cp", "Copy a file or directory.", &man_cp, 0},
-    { &command_mv, "mv", "Move (rename) files.", &man_mv, 0}, 
+    { &command_mv, "mv", "Move (rename) files.", &man_mv, 0},
     { &command_log, "loglevel", "Change the level of the log console.", &man_log, 0},
     { &stacksize, "stacksize", "Create a process that will grow its stack as indicated.", &manstacksize, 0},
     { &rma, "rma", "Access a random memory location.", &man_rma, 0},
@@ -119,12 +119,12 @@ void shell(char* unused) {
     int uid,gid;
     struct User* user;
     char* username;
-    
+
     getProcessPersona(getpid(), &uid, &gid);
     user = get_user_by_id(uid);
     username = user->name;
     free_user(user);
- 
+
     sort_commands(commands);
 
     while (1) {
@@ -145,17 +145,17 @@ void shell(char* unused) {
 /**
  * Simple bubble sort implementation to sort the arrat of commands alphabetically.
  *
- * @param commands The array of Command to be sorted. 
+ * @param commands The array of Command to be sorted.
  */
 void sort_commands(Command* commands) {
 
     int swapped = 1;
     int n = NUM_COMMANDS;
-    
+
     while (swapped) {
         swapped = 0;
         for (int i = 1; i < n; i++) {
-            
+
             if (strcmp(commands[i - 1].name, commands[i].name) > 0) {
                 Command aux = commands[i - 1];
                 commands[i - 1] = commands[i];
