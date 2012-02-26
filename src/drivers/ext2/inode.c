@@ -119,6 +119,9 @@ struct fs_Inode* ext2_read_inode(struct ext2* fs, size_t number) {
     fs_inode->data = kalloc(sizeof(struct ext2_Inode));
     fs_inode->fileSystem = fs;
     fs_inode->number = number;
+    fs_inode->refCount = 0;
+    fs_inode->extra = NULL;
+
     read_block_fragment(
         fs,
         fs->groupTable[blockGroup].inodeTableStart + tableBlock,
