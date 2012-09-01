@@ -1,9 +1,7 @@
 #ifndef _type_header
 #define _type_header
 
-#define NULL ((void*) 0)
-
-typedef unsigned int size_t;
+#include "library/stddef.h"
 
 typedef unsigned char byte;
 typedef short word;

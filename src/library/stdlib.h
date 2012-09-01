@@ -2,6 +2,8 @@
 
 #define __stdlib_header__
 
+#include "library/stddef.h"
+
 int atoi(const char *s);
 
 int itoa(char *s, int n);
@@ -19,7 +21,6 @@ int parseoct(char* string);
 int processStackSize(void);
 
 #define RAND_MAX 268435456
-#define NULL (void *)0
 
 #endif
 
