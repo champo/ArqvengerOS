@@ -6,7 +6,7 @@
  * Calls to a system call to yield the processor.
  */
 void yield(void) {
-    system_call(_SYS_YIELD, 0, 0, 0);
+    SYS1(_SYS_YIELD);
 }
 
 /**
@@ -15,14 +15,14 @@ void yield(void) {
  * @return the pid of the child that has finished.
  */
 pid_t wait(void) {
-    return system_call(_SYS_WAIT, 0, 0, 0);
+    return SYS1(_SYS_WAIT);
 }
 
 /**
  * Calls a system call to finish the process in a clean way.
  */
 void exit(void) {
-    system_call(_SYS_EXIT, 0, 0, 0);
+    SYS1(_SYS_EXIT);
 }
 
 /**
@@ -34,7 +34,7 @@ void exit(void) {
  * @return the process id of the new process.
  */
 pid_t run(void(*entryPoint)(char*), char* args, int fg) {
-    return system_call(_SYS_RUN, (int) entryPoint, (int) args, fg);
+    return SYS4(_SYS_RUN, entryPoint, args, fg);
 }
 
 /**
@@ -43,7 +43,7 @@ pid_t run(void(*entryPoint)(char*), char* args, int fg) {
  * @return the process id.
  */
 pid_t getpid(void) {
-    return system_call(_SYS_GETPID, 0, 0, 0);
+    return SYS1(_SYS_GETPID);
 }
 
 /**
@@ -52,7 +52,7 @@ pid_t getpid(void) {
  * @return the process id of the parent.
  */
 pid_t getppid(void) {
-    return system_call(_SYS_GETPPID, 0, 0, 0);
+    return SYS1(_SYS_GETPPID);
 }
 
 /**
@@ -61,7 +61,7 @@ pid_t getppid(void) {
  * @param pid, the process id of the process to be terminated.
  */
 void kill(pid_t pid) {
-    system_call(_SYS_KILL, pid, 0, 0);
+    SYS2(_SYS_KILL, pid);
 }
 
 /**
@@ -70,7 +70,7 @@ void kill(pid_t pid) {
  * @param seconds, the quantity of seconds to be blocked.
  */
 void sleep(int seconds) {
-    system_call(_SYS_SLEEP, seconds, 0, 0);
+    SYS2(_SYS_SLEEP, seconds);
 }
 
 /**
@@ -80,10 +80,10 @@ void sleep(int seconds) {
  * @return the new priority.
  */
 int nice(int priority) {
-    return system_call(_SYS_NICE, priority, 0, 0);
+    return SYS2(_SYS_NICE, priority);
 }
 
-/** 
+/**
  * Calls a system call that changes the priority of a process.
  *
  * @param pid, the process id of the process to be changed.
@@ -91,7 +91,7 @@ int nice(int priority) {
  * @return the new priority.
  */
 int renice(int pid, int priority) {
-    return system_call(_SYS_RENICE, pid, priority, 0);
+    return SYS3(_SYS_RENICE, pid, priority);
 }
 
 /**
@@ -102,7 +102,7 @@ int renice(int pid, int priority) {
  *  @return the quantity of structures read.
  */
 int pinfo(struct ProcessInfo* data, size_t size) {
-    return system_call(_SYS_PINFO, data, size, 0);
+    return SYS3(_SYS_PINFO, data, size);
 }
 
 /**
@@ -113,9 +113,9 @@ int pinfo(struct ProcessInfo* data, size_t size) {
  * @param uid, the new user id.
  */
 void setProcessPersona(int pid, int uid, int gid) {
-    system_call(_SYS_SETPPERSONA, pid, uid, gid);
+    SYS4(_SYS_SETPPERSONA, pid, uid, gid);
 }
 
 void getProcessPersona(int pid, int* uid, int* gid) {
-    system_call(_SYS_GETPPERSONA, pid, uid, gid);
+    SYS4(_SYS_GETPPERSONA, pid, uid, gid);
 }

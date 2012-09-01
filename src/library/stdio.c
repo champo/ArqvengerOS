@@ -249,7 +249,7 @@ int vprintf(const char *format, va_list arg) {
  * @return the number of characters written.
  */
 size_t write(int fd, const char *cs, size_t n){
-    return system_call(_SYS_WRITE, fd, (int) cs, n);
+    return SYS4(_SYS_WRITE, fd, cs, n);
 }
 
 /**
@@ -261,7 +261,7 @@ size_t write(int fd, const char *cs, size_t n){
  * @return the amount of characters read.
  */
 size_t read(int fd, void *buf, size_t n) {
-    return system_call(_SYS_READ, fd, (int)buf, n);
+    return SYS4(_SYS_READ, fd, buf, n);
 }
 
 /**
@@ -272,7 +272,7 @@ size_t read(int fd, void *buf, size_t n) {
  * @param argp, the arguments of the command.
  */
 size_t ioctl(int fd, int cmd, void *argp) {
-    return system_call(_SYS_IOCTL, fd, cmd, (int)argp);
+    return SYS4(_SYS_IOCTL, fd, cmd, argp);
 }
 
 /**
@@ -530,7 +530,7 @@ int fscanf(FILE *stream, const char *format, ...){
  * @return 0 if success, -1 if error.
  */
 int close(int fd) {
-    return system_call(_SYS_CLOSE, fd, 0, 0);
+    return SYS2(_SYS_CLOSE, fd);
 }
 
 /**
@@ -552,7 +552,7 @@ int open(const char* filename, int flags, ...) {
     } else {
         mode = 0;
     }
-    return system_call(_SYS_OPEN, (int)filename, flags, mode);
+    return SYS4(_SYS_OPEN, filename, flags, mode);
 }
 
 /*
@@ -626,7 +626,7 @@ int fclose(FILE* stream) {
  * @return 0 if success, other if error.
  */
 int mkdir(const char* path, int mode) {
-    return system_call(_SYS_MKDIR, (int) path, mode, 0);
+    return SYS3(_SYS_MKDIR, path, mode);
 }
 
 /**
@@ -636,7 +636,7 @@ int mkdir(const char* path, int mode) {
  * @return 0 if success, other if error.
  */
 int rmdir(const char* path) {
-    return system_call(_SYS_RMDIR, (int) path, 0, 0);
+    return SYS2(_SYS_RMDIR, path);
 }
 
 /**
@@ -646,7 +646,7 @@ int rmdir(const char* path) {
  * @return 0 if success, other if error
  */
 int unlink(const char* path) {
-    return system_call(_SYS_UNLINK, (int) path, 0, 0);
+    return SYS2(_SYS_UNLINK, path);
 }
 
 /**
@@ -656,7 +656,7 @@ int unlink(const char* path) {
  * @return 0 if success, other if error.
  */
 int rename(const char* from, const char* to) {
-    return system_call(_SYS_RENAME, (int) from, (int) to, 0);
+    return SYS3(_SYS_RENAME, from, to);
 }
 
 /**
@@ -668,7 +668,7 @@ int rename(const char* from, const char* to) {
  * @return, 1 if something was read, 0 if not.
  */
 int readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
-    return system_call(_SYS_READDIR, fd, (int) entry, hidden);
+    return SYS4(_SYS_READDIR, fd, entry, hidden);
 }
 
 /**
@@ -678,7 +678,7 @@ int readdir(int fd, struct fs_DirectoryEntry* entry, int hidden) {
  * @return 0 if success, other if error.
  */
 int chdir(const char* path) {
-    return system_call(_SYS_CHDIR, (int) path, 0, 0);
+    return SYS2(_SYS_CHDIR, path);
 }
 
 /**
@@ -689,7 +689,7 @@ int chdir(const char* path) {
  * @return 0 if success, other if error.
  */
 int getcwd(char* path, size_t len) {
-    return system_call(_SYS_GETCWD, (int) path, (int) len, 0);
+    return SYS3(_SYS_GETCWD, path, len);
 }
 
 /**
@@ -700,7 +700,7 @@ int getcwd(char* path, size_t len) {
  * @return 0 if success, other if error.
  */
 int symlink(const char* path, const char* target) {
-    return system_call(_SYS_SYMLINK, (int) path, (int) target, 0);
+    return SYS3(_SYS_SYMLINK, path, target);
 }
 
 /**
@@ -710,7 +710,7 @@ int symlink(const char* path, const char* target) {
  * @return 0 if success, other if error
  */
 int mkfifo(const char* path) {
-    return system_call(_SYS_MKFIFO, (int) path, 0, 0);
+    return SYS2(_SYS_MKFIFO, path);
 }
 
 
@@ -722,11 +722,11 @@ int mkfifo(const char* path) {
  * @return 0 if success, -1 if error.
  */
 int chmod(int mode, char* file) {
-    return system_call(_SYS_CHMOD, mode, (int)file, 0);
+    return SYS3(_SYS_CHMOD, mode, file);
 }
 
 int stat(const char* path, struct stat* data) {
-    return system_call(_SYS_STAT, (int) path, (int) data, 0);
+    return SYS3(_SYS_STAT, path, data);
 }
 
 /**
@@ -736,7 +736,7 @@ int stat(const char* path, struct stat* data) {
  * @return 0 if success, -1 if error.
  */
 int chown(char* file) {
-    return system_call(_SYS_CHOWN, (int)file, 0, 0);
+    return SYS2(_SYS_CHOWN, file);
 }
 
 /**
@@ -797,22 +797,22 @@ char* path_file(const char* path) {
         result[1] = '\0';
         return result;
     }
-        
+
     size_t len = strlen(path);
 
     //If we have a trailing slash, we ignore it
     if (path[len - 1] == '/') {
         len--;
     }
-                                     
+
     // Isolate the last element so that we can ignore it
     int lastSlash;
     for (lastSlash = len - 1; lastSlash >= 0 && path[lastSlash] != '/'; lastSlash--);
-                            
+
     char* result = kalloc(sizeof(char) * (len - lastSlash + 1));
     strncpy(result, path + (lastSlash + 1), len - lastSlash - 1);
     result[len - lastSlash] = 0;
-                         
+
     return result;
 }
 
@@ -883,5 +883,5 @@ char* join_paths(const char* cwd, const char* path) {
 }
 
 void loglevel(int level) {
-    system_call(_SYS_LOG, level, 0, 0);
+    SYS2(_SYS_LOG, level);
 }

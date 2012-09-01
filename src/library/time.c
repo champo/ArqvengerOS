@@ -13,19 +13,19 @@ void dateFromDayNumber(int *date, time_t daysSinceEpoch);
 static char string[30];
 
 /**
-* Get current time.
-*
-* Return the current calendar time as a time_t.
-*
-* The function returns this value, and if the argument is not a null pointer,
-* the value is also set to the object pointed by timer.
-*
-* @param tp Pointer to time_t where there time can be stored, providede it is not null.
-*
-* @return The current time.(Number of seconds since Epoch)
-*/
+ * Get current time.
+ *
+ * Return the current calendar time as a time_t.
+ *
+ * The function returns this value, and if the argument is not a null pointer,
+ * the value is also set to the object pointed by timer.
+ *
+ * @param tp Pointer to time_t where there time can be stored, provided it is not null.
+ *
+ * @return The current time.(Number of seconds since Epoch)
+ */
 time_t time(time_t *tp) {
-    return system_call(_SYS_TIME,tp,0,0);
+    return SYS2(_SYS_TIME, tp);
 }
 
 
