@@ -36,7 +36,7 @@ static struct LRUList cache_list = {.first = NULL, .last = NULL};
 
 static struct Chunk* find_chunk(int index);
 
-static int evict(int minPages, int force);
+static size_t evict(size_t minPages, int force);
 
 static void release_chunk(int tableIndex);
 
@@ -51,6 +51,8 @@ static void mark_access(struct Chunk* chunk);
  *
  */
 void cache_flush(char* unused) {
+
+    UNUSED(unused);
 
     while (1) {
         disableInterrupts();
@@ -129,8 +131,8 @@ int cache_read(unsigned long long sector, int count, void* buffer) {
 
         if (block == startBlock) {
 
-            int first = sector % SECTORS_PER_PAGE;
-            int sectors = count;
+            unsigned long long first = sector % SECTORS_PER_PAGE;
+            unsigned long long sectors = count;
             if (sectors + first > SECTORS_PER_PAGE) {
                 sectors = SECTORS_PER_PAGE - first;
             }
@@ -140,8 +142,8 @@ int cache_read(unsigned long long sector, int count, void* buffer) {
 
         } else if (block == endBlock) {
 
-            int last = (sector + count) % SECTORS_PER_PAGE;
-            memcpy(buff + counter * SECTOR_SIZE, chunk->buffer, SECTOR_SIZE * last);
+            unsigned long long last = (sector + count) % SECTORS_PER_PAGE;
+            memcpy(buff + counter * SECTOR_SIZE, chunk->buffer, SECTOR_SIZE * (int) last);
             counter += last;
         } else {
 
@@ -153,15 +155,15 @@ int cache_read(unsigned long long sector, int count, void* buffer) {
 }
 
 
-int cache_write(unsigned long long sector, int count, void* buffer) {
+int cache_write(unsigned long long sector, int count, const void* buffer) {
 
-    char* buff = (char*) buffer;
+    const char* buff = (const char*) buffer;
     struct Chunk* chunk;
-    int startBlock = sector / SECTORS_PER_PAGE;
-    int endBlock = (sector + count) / SECTORS_PER_PAGE;
-    int counter = 0;
+    unsigned long long startBlock = sector / SECTORS_PER_PAGE;
+    unsigned long long endBlock = (sector + count) / SECTORS_PER_PAGE;
+    unsigned long long counter = 0;
 
-    for (int block = startBlock; block <= endBlock; block++) {
+    for (unsigned long long block = startBlock; block <= endBlock; block++) {
 
         if ((chunk = find_chunk(block)) == NULL) {
             return -1;
@@ -178,8 +180,8 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
 
         if (block == startBlock) {
 
-            int first = sector % SECTORS_PER_PAGE;
-            int sectors = count;
+            unsigned long long first = sector % SECTORS_PER_PAGE;
+            unsigned long long sectors = count;
             if (sectors + first > SECTORS_PER_PAGE) {
                 sectors = SECTORS_PER_PAGE - first;
             }
@@ -189,8 +191,8 @@ int cache_write(unsigned long long sector, int count, void* buffer) {
 
         } else if (block == endBlock) {
 
-            int last = (sector + count) % SECTORS_PER_PAGE;
-            memcpy(chunk->buffer, buff + counter * SECTOR_SIZE, SECTOR_SIZE * last);
+            unsigned long long last = (sector + count) % SECTORS_PER_PAGE;
+            memcpy(chunk->buffer, buff + counter * SECTOR_SIZE, SECTOR_SIZE * (int) last);
             counter += last;
         } else {
 
@@ -286,13 +288,13 @@ int cache_sync(int force) {
     return 0;
 }
 
-int cache_evict(int minPages) {
+size_t cache_evict(size_t minPages) {
 
 
     // Ideally, we'd want to evict LRU pages.
     // Right we'll just evict the first minPages.
 
-    int evicted = evict(minPages, 0);
+    size_t evicted = evict(minPages, 0);
     if (evicted < minPages) {
 
         // If we didnt release enough, let's sync some pages
@@ -311,10 +313,10 @@ int cache_evict(int minPages) {
     return evicted;
 }
 
-int evict(int minPages, int force) {
+size_t evict(size_t minPages, int force) {
 
     int now = _time(NULL);
-    int evicted = 0;
+    size_t evicted = 0;
 
     struct Chunk* entry = cache_list.last;
     while (entry && evicted < minPages) {

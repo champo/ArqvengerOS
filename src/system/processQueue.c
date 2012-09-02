@@ -1,5 +1,5 @@
 #include "system/processQueue.h"
-
+#include "system/alloc.h"
 
 static struct QueueNode* freeNodes = NULL;
 
@@ -45,20 +45,20 @@ void process_queue_push(struct ProcessQueue* queue, struct Process* process) {
 }
 
 struct Process* process_queue_pop(struct ProcessQueue* queue) {
-    
+
     if (queue->first == NULL) {
         return NULL;
     }
-    
+
     struct Process* process = queue->first->process;
     struct QueueNode* aux = queue->first;
-    
+
     if (queue->first == queue->last) {
         queue->first = queue->last = NULL;
     } else {
         queue->first = queue->first->next;
     }
-    
+
     free_node(aux);
     return process;
 }

@@ -18,7 +18,7 @@ void srand(unsigned int seed);
 
 int parseoct(char* string);
 
-int processStackSize(void);
+size_t processStackSize(void);
 
 #define RAND_MAX 268435456
 

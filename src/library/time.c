@@ -6,8 +6,9 @@
 
 
 static int dayOfWeek(int year, int month, int day);
-static void initTm(struct tm *date);
+
 static struct tm sharedTm;
+
 void dateFromDayNumber(int *date, time_t daysSinceEpoch);
 
 static char string[30];
@@ -57,9 +58,8 @@ time_t time(time_t *tp) {
  */
 char* asctime(const struct tm *tp) {
 
-    int i = 0;
     int curPos = 0;
-    char* day,*month;
+    const char* day,*month;
     char aux[5];
 
     switch (tp->wday) {
@@ -83,6 +83,9 @@ char* asctime(const struct tm *tp) {
             break;
         case 6:
             day = "Sat";
+            break;
+        default:
+            day = "???";
             break;
     }
     strcpy(string,day);
@@ -125,6 +128,9 @@ char* asctime(const struct tm *tp) {
             break;
         case 12:
             month = "Dec";
+            break;
+        default:
+            month = "???";
             break;
     }
     strcpy(string + curPos,month);
@@ -227,7 +233,8 @@ static int dayOfWeek(int year, int month, int day) {
  *
  */
 void dateFromDayNumber(int *date, time_t daysSinceEpoch) {
-    unsigned int year,month,day,ddd,mi;
+    long ddd, mi;
+    unsigned int year,month,day;
     daysSinceEpoch -= 60;   // adjusting the reference date of the algorith from Mar 1 1970
                             // to epoch (Jan 1 1970)
     year = (10000 * daysSinceEpoch + 14780) / 3652425;  //year ~= days / 365.2425

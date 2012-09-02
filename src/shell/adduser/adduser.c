@@ -1,4 +1,5 @@
 #include "shell/adduser/adduser.h"
+#include "library/sys.h"
 #include "shell/utils.h"
 #include "system/accessControlList/users.h"
 #include "system/accessControlList/groups.h"
@@ -9,6 +10,9 @@
 
 
 void adduser(char* argv) {
+
+    UNUSED(argv);
+
     char username[MAX_USERNAME_LEN];
     char groupname[MAX_GROUPNAME_LEN];
     char passwd[MAX_PASSWD_LEN];

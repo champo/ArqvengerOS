@@ -16,7 +16,7 @@ struct ScreenStatus {
     int csi;
     char attribute;
     char controlBuffer[CONTROL_BUFFER_LEN];
-    size_t controlBufferPos;
+    int controlBufferPos;
     int visibleLine;
     int lastLine;
     char videoBuffer[2 * LINE_WIDTH * (BUFFER_ROWS + 1)];

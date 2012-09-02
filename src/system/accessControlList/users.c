@@ -191,7 +191,7 @@ int create_user(char* name, char* passwd, char* groupname) {
     struct User* users[MAX_USERS];
     struct Group* group;
     int ids[MAX_USERS] = {0};
-    int i = 0, id;
+    int i = 0, id = -1;
 
     while(fscanf(fp, "%s\n", line) != 0 && i < MAX_USERS) {
         users[i] = malloc(sizeof(struct User));
@@ -219,6 +219,15 @@ int create_user(char* name, char* passwd, char* groupname) {
             id = j;
             break;
         }
+    }
+
+    if (id == -1) {
+
+        for (int j = 0; j < i; j++) {
+            free(users[j]);
+        }
+
+        return -1;
     }
 
     strcpy(users[i - 1]->name, name);

@@ -6,6 +6,7 @@
 
 
 void logout(char* argv) {
+    UNUSED(argv);
     exit();
 }
 

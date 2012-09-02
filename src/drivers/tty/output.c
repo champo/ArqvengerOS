@@ -337,7 +337,7 @@ void parseControlBuffer(struct Terminal* term, int* a, int* b, int def) {
     // Set the null at the end, and then parse it
     if (status->controlBufferPos) {
 
-        size_t i = 0;
+        int i = 0;
         int t = 0;
 
         while (i < status->controlBufferPos && status->controlBuffer[i] != ';') {

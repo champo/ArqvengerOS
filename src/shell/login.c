@@ -12,6 +12,8 @@ struct User* askForLogin(void);
 
 void login(char* unused) {
 
+    UNUSED(unused);
+
     while(1) {
 
         struct User* user;
@@ -29,10 +31,8 @@ void login(char* unused) {
 
 struct User* askForLogin(void) {
 
-    int promptLen = strlen("login");
     char passwd[MAX_PASSWD_LEN];
     char username[MAX_USERNAME_LEN];
-    termios userTermios = {1, 1};
 
     askForInput("Login:", username);
 

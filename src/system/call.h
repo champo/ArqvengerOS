@@ -6,9 +6,9 @@
 #include "system/fs/direntry.h"
 #include "system/stat.h"
 
-size_t _write(int fd, const void* buf, size_t length);
+int _write(int fd, const void* buf, size_t length);
 
-size_t _read(int fd, void* buf, size_t length);
+int _read(int fd, void* buf, size_t length);
 
 int _ioctl(int fd, int cmd, void* argp);
 
@@ -26,7 +26,7 @@ void _kill(pid_t pid);
 
 pid_t _wait(void);
 
-int _pinfo(struct ProcessInfo* data, size_t size);
+size_t _pinfo(struct ProcessInfo* data, size_t size);
 
 void _sleep(int seconds);
 

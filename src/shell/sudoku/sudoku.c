@@ -122,6 +122,8 @@ static void drawBoard(GameState* state);
  */
 void sudoku(char* argv) {
 
+    UNUSED(argv);
+
     termios oldStatus;
 
     time_t initialTime = time(NULL);

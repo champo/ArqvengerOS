@@ -22,7 +22,7 @@ struct TaskState* task_create_tss(void) {
 }
 
 void task_load(struct Process* p) {
-    ts->esp0 = p->mm.kernelStack;
+    ts->esp0 = (int) p->mm.kernelStack;
 }
 
 unsigned int task_page_address(void) {

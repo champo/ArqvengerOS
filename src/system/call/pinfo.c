@@ -14,9 +14,9 @@
  *  @param size, the lenght of the array.
  *  @return the quantity of structures read.
  */
-int _pinfo(struct ProcessInfo* data, size_t size) {
+size_t _pinfo(struct ProcessInfo* data, size_t size) {
 
-    int pcount = 0;
+    size_t pcount = 0;
     for (; pcount < size; pcount++) {
         struct Process* process = process_table_entry(pcount);
         if (process != NULL) {

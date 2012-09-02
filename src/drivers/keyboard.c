@@ -1,4 +1,5 @@
 #include "drivers/keyboard.h"
+#include "library/sys.h"
 #include "system/reboot.h"
 #include "drivers/tty/tty.h"
 #include "system/call/ioctl/keyboard.h"

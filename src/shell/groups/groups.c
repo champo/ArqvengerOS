@@ -5,19 +5,21 @@
 
 void groups(char* argv) {
 
-    int i = 0, groups = 0;
+    UNUSED(argv);
+
+    int i = 0, processed = 0;
     int total = get_groups_num();
     struct Group* group;
 
     printf("total groups ---- %d\n",total);
 
-    while (groups < total ) {
+    while (processed < total ) {
         group = get_group_by_id(i++);
 
         if (group != NULL) {
 
             printf("groupname:%s gid:%d members:%d\n", group->name, group->id, group->num_members);
-            groups++;
+            processed++;
 
             free_group(group);
         }

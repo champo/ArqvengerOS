@@ -312,7 +312,7 @@ int ext2_write_inode_content(struct fs_Inode* inode, size_t offset, size_t size,
 
             // We gotta read the block, modify it, and write it
 
-            size_t bufferIndex = load_buffer(inode, block);
+            int bufferIndex = load_buffer(inode, block);
             if (bufferIndex == -1) {
                 break;
             }

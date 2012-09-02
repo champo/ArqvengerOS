@@ -3,7 +3,7 @@
 
 #include "system/process/process.h"
 
-struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Process* parent, int kernel, int terminal, int active);
+struct Process* process_table_new(EntryPoint entryPoint, const char* args, struct Process* parent, int kernel, int terminal, int active);
 
 void process_table_exit(struct Process* process);
 

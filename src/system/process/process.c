@@ -29,7 +29,7 @@ inline static void push(unsigned int** esp, unsigned int val) {
     **esp = val;
 }
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal, int kernel) {
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, const char* args, int terminal, int kernel) {
 
     process->pid = ++pid;
     process->kernel = !!kernel;
@@ -139,10 +139,9 @@ void createProcess(struct Process* process, EntryPoint entryPoint, struct Proces
         struct Pages* ungetPage = reserve_pages(process, 1);
         assert(ungetPage != NULL);
         mm_pagination_map(process, (unsigned int)ungetPage->start, (unsigned int)STACK_TOP_MAPPING, 1, 1, 1);
-        FILE* files;
 
         for (int i = 0; i < 3; i++) {
-            files = ungetPage->start + i * sizeof(FILE);
+            FILE* files = (FILE*) ungetPage->start + i;
             files->fd = i;
             files->flag = 0;
             files->unget = 0;
@@ -241,7 +240,7 @@ void setup_page_directory(struct Process* process, int kernel) {
     mm_pagination_map(process, kernelStackBottom, kernelStackBottom, mm->pagesInKernelStack, 0, 1);
 
     if (mm->mallocContext) {
-        mm_pagination_map(process, mm->mallocContext, mm->mallocContext, mm->pagesInHeap, 1, 1);
+        mm_pagination_map(process, (unsigned int) mm->mallocContext, (unsigned int) mm->mallocContext, mm->pagesInHeap, 1, 1);
     }
 
     if (mm->esp) {

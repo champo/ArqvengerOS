@@ -4,19 +4,23 @@
 #include "library/stdio.h"
 
 void users(char* argv) {
-   
-    int i = 0, users = 0;
+
+    UNUSED(argv);
+
+    int i = 0, found = 0;
     int total = get_users_num();
-    printf("total users ---- %d\n",total);
     struct User* user;
-    while(users < total) {
+
+    printf("total users ---- %d\n", total);
+
+    while(found < total) {
         user = get_user_by_id(i++);
-        
+
         if (user != NULL) {
             printf("name:%s uid:%d gid:%d\n", user->name, user->id, user->gid[0]);
-            users++;
+            found++;
             free_user(user);
-        } 
+        }
     }
 }
 

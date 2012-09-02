@@ -33,7 +33,7 @@ void exit(void) {
  * @param fg, if the process runs on foreground.
  * @return the process id of the new process.
  */
-pid_t run(void(*entryPoint)(char*), char* args, int fg) {
+pid_t run(void(*entryPoint)(char*), const char* args, int fg) {
     return SYS4(_SYS_RUN, entryPoint, args, fg);
 }
 
@@ -101,7 +101,7 @@ int renice(int pid, int priority) {
  *  @param size, the lenght of the array.
  *  @return the quantity of structures read.
  */
-int pinfo(struct ProcessInfo* data, size_t size) {
+size_t pinfo(struct ProcessInfo* data, size_t size) {
     return SYS3(_SYS_PINFO, data, size);
 }
 

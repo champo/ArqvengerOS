@@ -1,4 +1,5 @@
 #include "system/process/table.h"
+#include "system/alloc.h"
 #include "system/scheduler.h"
 #include "drivers/tty/tty.h"
 #include "debug.h"
@@ -13,7 +14,7 @@ static void process_table_remove(struct Process* process);
 
 static struct Process* waitable_child(struct Process* process);
 
-struct Process* process_table_new(EntryPoint entryPoint, char* args, struct Process* parent, int kernel, int terminal, int active) {
+struct Process* process_table_new(EntryPoint entryPoint, const char* args, struct Process* parent, int kernel, int terminal, int active) {
 
     size_t i;
     for (i = 0; i < PTABLE_SIZE; i++) {

@@ -5,12 +5,9 @@
 #include "type.h"
 #include "system/process/process.h"
 #include "system/mm/page.h"
+#include "system/alloc.h"
 
 void initMemoryMap(struct multiboot_info* info);
-
-void* kalloc(size_t size);
-
-void kfree(void* data);
 
 void* allocPages(size_t pages);
 

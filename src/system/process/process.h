@@ -80,7 +80,7 @@ struct Process {
     char* cwd;
 };
 
-void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, char* args, int terminal, int kernel);
+void createProcess(struct Process* process, EntryPoint entryPoint, struct Process* parent, const char* args, int terminal, int kernel);
 
 void destroyProcess(struct Process* process);
 

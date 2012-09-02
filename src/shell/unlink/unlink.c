@@ -1,4 +1,5 @@
 #include "shell/unlink/unlink.h"
+#include "mcurses/mcurses.h"
 #include "library/stdio.h"
 #include "constants.h"
 #include "library/stdlib.h"

@@ -44,5 +44,5 @@ waitForElapsedTicks:
     ret 
 
 [SECTION .data]
-timeStampCounterLow: resb 4 
-timeStampCounterHigh: resb 4
+timeStampCounterLow: DB 0, 0, 0, 0
+timeStampCounterHigh: DB 0, 0, 0, 0

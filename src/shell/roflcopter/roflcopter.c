@@ -9,6 +9,9 @@
  * @param argv A string containg everything that came after the command.
  */
 void roflcopter(char* argv) {
+
+    UNUSED(argv);
+
     printf("ROFL:ROFL:LOL:ROFL:ROFL\n"
            "           |\n"
            "  L   /---------\n"

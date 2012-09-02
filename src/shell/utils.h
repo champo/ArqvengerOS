@@ -4,8 +4,8 @@
 
 #define cleanbuffer() while(getchar()!='\n')
 
-void askForPasswd(char* prompt, char* passwd);
+void askForPasswd(const char* prompt, char* passwd);
 
-void askForInput(char* prompt, char* buffer);
+void askForInput(const char* prompt, char* buffer);
 
 #endif

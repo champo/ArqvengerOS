@@ -162,6 +162,6 @@ int parseoct(char* string) {
     return ans;
 }
 
-int processStackSize(void) {
-    return SYS1(_SYS_STACKSIZE);
+size_t processStackSize(void) {
+    return (size_t) SYS1(_SYS_STACKSIZE);
 }

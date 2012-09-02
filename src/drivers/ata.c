@@ -1,5 +1,6 @@
 #include "drivers/ata.h"
 #include "system/kprintf.h"
+#include "system/io.h"
 #include "type.h"
 
 struct DriveInfo {

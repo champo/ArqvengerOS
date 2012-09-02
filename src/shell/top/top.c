@@ -12,6 +12,8 @@
 
 void top(char* argv) {
 
+    UNUSED(argv);
+
     struct ProcessInfo data[20];
     int pcount;
 

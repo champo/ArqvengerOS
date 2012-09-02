@@ -31,6 +31,9 @@ static const char *phrases[] = { "The Arqvengers manifest: \n\nYet to be done...
  * Executes the fortune command meaning the user will receive an awesome phrase.
  */
 void fortune(char* unused) {
+
+    UNUSED(unused);
+
     srand(time(NULL));
     printf("%s\n", phrases[rand() % CANT_FORTUNES]);
 }

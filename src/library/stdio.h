@@ -47,9 +47,9 @@ int open(const char* filename, int flags, ...);
 FILE * fopen(const char* filename, const char* mode);
 int fclose(FILE* stream);
 
-size_t write(int fd, const char *cs, size_t n);
+int write(int fd, const char *cs, size_t n);
 
-size_t read(int fd, void *buf, size_t n);
+int read(int fd, void *buf, size_t n);
 
 int mkdir(const char* path, int mode);
 
@@ -70,6 +70,8 @@ int symlink(const char* path, const char* target);
 int mkfifo(const char* path);
 
 int chmod(int mode, char* file);
+
+int chown(char* file);
 
 int stat(const char* path, struct stat* data);
 

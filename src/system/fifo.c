@@ -1,4 +1,5 @@
 #include "system/fifo.h"
+#include "system/alloc.h"
 #include "system/fs/fs.h"
 #include "system/processQueue.h"
 #include "constants.h"

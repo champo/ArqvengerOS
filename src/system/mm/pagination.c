@@ -125,7 +125,7 @@ void mm_pagination_clear_directory(struct PageDirectory* directory) {
 void* mm_translate_address(struct Process* owner, unsigned int address) {
 
     if (owner->mm.directory == NULL) {
-        return address;
+        return (void*) address;
     }
 
     int directoryIndex = (address >> 22) & 0x3FF;
@@ -135,7 +135,7 @@ void* mm_translate_address(struct Process* owner, unsigned int address) {
     if (dirEntry->present) {
         struct PageTable* table = (struct PageTable*) (dirEntry->tableAddress * PAGE_SIZE);
         if (table->entries[tableIndex].present) {
-            return (table->entries[tableIndex].pageAddress * PAGE_SIZE) + (address & 0xFFF);
+            return (void*)((table->entries[tableIndex].pageAddress * PAGE_SIZE) + (address & 0xFFF));
         }
     }
 

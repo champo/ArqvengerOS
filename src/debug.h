@@ -1,6 +1,8 @@
 #ifndef __DEBUG__
 #define __DEBUG__
 
+#include "system/kprintf.h"
+
 #if 1
 #define enter() kprintf("Entering %s:%u\n", __func__, __LINE__)
 #define leave() kprintf("leaving %s:%u\n", __func__, __LINE__)

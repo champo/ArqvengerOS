@@ -5,11 +5,13 @@
 #include "library/time.h"
 
 void rma(char* argv) {
-    
+
+    UNUSED(argv);
+
     srand(time(NULL));
     int* address = (int*) rand();
     int b = *address;
-    rma(argv);
+    rma((char*) b);
     return;
 }
 

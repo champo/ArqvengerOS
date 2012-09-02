@@ -6,7 +6,7 @@ termios oldTermios;
 termios passwdTermios = {1 , 0};
 
 
-void askForPasswd(char* prompt, char* passwd) {
+void askForPasswd(const char* prompt, char* passwd) {
 
     if (prompt != NULL) {
         printf(prompt);
@@ -19,13 +19,13 @@ void askForPasswd(char* prompt, char* passwd) {
 
     ioctl(0, TCSETS, (void*) &oldTermios);
     printf("\n");
-    
+
     return;
 }
 
 
-void askForInput(char* prompt, char* buffer) {
-    
+void askForInput(const char* prompt, char* buffer) {
+
     if (prompt != NULL) {
         printf(prompt);
     }

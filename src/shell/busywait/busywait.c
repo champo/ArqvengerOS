@@ -4,7 +4,9 @@
 
 
 void busywait(char* argv) {
-    
+
+    UNUSED(argv);
+
     printf("I'm busywaiting...\n");
 
     while(1);

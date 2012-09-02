@@ -13,6 +13,8 @@ static termios shellStatus = { 0, 0 };
  */
 void help(char* argv) {
 
+    UNUSED(argv);
+
     const Command* commands;
     size_t numCommands, i;
 

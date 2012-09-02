@@ -1,6 +1,7 @@
 #include "system/sleepList.h"
 #include "system/scheduler.h"
 #include "library/stdio.h"
+#include "system/alloc.h"
 
 struct DeltaQueue {
     struct Node*   first;
@@ -133,6 +134,7 @@ void sleep_list_remove(SleepList list, struct Process* process) {
 }
 
 void sleep_list_free(SleepList list) {
+    UNUSED(list);
     //TODO
 }
 

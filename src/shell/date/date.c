@@ -12,6 +12,8 @@
  */
 void date(char* argv) {
 
+    UNUSED(argv);
+
     time_t rawTime = time(NULL);
     struct tm* timeInfo = localtime(&rawTime);
     char *str = asctime(timeInfo);

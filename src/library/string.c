@@ -1,6 +1,7 @@
 #include "type.h"
 #include "library/stdio.h"
 #include "library/stdlib.h"
+#include "library/ctype.h"
 #include "limits.h"
 #include "string.h"
 
@@ -54,7 +55,7 @@ char *strcpy(char *s, const char *ct) {
  */
 char *strncpy(char *s, const char *ct, size_t n) {
 
-    int i;
+    size_t i;
 
     for (i = 0; i < n && ct[i] != '\0'; i++) {
         s[i] = ct[i];
@@ -100,8 +101,8 @@ char *strcat(char *s, const char *ct) {
  */
 char *strncat(char *s, const char *ct, size_t n) {
 
-    int i = 0;
-    int j = 0;
+    size_t i = 0;
+    size_t j = 0;
 
     while (s[i] != '\0') {
         i++;
@@ -132,7 +133,7 @@ char *strchr(const char *cs, char c) {
         i++;
     }
 
-    return cs[i] == '\0' ? NULL : (cs + i);
+    return cs[i] == '\0' ? NULL : ((char*) cs + i);
 }
 
 /**
@@ -154,7 +155,7 @@ char *strrchr(const char *cs, char c) {
         i++;
     }
 
-    return last == -1 ? NULL : (cs + last);
+    return last == -1 ? NULL : ((char*) cs + last);
 }
 
 
@@ -180,7 +181,7 @@ int strcmp(const char *cs, const char *ct) {
  */
 int strncmp(const char *cs, const char *ct, size_t n) {
 
-    int i = 0;
+    size_t i = 0;
 
     while (cs[i] == ct[i] && cs[i] != '\0' && i < n) {
         i++;
@@ -202,7 +203,7 @@ int strncmp(const char *cs, const char *ct, size_t n) {
  */
 void *memset(void *s, char c, size_t n) {
 
-    int i = 0;
+    size_t i = 0;
 
     while (i < n){
         *((char *) s + i) = c;
@@ -222,10 +223,10 @@ void *memset(void *s, char c, size_t n) {
  */
 void *memcpy(void *s, const void *ct, size_t n) {
 
-    int i = 0;
+    size_t i = 0;
 
     while (i < n) {
-        *((char *) s + i) = *((char *)ct + i);
+        *((char *) s + i) = *((const char *)ct + i);
         i++;
     }
 
@@ -242,13 +243,13 @@ void *memcpy(void *s, const void *ct, size_t n) {
  */
 void *memchr(const void *cs, char c, size_t n){
 
-    int i = 0;
+    size_t i = 0;
 
-    while (i < n && *((char *) cs + i) != c) {
+    while (i < n && *((const char *) cs + i) != c) {
         i++;
     }
 
-    return *((char *) cs + i) == c ? (char *)cs + i : NULL;
+    return *((const char *) cs + i) == c ? (char *)cs + i : NULL;
 }
 
 /**
@@ -261,17 +262,17 @@ void *memchr(const void *cs, char c, size_t n){
  */
 int memcmp(const void *cs, const void *ct, size_t n) {
 
-    int i = 0;
+    size_t i = 0;
 
-    while (*((char *) cs + i) == *((char *) ct +i) && i < n) {
+    while (*((const char *) cs + i) == *((const char *) ct +i) && i < n) {
         i++;
     }
 
-    if (*((char *) cs + i) == *((char *) ct + i)) {
+    if (*((const char *) cs + i) == *((const char *) ct + i)) {
         return 0;
     }
 
-    return *((char *) cs + i) < *((char *) ct + i) ? -1 : 1;
+    return *((const char *) cs + i) < *((const char *) ct + i) ? -1 : 1;
 
 }
 
@@ -318,7 +319,7 @@ int is_a_number(char* str) {
         str++;
     }
 
-    while(str[i] != '\0' && isdigit(str[i])) {
+    while (str[i] != '\0' && isdigit(str[i])) {
         i++;
     }
 

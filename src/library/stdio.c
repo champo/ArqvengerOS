@@ -29,7 +29,7 @@ FILE *stdout;
 FILE *stdin;
 FILE *stderr;
 
-static int print_padding(FILE* stream, char pad, int strlen, int to);
+static int print_padding(FILE* stream, char pad, int len, int to);
 
 /**
  * Insert a character into the given stream.
@@ -73,15 +73,15 @@ int getfd(FILE *stream) {
     return stream->fd;
 }
 
-int print_padding(FILE* stream, char pad, int strlen, int to) {
+int print_padding(FILE* stream, char pad, int len, int to) {
 
-    if (pad == 0 || to <= strlen) {
+    if (pad == 0 || to <= len) {
         return 0;
     } else {
-        for (int i = strlen; i < to; i++) {
+        for (int i = len; i < to; i++) {
             fputc(pad, stream);
         }
-        return to - strlen;
+        return to - len;
     }
 }
 
@@ -248,7 +248,7 @@ int vprintf(const char *format, va_list arg) {
  * @param n, the amount of characters to be written.
  * @return the number of characters written.
  */
-size_t write(int fd, const char *cs, size_t n){
+int write(int fd, const char *cs, size_t n){
     return SYS4(_SYS_WRITE, fd, cs, n);
 }
 
@@ -260,7 +260,7 @@ size_t write(int fd, const char *cs, size_t n){
  * @param n, the amount of characters to be read.
  * @return the amount of characters read.
  */
-size_t read(int fd, void *buf, size_t n) {
+int read(int fd, void *buf, size_t n) {
     return SYS4(_SYS_READ, fd, buf, n);
 }
 
@@ -281,11 +281,13 @@ size_t ioctl(int fd, int cmd, void *argp) {
  * @param stream, a pointer to the FILE to be read.
  * @return returns the character read or EOF if fails. */
 int fgetc(FILE *stream) {
-    char c;
+
     if (stream->flag) {
         stream->flag = 0;
         return stream->unget;
     }
+
+    char c = -1;
     return read(getfd(stream), &c, 1) == 1 ? c : EOF;
 }
 
@@ -566,7 +568,8 @@ int open(const char* filename, int flags, ...) {
  *  @return a FILE structure representing the file opened on success, NULL on error.
  */
 FILE* fopen(const char* filename, const char* mode) {
-    int fd;
+
+    int fd = -1;
     FILE *fp = malloc(sizeof(FILE));
 
     int  hasR = strchr(mode, 'r') != NULL;
@@ -792,7 +795,7 @@ char* path_directory(const char* path) {
 char* path_file(const char* path) {
 
     if (strcmp(path, "/") == 0) {
-        char* result = kalloc(sizeof(char) * 2);
+        char* result = malloc(sizeof(char) * 2);
         result[0] = '.';
         result[1] = '\0';
         return result;
@@ -809,7 +812,7 @@ char* path_file(const char* path) {
     int lastSlash;
     for (lastSlash = len - 1; lastSlash >= 0 && path[lastSlash] != '/'; lastSlash--);
 
-    char* result = kalloc(sizeof(char) * (len - lastSlash + 1));
+    char* result = malloc(sizeof(char) * (len - lastSlash + 1));
     strncpy(result, path + (lastSlash + 1), len - lastSlash - 1);
     result[len - lastSlash] = 0;
 
@@ -830,7 +833,7 @@ char* join_paths(const char* cwd, const char* path) {
 
     if (path[0] == '/') {
         // If the new path is absolute little work needs to be done
-        nwd = kalloc(sizeof(char) * (pathLen + 1));
+        nwd = malloc(sizeof(char) * (pathLen + 1));
         strcpy(nwd, path);
 
         return nwd;
@@ -838,7 +841,7 @@ char* join_paths(const char* cwd, const char* path) {
 
     size_t cwdLen = strlen(cwd);
 
-    nwd = kalloc(sizeof(char) * (cwdLen + pathLen + 2));
+    nwd = malloc(sizeof(char) * (cwdLen + pathLen + 2));
     strcpy(nwd, cwd);
 
     int index = cwdLen;

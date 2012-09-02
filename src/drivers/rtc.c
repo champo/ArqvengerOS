@@ -19,10 +19,29 @@
 #define ISLEAPYEAR(i)       (((i) % 4 == 0 && (i) % 100 != 0) || (i) % 400 == 0)
 #define SECONDSINDAY        86400
 
-static enum months {JAN = 1, FEB, MAR, APRIL, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC };
+enum months {
+    JAN = 1,
+    FEB,
+    MAR,
+    APRIL,
+    MAY,
+    JUN,
+    JUL,
+    AUG,
+    SEP,
+    OCT,
+    NOV,
+    DEC
+};
 
 typedef struct {
-    int seconds,minutes,hours,day,month,year,century;
+    int seconds;
+    int minutes;
+    int hours;
+    int day;
+    int month;
+    int year;
+    int century;
 } RTCRegisters;
 
 
@@ -42,7 +61,7 @@ static void readRTCRegisters(RTCRegisters *regs);
  * with the information offered by the RTC.
  *
  * @param tp Pointer to an unsigned int where, if it is not NULL the result
- * 	     will be stored.
+ *       will be stored.
  *
  * @return The amount of second since Epoch.
  */

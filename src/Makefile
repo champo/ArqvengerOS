@@ -18,7 +18,7 @@ CFLAGS=-fno-builtin -I$(SRCDIR) -pedantic -std=c99 -fstrict-aliasing -Wall -Wext
 	-Wwrite-strings -Wpointer-arith -Wcast-align -Wmissing-prototypes \
 	-Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline \
 	-Wstrict-prototypes -Wunreachable-code -fno-builtin -nostdlib \
-	-nostartfiles -nodefaultlibs -m32
+	-nostartfiles -nodefaultlibs -m32 -include $(SRCDIR)/unused.h
 LDFLAGS=-T $(SRCDIR)/link.ld
 NASMFLAGS=
 

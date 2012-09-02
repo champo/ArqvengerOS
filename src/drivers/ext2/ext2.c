@@ -6,6 +6,7 @@
 #include "drivers/ext2/directory.h"
 #include "system/fs/fs.h"
 #include "system/mm/allocator.h"
+#include "library/string.h"
 
 /**
  * The write function for regular files and symbolic links.

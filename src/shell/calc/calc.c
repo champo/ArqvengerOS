@@ -24,6 +24,9 @@ void manCalc(void) {
  * Allows to make equations with the format X op Y.
  */
 void calc(char* unused) {
+
+    UNUSED(unused);
+
     int num1;
     int num2;
     int ans = 0;

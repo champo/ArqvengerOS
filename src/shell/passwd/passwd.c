@@ -10,6 +10,8 @@
 
 void passwd(char* argv) {
 
+    UNUSED(argv);
+
     char old_passwd[MAX_PASSWD_LEN];
     char new_passwd1[MAX_PASSWD_LEN];
     char new_passwd2[MAX_PASSWD_LEN];
@@ -31,7 +33,7 @@ void passwd(char* argv) {
         printf("passwd: password unchanged\n");
         return;
     }
-    
+
     askForPasswd("Enter new password:", new_passwd1);
     askForPasswd("Retype new password:", new_passwd2);
 
@@ -54,18 +56,18 @@ void manPasswd(void) {
     printf("Usage:\n\t passwd ");
     setBold(0);
 
-    printf("[ LOGIN ]\n");  
+    printf("[ LOGIN ]\n");
 
     setBold(1);
     printf("DESCRIPTION\n");
     setBold(0);
 
     printf("The");
-    
+
     setBold(1);
     printf("passwd");
     setBold(0);
-    
+
     printf("command changes passwords for user accounts. A normal \
             user may only change the password for his/her own account, while \
             the superuser may change the password for any account.\n");

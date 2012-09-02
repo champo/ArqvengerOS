@@ -5,6 +5,7 @@
 #include "system/scheduler.h"
 #include "system/malloc/malloc.h"
 #include "system/cache/cache.h"
+#include "system/kprintf.h"
 
 struct MemoryMapEntry {
     size_t size;

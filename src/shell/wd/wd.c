@@ -1,4 +1,6 @@
 #include "shell/wd/wd.h"
+#include "library/sys.h"
+#include "system/malloc/malloc.h"
 #include "library/stdio.h"
 #include "constants.h"
 #include "library/stdlib.h"
@@ -12,11 +14,11 @@
 
 static void print_flag(int value, int flag, char c);
 
-static void cp_wrapper(const char* source, const char* dest, int recursive, int first);
+static void cp_wrapper(char* source, char* dest, int recursive, int first);
 
-static void cp_recursive(int sourcefd, const char* source, const char* dest, struct stat data, int first);
+static void cp_recursive(int sourcefd, char* source, char* dest, struct stat data, int first);
 
-static void cp_non_recursive(int sourcefd, const char* dest, struct stat data);
+static void cp_non_recursive(int sourcefd, char* dest, struct stat data);
 
 void command_cd(char* argv) {
 
@@ -42,6 +44,9 @@ void man_cd(void) {
 }
 
 void command_pwd(char* argv) {
+
+    UNUSED(argv);
+
     char cwd[512];
     if (getcwd(cwd, 512) == 0) {
         printf("%s\n", cwd);
@@ -350,7 +355,6 @@ void man_chown(void) {
 void command_cp(char* argv) {
 
     int recursive = 0;
-    int ans;
 
     char* argument1 = strchr(argv, ' ');
     if (argument1 == NULL) {
@@ -388,7 +392,7 @@ void command_cp(char* argv) {
 
 }
 
-void cp_wrapper(const char* source, const char* dest, int recursive, int first) {
+void cp_wrapper(char* source, char* dest, int recursive, int first) {
 
     int sourcefd = open(source, O_RDONLY);
 
@@ -413,7 +417,7 @@ void cp_wrapper(const char* source, const char* dest, int recursive, int first) 
     close(sourcefd);
 }
 
-void cp_recursive(int sourcefd, const char* source, const char* dest, struct stat data, int first) {
+void cp_recursive(int sourcefd, char* source, char* dest, struct stat data, int first) {
 
     struct fs_DirectoryEntry entry;
 
@@ -430,7 +434,7 @@ void cp_recursive(int sourcefd, const char* source, const char* dest, struct sta
 
     char* dirdest;
     if (first) {
-     dirdest = join_paths(dest, filename);
+        dirdest = join_paths(dest, filename);
     } else {
         dirdest = dest;
     }
@@ -466,7 +470,7 @@ void cp_recursive(int sourcefd, const char* source, const char* dest, struct sta
 
 }
 
-void cp_non_recursive(int sourcefd, const char* dest, struct stat data) {
+void cp_non_recursive(int sourcefd, char* dest, struct stat data) {
 
     struct fs_DirectoryEntry entry;
 

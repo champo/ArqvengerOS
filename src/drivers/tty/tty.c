@@ -9,6 +9,7 @@
 #include "shell/login.h"
 #include "library/stdio.h"
 #include "system/accessControlList/users.h"
+#include "system/panic.h"
 
 static int activeTerminal = 0;
 
@@ -28,6 +29,8 @@ void tty_early_init(void) {
 }
 
 void tty_run(char* unused) {
+
+    UNUSED(unused);
 
     tty_keyboard_init();
 
@@ -131,14 +134,23 @@ struct Terminal* tty_terminal(int number) {
 }
 
 size_t op_write(struct FileDescriptor* fd, const void* buffer, size_t len) {
+
+    UNUSED(fd);
+
     return tty_write(buffer, len);
 }
 
 size_t op_read(struct FileDescriptor* fd, void* buffer, size_t len) {
+
+    UNUSED(fd);
+
     return tty_read(buffer, len);
 }
 
 int op_ioctl(struct FileDescriptor* fd, int cmd, void* argp) {
+
+    UNUSED(fd);
+
     return ioctlKeyboard(cmd, argp);
 }
 

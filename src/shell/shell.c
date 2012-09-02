@@ -52,6 +52,8 @@ static void chooseCurrentEntry(struct Shell* self);
 
 static void run_command(struct Shell* self, const Command* cmd);
 
+static void sort_commands(Command* commands);
+
 #define NUM_COMMANDS 38
 static Command commands[] = {
     { &echo, "echo", "Prints the arguments passed to screen.", &manEcho, 0 },
@@ -101,6 +103,8 @@ static termios shellStatus = { 0, 0 };
  */
 void shell(char* unused) {
 
+    UNUSED(unused);
+
     const Command* cmd;
     struct Shell me;
     struct Shell* self = &me;
@@ -147,7 +151,7 @@ void shell(char* unused) {
  *
  * @param commands The array of Command to be sorted.
  */
-void sort_commands(Command* commands) {
+void sort_commands(Command* cmds) {
 
     int swapped = 1;
     int n = NUM_COMMANDS;
@@ -156,10 +160,10 @@ void sort_commands(Command* commands) {
         swapped = 0;
         for (int i = 1; i < n; i++) {
 
-            if (strcmp(commands[i - 1].name, commands[i].name) > 0) {
-                Command aux = commands[i - 1];
-                commands[i - 1] = commands[i];
-                commands[i] = aux;
+            if (strcmp(cmds[i - 1].name, cmds[i].name) > 0) {
+                Command aux = cmds[i - 1];
+                cmds[i - 1] = cmds[i];
+                cmds[i] = aux;
                 swapped = 1;
             }
         }
@@ -414,17 +418,17 @@ const Command* nextCommand(struct Shell* self, const char* prompt) {
  */
 void addToInput(struct Shell* self, size_t promptLen, const char* in, size_t len) {
 
-    int i, destPos;
+    int destPos;
     // We only write when we have enough space
     if (self->inputEnd + len < BUFFER_SIZE - 1) {
 
         // Move the characters after the cursor to make room for the new text
-        for (i = self->inputEnd - 1; i >= self->cursor; i--) {
+        for (int i = self->inputEnd - 1; i >= self->cursor; i--) {
             self->buffer[i + len] = self->buffer[i];
         }
 
         // Copy the new input to the buffer
-        for (i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; i++) {
             self->buffer[self->cursor + i] = in[i];
         }
 

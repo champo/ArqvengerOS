@@ -58,6 +58,9 @@ void int0E(registers* regs) {
  *  @param regs Pointer to struct containing micro's registers.
  */
 void int20(registers* regs) {
+
+    UNUSED(regs);
+
     timerTick();
 }
 
@@ -67,6 +70,9 @@ void int20(registers* regs) {
  *  @param regs Pointer to struct containing micro's registers.
  */
 void int21(registers* regs ) {
+
+    UNUSED(regs);
+
     keyboard_read();
 }
 
@@ -79,8 +85,8 @@ void setInterruptHandlerTable(void) {
     for (i = 0;i < 32;i++) {
         table[i] = &exceptionHandler;
     }
-   
-    register(0E); 
+
+    register(0E);
     register(20);
     register(21);
 
