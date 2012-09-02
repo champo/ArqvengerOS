@@ -1,4 +1,5 @@
 #include "drivers/ata.h"
+#include "system/kprintf.h"
 #include "type.h"
 
 struct DriveInfo {
@@ -45,8 +46,12 @@ struct DriveInfo {
 static unsigned long long sectors = 0L;
 
 static void set_ports(unsigned long long sector, int count, unsigned char command);
+
 static int poll(void);
+
 static int checkBSY(void);
+
+static void handle_error(unsigned char status);
 
 /**
  * Checks if an ata driver has been initialized.
@@ -74,9 +79,12 @@ void ata_init(struct multiboot_info* info) {
                 sectors = 1 << 28;
             }
 
+            // This should disable IRQs for that device
+            outB(CONTROL_REGISTER, 2);
             outB(DRIVE_PORT, MASTER);
         }
     }
+
 }
 
 /**
@@ -133,15 +141,17 @@ int ata_write(unsigned long long sector, int count, const void* buffer) {
         return -1;
     }
 
+    checkBSY();
     for ( i = 0; i < count; i++) {
         set_ports(sector + i, 1, WRITE_COMMAND);
-        poll();
+        checkBSY();
+
         __asm__("rep outsw"::"c"(SIZE_WORD), "d"(DATA_PORT), "S"((unsigned int) edi));
         edi += (SIZE_WORD * 2);
-    }
 
-    outB(COMMAND_PORT, CACHE_FLUSH);
-    checkBSY();
+        outB(COMMAND_PORT, CACHE_FLUSH);
+        checkBSY();
+    }
 
     return 0;
 }
@@ -168,6 +178,7 @@ void set_ports(unsigned long long sector, int count, unsigned char command) {
  * @return 0 if the drive is ready, -1 if an error was detected.
  */
 int poll(void) {
+
     unsigned char status;
 
     if (checkBSY() != 0) {
@@ -177,10 +188,18 @@ int poll(void) {
     status = inB(STATUS_PORT);
 
     while (!DRQ(status)) {
+
         if (ERR(status) || DF(status)) {
+            handle_error(status);
             return -1;
         }
+
         status = inB(STATUS_PORT);
+    }
+
+    if (ERR(status) || DF(status)) {
+        handle_error(status);
+        return -1;
     }
 
     return 0;
@@ -196,11 +215,26 @@ int checkBSY(void) {
     unsigned char status = inB(STATUS_PORT);
 
     while (BSY(status)) {
+
         if (ERR(status) || DF(status)) {
+            handle_error(status);
             return -1;
         }
+
         status = inB(STATUS_PORT);
+    }
+
+    if (ERR(status) || DF(status)) {
+        handle_error(status);
+        return -1;
     }
 
     return 0;
 }
+
+void handle_error(unsigned char status) {
+
+    unsigned char err = inB(INFO_PORT);
+    log_error("Got error status %d with error code %d", status, err);
+}
+
