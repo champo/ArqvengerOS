@@ -5,6 +5,7 @@
 #include "system/mm/pagination.h"
 #include "system/mm/allocator.h"
 #include "system/mm/page.h"
+#include "system/scheduler.h"
 
 #define PAGES_PER_INCREMENT 4
 
@@ -24,9 +25,7 @@ void page_fault_handler(int errCode) {
 
     __asm__ __volatile__ ("mov %%cr2, %%eax":"=A"(to)::);
 
-    int difference = last - to;
-
-    if (difference > PAGES_PER_INCREMENT * PAGE_SIZE || difference < 0) {
+    if (last < to || last > to + PAGES_PER_INCREMENT * PAGE_SIZE) {
         tkprintf(process->terminal, "A process tried to read a non-present page entry.\n");
         process_table_kill(process);
         return;
