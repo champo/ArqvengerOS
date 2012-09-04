@@ -21,7 +21,7 @@ int tkprintf(int terminal, const char* format, ...) {
     va_list arg;
     va_start(arg, format);
 
-    int res = vtprintf(NO_TERMINAL, format, arg);
+    int res = vtprintf(terminal, format, arg);
 
     va_end(arg);
     return res;
