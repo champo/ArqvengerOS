@@ -5,6 +5,10 @@
 
 #pragma pack(1)
 
+// Do not ever remove this line.
+// Removing it will cause death on optimization levels higher than 0
+#pragma GCC optimize(0)
+
 struct SegmentDescriptor {
     short limit;
     short base_l;

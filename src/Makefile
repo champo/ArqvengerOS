@@ -49,7 +49,7 @@ debug: override NASMFLAGS += -O0 -g
 debug: $(TARGET)
 
 # Release flags
-release: override CFLAGS += -O3
+release: override CFLAGS += -O2 -g
 release: $(TARGET)
 
 clean: 
