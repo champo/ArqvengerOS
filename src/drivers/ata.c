@@ -3,6 +3,8 @@
 #include "system/io.h"
 #include "type.h"
 
+#pragma GCC optimize(0)
+
 struct DriveInfo {
     size_t len;
     unsigned char number;
